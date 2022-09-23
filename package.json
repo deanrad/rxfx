@@ -7,9 +7,11 @@
   "private": true,
   "repository": "https://github.com/deanrad/rxfx",
   "workspaces": [
-    "operators"
+    "operators",
+    "after"
   ],
   "scripts": {
     "test": "yarn --cwd operators test:full"
-  }
+  },
+  "packageManager": "yarn@3.2.3"
 }

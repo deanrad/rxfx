@@ -13,3 +13,4 @@ example/*/node_modules
 *.mdb
 .vscode
 operators/gdocs
+.yarn
