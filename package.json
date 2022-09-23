@@ -1,0 +1,14 @@
+{
+  "name": "rxfx",
+  "version": "0.9.0",
+  "description": "Effect manager for RxJS",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true,
+  "workspaces": [
+    "operators"
+  ],
+  "scripts": {
+    "test": "yarn --cwd operators test:full"
+  }
+}
