@@ -10,8 +10,12 @@
     "operators",
     "after"
   ],
+  "dependencies": {
+    "rxjs": "^7.3.0",
+    "tslib": "^2.3.1"
+  },
   "scripts": {
-    "test": "yarn --cwd operators test:full"
+    "test": "yarn workspaces foreach run test"
   },
   "packageManager": "yarn@3.2.3"
 }
