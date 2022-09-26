@@ -49,16 +49,16 @@ const thunkTrue = () => true;
 //#endregion
 
 /**
- * An instance of an Omnibus provides type-safe ways of triggering
+ * An instance of a Bus provides type-safe ways of triggering
  * and canceling side-effects, in response to events triggered upon it.
  *
- * In addition, an Omnibus instance allows delcarative concurrency
+ * In addition, a Bus instance allows delcarative concurrency
  * control, and provides ample means to dispose of resources at the
  * callers' control. When the side-effects are implemented as Observables,
  * cancelation and declarative concurrency control can be applied,
  * harnessing the power of RxJS operators.
  */
-export class Omnibus<TBusItem> {
+export class Bus<TBusItem> {
   private channel: Subject<TBusItem>;
   private resets: Subject<void>;
   private guards: Array<[Predicate<TBusItem>, (item: TBusItem) => void]>;

@@ -17,15 +17,12 @@ import {
   resultCreator,
   searchRequestCreator,
 } from './example/searchService';
-import { Omnibus } from '../src/bus';
+import { Bus } from '../src/bus';
 import { after } from '@rxfx/after';
 
 export const anyEvent = () => true;
 
-function capturing<T>(
-  bus: Omnibus<T>,
-  testFn: (arg: T[]) => void | Promise<any>
-) {
+function capturing<T>(bus: Bus<T>, testFn: (arg: T[]) => void | Promise<any>) {
   return function () {
     const seen = new Array<T>();
     // @ts-ignore
@@ -64,9 +61,9 @@ const withTiming = (events) => {
     })
   );
 };
-const FSABus = new Omnibus<Action<any>>();
-const StringBus = new Omnibus<string>();
-const miniBus = new Omnibus<number>();
+const FSABus = new Bus<Action<any>>();
+const StringBus = new Bus<string>();
+const miniBus = new Bus<number>();
 
 describe('Bus', () => {
   beforeEach(() => {
@@ -86,7 +83,7 @@ describe('Bus', () => {
     }
 
     it('types - can make more actions', async () => {
-      const b = new Omnibus<Foo | Bar>();
+      const b = new Bus<Foo | Bar>();
       const seen: Array<Foo | Bar> = [];
 
       b.spy((foo) => seen.push(foo));
@@ -638,7 +635,7 @@ describe('Bus', () => {
     });
     it('does not insert a tick between each trigger', async () => {
       const seen = [];
-      const micro = new Omnibus<number>();
+      const micro = new Bus<number>();
       micro.listen(
         () => true,
         (e) => {
@@ -655,7 +652,7 @@ describe('Bus', () => {
 
   describe('#reset', () => {
     it('ends all listeners', () => {
-      const microBus = new Omnibus<number>();
+      const microBus = new Bus<number>();
       const events = [];
       const listener = microBus.listen(
         (n) => n == 1,
@@ -861,7 +858,7 @@ describe('Bus', () => {
         expect(seen).toEqual([1, 2]);
       });
       it('should maintain exception handling', () => {
-        const micro = new Omnibus<number>();
+        const micro = new Bus<number>();
         // on our secondarily triggered action we throw
         micro.guard(
           (n) => n % 2 === 0,
@@ -1008,7 +1005,7 @@ describe('Bus', () => {
 
     describe('#filter #filter #trigger', () => {
       it('no exception - error sent to bus.errors', () => {
-        const micro = new Omnibus<number>();
+        const micro = new Bus<number>();
         const seenErrors = [];
         micro.errors.subscribe((e) => seenErrors.push(e));
         // on our secondarily triggered action we throw
@@ -1029,7 +1026,7 @@ describe('Bus', () => {
         expect(seenErrors).toEqual(['2 not odd']);
       });
       it('continues to process events', () => {
-        const micro = new Omnibus<number>();
+        const micro = new Bus<number>();
         const seenErrors = [];
         const seen = [];
         const heard = [];
