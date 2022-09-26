@@ -8,7 +8,8 @@
   "repository": "https://github.com/deanrad/rxfx",
   "workspaces": [
     "operators",
-    "after"
+    "after",
+    "bus"
   ],
   "dependencies": {
     "rxjs": "^7.3.0",
@@ -17,5 +18,8 @@
   "scripts": {
     "test": "yarn workspaces foreach run test"
   },
-  "packageManager": "yarn@3.2.3"
+  "packageManager": "yarn@3.2.3",
+  "devDependencies": {
+    "typescript-fsa": "^3.0.0"
+  }
 }

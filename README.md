@@ -6,4 +6,8 @@ A family of RxJS enhancers and abstractions for asynchronous event handling.
 
 - [`@rxfx/after`](https://github.com/deanrad/rxfx/tree/main/after)
 
-- [`@rxfx/bus`](https://github.com/deanrad/rxfx/tree/main/bus) (on deck)
+- [`@rxfx/bus`](https://github.com/deanrad/rxfx/tree/main/bus)
+
+- [`@rxfx/service`](https://github.com/deanrad/rxfx/tree/main/service) (on deck)
+
+- [`@rxfx/react`](https://github.com/deanrad/rxfx/tree/main/service) (2nd in queue)
