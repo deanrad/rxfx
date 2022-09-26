@@ -1,6 +1,6 @@
 {
   "name": "@rxfx/bus",
-  "version": "0.9.10",
+  "version": "0.9.11",
   "license": "MIT",
   "author": "Dean Radcliffe",
   "repository": "https://github.com/deanrad/rxfx",
@@ -29,6 +29,7 @@
     "build": "rimraf dist && tsc && timeout --foreground --preserve-status 10 rollup -c rollup.config.js"
   },
   "dependencies": {
+    "@rxfx/operators": "workspace:^",
     "rxjs": "^7.3.0",
     "tslib": "^2.3.1",
     "typescript-fsa": "^3.0.0"

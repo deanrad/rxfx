@@ -1,25 +1,30 @@
 //#region imports
+// @ts-ignore // i cant workspace :)
+import { toggleMap } from '@rxfx/operators';
 import {
+  EMPTY,
+  from,
   Observable,
   ObservableInput,
   OperatorFunction,
   PartialObserver,
   Subject,
-  Subscription,
   Subscriber,
+  Subscription,
   TeardownLogic,
 } from 'rxjs';
-import { EMPTY, from } from 'rxjs';
 import {
   catchError,
   concatMap,
   exhaustMap,
+  filter,
   first,
   mergeMap,
-  switchMap,
   retry,
+  switchMap,
+  takeUntil,
+  tap,
 } from 'rxjs/operators';
-import { filter, takeUntil, tap } from 'rxjs/operators';
 //#endregion
 
 //#region types
@@ -263,6 +268,22 @@ export class Bus<TBusItem> {
     observer?: TapObserver<TConsequence>
   ) {
     return this.listen(matcher, handler, observer, exhaustMap);
+  }
+
+  /** Triggers effects upon matching events, using a Toggling (gate) Concurrency Strategy.
+   * A new effect is not begun if one is in progress, and the existing effect is canceled.
+   * @param matcher A predicate (returning Boolean) function to determine the subset of Event Bus events the handler will be invoked for.
+   * @param handler Called for each matching event, returns an ObservableInput (an Iterable,Promise,Observable)
+   * @param observer Provides functions to be called upon notifications of the handler
+   * @returns a subscription that can be used to unsubscribe the listener, thereby canceling work in progress.
+   */
+  public listenToggling<TConsequence, TMatchType extends TBusItem = TBusItem>(
+    matcher: ((i: TBusItem) => i is TMatchType) | ((i: TBusItem) => boolean),
+    handler: ResultCreator<TMatchType, TConsequence>,
+    observer?: TapObserver<TConsequence>
+  ) {
+    // @ts-ignore
+    return this.listen(matcher, handler, observer, toggleMap);
   }
 
   /** Run a function (synchronously) for all runtime events, prior to all spies and listeners.
