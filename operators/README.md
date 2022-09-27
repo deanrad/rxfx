@@ -4,3 +4,4 @@ A collection of RxJS operators. Part of the [𝗥𝘅𝑓𝑥](https://github.co
 
 - `toggleMap`
 - `queueOnlyLatest`
+- `padToTime`
