@@ -9,7 +9,8 @@
   "workspaces": [
     "operators",
     "after",
-    "bus"
+    "bus",
+    "service"
   ],
   "dependencies": {
     "rxjs": "^7.3.0",
