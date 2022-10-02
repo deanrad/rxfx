@@ -62,6 +62,7 @@ export function after<T>(
         canceled = true;
       };
     });
+    // @ts-ignore
     return makeThenable(obs, observer);
   }
 

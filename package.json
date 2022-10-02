@@ -10,7 +10,8 @@
     "operators",
     "after",
     "bus",
-    "react"
+    "react",
+    "service"
   ],
   "dependencies": {
     "rxjs": "^7.3.0",

@@ -1,11 +1,11 @@
 {
   "name": "@rxfx/service",
-  "version": "0.9.9",
+  "version": "1.0.0",
   "license": "MIT",
   "author": "Dean Radcliffe",
   "repository": "https://github.com/deanrad/rxfx",
-  "main": "dist/rxfx-after.min.js",
-  "module": "dist/rxfx-after.esm.js",
+  "main": "dist/rxfx-service.min.js",
+  "module": "dist/rxfx-service.esm.js",
   "typings": "dist/tsc/types/src/index.d.ts",
   "sideEffects": false,
   "files": [
@@ -29,7 +29,9 @@
     "build": "rimraf dist && tsc && timeout --foreground --preserve-status 10 rollup -c rollup.config.js"
   },
   "dependencies": {
+    "@rxfx/after": "workspace:^",
     "@rxfx/bus": "workspace:^",
+    "@rxfx/operators": "workspace:^",
     "rxjs": "^7.3.0",
     "tslib": "^2.3.1"
   },
@@ -39,6 +41,7 @@
     "@babel/preset-typescript": ">= 7.15.0",
     "@open-wc/building-rollup": ">= 1.10.0",
     "@rollup/plugin-typescript": ">= 8.2.5",
+    "@rxfx/after": "workspace:^",
     "@size-limit/preset-small-lib": ">= 5.0.3",
     "@types/jest": ">= 27.0.1",
     "@typescript-eslint/eslint-plugin": ">= 4.31.2",
