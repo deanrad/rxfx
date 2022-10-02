@@ -29,6 +29,7 @@
     "build": "rimraf dist && tsc && timeout --foreground --preserve-status 10 rollup -c rollup.config.js"
   },
   "dependencies": {
+    "@rxfx/service": "workspace:^",
     "rxjs": "^7.3.0",
     "tslib": "^2.3.1"
   },

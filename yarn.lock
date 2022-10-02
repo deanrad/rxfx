@@ -2517,6 +2517,7 @@ __metadata:
     "@babel/preset-typescript": ">= 7.15.0"
     "@open-wc/building-rollup": ">= 1.10.0"
     "@rollup/plugin-typescript": ">= 8.2.5"
+    "@rxfx/service": "workspace:^"
     "@size-limit/preset-small-lib": ">= 5.0.3"
     "@testing-library/jest-dom": ^5.16.5
     "@testing-library/react": ^13.4.0
@@ -2550,7 +2551,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@rxfx/service@workspace:service":
+"@rxfx/service@workspace:^, @rxfx/service@workspace:service":
   version: 0.0.0-use.local
   resolution: "@rxfx/service@workspace:service"
   dependencies:
