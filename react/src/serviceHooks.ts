@@ -1,17 +1,17 @@
-import { useRef, useState } from 'react';
-import { BehaviorSubject, Subscription } from 'rxjs';
-import { Action, ActionCreator } from 'typescript-fsa';
+import { useState } from 'react';
+import { Subscription } from 'rxjs';
+import type { Service } from '@rxfx/service';
 import { useWhileMounted } from './useWhileMounted';
 
 /** Maintains a React state  and isActive fields populated from the service.
  */
- export function useService<TRequest, TNext, TError, TState>(
-  service: any
+export function useService<TRequest, TNext, TError, TState>(
+  service: Service<TRequest, TNext, TError, TState>
 ) {
   // hook fields
-  const [serviceState, setServiceState] = useState<object>();
+  const [serviceState, setServiceState] = useState<TState>(service.state.value);
   const [isActive, setIsActvive] = useState<boolean>(false);
-  const request = service.request.bind(service)
+  const request = service.request.bind(service);
 
   // prettier-ignore
   useWhileMounted(() => {

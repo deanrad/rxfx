@@ -9,6 +9,7 @@
     ],
     "strict": true,
     "esModuleInterop": false,
+    "jsx": "react",
     "outDir": "dist/tsc",
     "rootDir": "./",
     "downlevelIteration": true,
