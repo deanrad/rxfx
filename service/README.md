@@ -1,8 +1,36 @@
 # 𝗥𝘅𝑓𝑥 `service`
 
 A typesafe, concurrency-controlled, stateful service over an `@rxfx/bus`. Part of the 𝗥𝘅𝑓𝑥 family of libraries.
+For help consuming services in React, check out [`@rxfx/react`](https://github.com/deanrad/rxfx/tree/main/react).
 
-Going on a normal bus listener, a **Service**:
+# Example Usage
+
+```js
+const reducer = (count=0, {type}) => {
+  if (type === 'count/next') {
+    return count++
+  }
+  return count;
+}
+
+const asyncCounter = createQueueingService<void, void, Error, number>(
+  'count', 
+  bus, 
+  () => after(1000),
+  () => reducer
+);
+
+asyncCounter(); /* request a count (will complete after 1000 msec) */
+
+asyncCounter.state.subscribe(count:number => /* update your UI state */)
+asyncCounter.isActive.subscribe(isActive:boolean => /* update your UI state */)
+asyncCounter.responses.subscribe(resp:undefined => /* consume returned values of the effect */)
+asyncCounter.errors.subscribe(err:Error => /* consume returned errors of the effect */)
+
+asyncCounter.cancelCurrent() /* cancel the effect - eg upon route change */ 
+```
+
+Building upon a normal bus listener, a **Service**:
 
 - Turn errors into events, rescuing them
 - Has a naming convention for events
@@ -10,7 +38,7 @@ Going on a normal bus listener, a **Service**:
 - Has an Observable of whether a request handling is active
 - Allows for cancelation of in-flight, or queued requests
 
-In comparison to `createAsyncThunk` from Redux Toolkit, except concurrency-controlled.
+In comparison to `createAsyncThunk` from Redux Toolkit, except concurrency-controlled and cancelable.
 
 # Benefits of using a service
 
@@ -24,26 +52,27 @@ In both cases: _It is the UI which speaks to the service, not the other way arou
 This keeps our service logic code from being dependent on the UI - it inverts the dependency. The result is being able to port the same core code to any Web or Native platform without re-tooling. This also enables continued operation in the face of major-version updates to UI frameworks.
 Fields `state` and `isActive` are explicit Observables which can be consumed in your UI framework:
 
+# Example Application - API Data Fetcher
+With concurrency, cancelation, other best-practices and UX tweaks.
+[CodeSandbox](https://codesandbox.io/s/rxfx-service-cat-fetcher-nweq0h)
+
+![](https://s3.amazonaws.com/www.deanius.com/rxfx-data-fetcher-static.png)
+
 # Example Application - Alarm Clock
-The following application is an Alarm Clock _(of a variety you may already know!)_ built in an `@rxfx/service`, with [this statechart](https://s3.amazonaws.com/www.deanius.com/rxfx-alarm-clock-xstate.png) modeling its flow.
+Though we usually think about Effect Management as calling an endpoint for a single response - in general an effect may deliver multiple events.
+This means, instead of returning a Promise from an effect, we can return an entire Observable.
 
+In our alarm clock, pushing a time/set button down is the request, and the responses are all the updates of hour or minute we get from the H or M keypresses.
 
-Now here it is live, running a demo upon reload, and interactive for you:
+So this service architecture is very useful. Here we apply it an Alarm Clock _(of a variety you may already know!)_ . [This statechart](https://s3.amazonaws.com/www.deanius.com/rxfx-alarm-clock-xstate.png) models its flow as a statechart, but I think the request-responses model of cause-and-effect is just as effective a model.
 
-<iframe src="https://codesandbox.io/embed/rxfx-service-alarm-clock-vue-hk916l?fontsize=14&hidenavigation=1&theme=dark"
-     style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;"
-     title="rxfx/service alarm clock - Vue"
-     allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
-     sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
-   ></iframe>
+![](https://m.media-amazon.com/images/I/71fHRhzQnML._AC_SL1500_.jpg)
 
+Most importantly, because RxFx ensures your services don't depend upon your view, you can port the same service to any UI framework, Web or Native, trivially.
 
-# Alarm Clock ports
+These ports of the Alarm Clock to major UI frameworks took under half an hour each to do - they have only to integrate with the framework at event handlers and state subscription!
 
-These ports took under half an hour each to do - they have only to integrate with the framework at event handlers and state subscription!
-
- - React
-[Code Sandbox](https://codesandbox.io/s/rxfx-bus-alarm-clock-react-8or1oq)
+ - React [Code Sandbox](https://codesandbox.io/s/rxfx-bus-alarm-clock-react-sesc51)
 - Angular [Code Sandbox](https://codesandbox.io/s/rxfx-service-alarm-clock-angular-sdenc1)
 - Svelte [Code Sandbox](https://codesandbox.io/s/rxfx-service-alarm-clock-svelte-d0bejx)
 - Vue [Code Sandbox](https://codesandbox.io/s/rxfx-service-alarm-clock-vue-hk916l)

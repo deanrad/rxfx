@@ -14,3 +14,4 @@ example/*/node_modules
 .vscode
 operators/gdocs
 .yarn
+assets/_private

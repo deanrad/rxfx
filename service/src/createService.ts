@@ -99,7 +99,7 @@ export function matchesAny(...acs: ActionCreator<any>[]) {
 /**
  * Like Redux Toolkit's createAsyncThunk, but using an event bus, not Redux for communication,
  * and both cancelable, and concurrency-controllable. By default
- * runs handlers simultaneously.
+ * runs handlers immediately, but overridable with a 5th parameter - an RxJS operator implmenting the desired concurrency.
  *
  * @param actionNamespace - Prefix of all actions: The 'search' in search/request
  * @param bus - The Bus event bus triggered to and listened on
