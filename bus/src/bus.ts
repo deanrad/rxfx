@@ -380,3 +380,5 @@ export class Bus<TBusItem> {
     });
   }
 }
+
+export const defaultBus = new Bus<any>();

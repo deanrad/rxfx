@@ -52,27 +52,34 @@ In both cases: _It is the UI which speaks to the service, not the other way arou
 This keeps our service logic code from being dependent on the UI - it inverts the dependency. The result is being able to port the same core code to any Web or Native platform without re-tooling. This also enables continued operation in the face of major-version updates to UI frameworks.
 Fields `state` and `isActive` are explicit Observables which can be consumed in your UI framework:
 
-# Example Application - API Data Fetcher
+# Examples
+The following examples and tutorials will give you a feel for what UX you can build, and the ease of DX you'll find.
+
+## Tutorial - Swipe-To-Refresh
+
+As seen on [LearnRxJS.io](https://learnrxjs.io).
+
+![](https://camo.githubusercontent.com/c5e9ed0696c615d2472f30f1e82e0d056d852626a5947471d18c7c99d7d9c2e5/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f7777772e6465616e6975732e636f6d2f727866782d73776970652d746f2d726566726573682d64656d6f2e676966)
+
+- [Swipe-To-Refresh](https://github.com/deanrad/rxfx-example-swipe-to-refresh-blitz/blob/main/README.md)
+
+## Example Application - API Data Fetcher
 With concurrency, cancelation, other best-practices and UX tweaks.
 [CodeSandbox](https://codesandbox.io/s/rxfx-service-cat-fetcher-nweq0h)
 
 ![](https://s3.amazonaws.com/www.deanius.com/rxfx-data-fetcher-static.png)
 
-# Example Application - Alarm Clock
-Though we usually think about Effect Management as calling an endpoint for a single response - in general an effect may deliver multiple events.
-This means, instead of returning a Promise from an effect, we can return an entire Observable.
+## Example Application - Alarm Clock
 
-In our alarm clock, pushing a time/set button down is the request, and the responses are all the updates of hour or minute we get from the H or M keypresses.
 
-So this service architecture is very useful. Here we apply it an Alarm Clock _(of a variety you may already know!)_ . [This statechart](https://s3.amazonaws.com/www.deanius.com/rxfx-alarm-clock-xstate.png) models its flow as a statechart, but I think the request-responses model of cause-and-effect is just as effective a model.
+Here we build an Alarm Clock _(of a variety you may already know!)_ . [This statechart](https://s3.amazonaws.com/www.deanius.com/rxfx-alarm-clock-xstate.png) models its flow as a statechart, but I think the request-responses model of cause-and-effect is just as effective a model. Pushing a time/set button down is the request, and the responses are all the updates of hour or minute we get from the H or M keypresses.
 
 ![](https://m.media-amazon.com/images/I/71fHRhzQnML._AC_SL1500_.jpg)
 
-Most importantly, because RxFx ensures your services don't depend upon your view, you can port the same service to any UI framework, Web or Native, trivially.
-
-These ports of the Alarm Clock to major UI frameworks took under half an hour each to do - they have only to integrate with the framework at event handlers and state subscription!
+Because 𝗥𝘅𝑓𝑥 ensures your services don't depend upon your view, you can port the same service to any UI framework, Web or Native, trivially. These ports of the Alarm Clock to major UI frameworks took under half an hour each to do:
 
  - React [Code Sandbox](https://codesandbox.io/s/rxfx-bus-alarm-clock-react-sesc51)
 - Angular [Code Sandbox](https://codesandbox.io/s/rxfx-service-alarm-clock-angular-sdenc1)
 - Svelte [Code Sandbox](https://codesandbox.io/s/rxfx-service-alarm-clock-svelte-d0bejx)
 - Vue [Code Sandbox](https://codesandbox.io/s/rxfx-service-alarm-clock-vue-hk916l)
+
