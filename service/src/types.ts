@@ -1,11 +1,21 @@
 import { ActionCreator } from 'typescript-fsa';
 
 /** The events a process emits or responds to throughout its lifecycle. */
+export type ProcessLifecycleEvent =
+  | 'request'
+  | 'cancel'
+  | 'started'
+  | 'next'
+  | 'error'
+  | 'complete'
+  | 'canceled';
+
 export interface ProcessEvents<TRequest, TNext, TError> {
   /** invokes the service */
   request: ActionCreator<TRequest>;
   /** cancels the current invocation of the service */
   cancel: ActionCreator<void>;
+  /** cancels the current invocation of the service */
   started: ActionCreator<void>;
   next: ActionCreator<TNext>;
   error: ActionCreator<TError>;

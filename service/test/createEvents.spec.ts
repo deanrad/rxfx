@@ -46,7 +46,7 @@ describe(createEvent, () => {
   });
 });
 
-describe('createProcessEvents', () => {
+describe(createProcessEvents, () => {
   describe('return value', () => {
     it('creates types', () => {
       const INC = createProcessEvents('inc');
@@ -68,7 +68,7 @@ describe('createProcessEvents', () => {
   });
 });
 
-describe('createDataEvents', () => {
+describe(createCollectionEvents, () => {
   describe('return value', () => {
     it('creates types', () => {
       const BOOKS = createCollectionEvents('books');
