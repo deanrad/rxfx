@@ -49,7 +49,12 @@ export type TapObserver<T> = PartialObserver<T> | SubscribeObserver;
 export type ObserverKey = keyof PartialObserver<any> | keyof SubscribeObserver;
 export type MapFn<T, U> = (t?: T) => U;
 export type Mapper<T, U> = Partial<Record<ObserverKey, MapFn<T, U>>>;
-
+export type ConcurrencyMode =
+  | 'immediate'
+  | 'queueing'
+  | 'replacing'
+  | 'blocking'
+  | 'toggling';
 const thunkTrue = () => true;
 //#endregion
 

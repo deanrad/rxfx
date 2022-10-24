@@ -35,7 +35,9 @@ export function createCollectionEvents<
   TRecord = any,
   TResponse extends TRecord = TRecord,
   TError = Error
->(ns: string): CollectionEvents<TFetcher, TRecord, TResponse, TError> {
+>(
+  ns: string
+): CollectionEvents<TFetcher, TRecord, TResponse, TError>  {
   return {
     load: createProcessEvents<TFetcher, TRecord, TError>(`${ns}/load`),
     refresh: createProcessEvents<TFetcher, TRecord, TError>(`${ns}/refresh`),
@@ -46,5 +48,6 @@ export function createCollectionEvents<
     delete: createProcessEvents<Partial<TRecord>, TResponse, TError>(
       `${ns}/delete`
     ),
+    namespace: ns,
   };
 }

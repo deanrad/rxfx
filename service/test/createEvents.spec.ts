@@ -82,6 +82,7 @@ describe(createCollectionEvents, () => {
           "post",
           "update",
           "delete",
+          "namespace",
         ]
       `);
     });

@@ -36,6 +36,7 @@ export interface CollectionEvents<
   post: ProcessEvents<TRecord, TResponse, TError>;
   update: ProcessEvents<Partial<TRecord>, TResponse, TError>;
   delete: ProcessEvents<Partial<TRecord>, TResponse, TError>;
+  namespace: string;
 }
 
 /** Helpful, optional interface to differentiate service actions. */
