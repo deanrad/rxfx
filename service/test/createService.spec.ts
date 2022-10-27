@@ -182,7 +182,7 @@ describe('createService', () => {
       });
     });
 
-    describe('#isActive', () => {
+    describe('#isHandling', () => {
       let asyncHandler, asyncService;
       const ASYNC_DELAY = 10;
 
@@ -198,22 +198,22 @@ describe('createService', () => {
       });
 
       it('initially is false', () => {
-        expect(asyncService.isActive.value).toBeFalsy();
+        expect(asyncService.isHandling.value).toBeFalsy();
       });
 
       it('becomes true when a handler is in-flight', async () => {
         asyncService();
 
         expect(asyncHandler).toHaveBeenCalled();
-        expect(asyncService.isActive.value).toBeTruthy();
+        expect(asyncService.isHandling.value).toBeTruthy();
 
         await after(ASYNC_DELAY);
-        expect(asyncService.isActive.value).toBeFalsy();
+        expect(asyncService.isHandling.value).toBeFalsy();
       });
 
       it('emits changes only on request, completed, error, unsubscribe, and when changed', () => {
         const statuses: boolean[] = [];
-        asyncService.isActive.subscribe((s) => statuses.push(s));
+        asyncService.isHandling.subscribe((s) => statuses.push(s));
 
         asyncService();
         // trigger again
@@ -223,28 +223,124 @@ describe('createService', () => {
         expect(statuses).toEqual([false, true]);
       });
 
+      describe('Immediate', () => {
+        it('toggles on and off across multiple handlings', async () => {
+          const statuses: boolean[] = [];
+          const svc = createService<void, string, Error>(
+            'isHandling-immediate',
+            bus,
+            () => after(ASYNC_DELAY, '3.14')
+          );
+
+          svc.isHandling.subscribe((s) => statuses.push(s));
+          expect(statuses).toEqual([false]);
+
+          svc();
+          expect(statuses).toEqual([false, true]);
+
+          //
+          svc();
+          expect(statuses).toEqual([false, true]);
+          await after(ASYNC_DELAY * 2);
+
+          expect(statuses).toEqual([false, true, false]);
+        });
+      });
+
+      describe('Queueing', () => {
+        it('toggles on and off across multiple handlings', async () => {
+          const statuses: boolean[] = [];
+          const svc = createQueueingService<void, string, Error>(
+            'isHandling-queueing',
+            bus,
+            () => after(ASYNC_DELAY, '3.14')
+          );
+
+          svc.isHandling.subscribe((s) => statuses.push(s));
+          expect(statuses).toEqual([false]);
+
+          svc();
+          expect(statuses).toEqual([false, true]);
+
+          //
+          svc();
+          expect(statuses).toEqual([false, true]);
+          await after(ASYNC_DELAY * 3);
+
+          expect(statuses).toEqual([false, true, false, true, false]);
+        });
+      });
+
+      describe('Replacing', () => {
+        it('toggles on and off across multiple handlings', async () => {
+          const statuses: boolean[] = [];
+          const svc = createReplacingService<void, string, Error>(
+            'isHandling-replacing',
+            bus,
+            () => after(ASYNC_DELAY, '3.14')
+          );
+
+          svc.isHandling.subscribe((s) => statuses.push(s));
+          expect(statuses).toEqual([false]);
+
+          svc();
+          expect(statuses).toEqual([false, true]);
+
+          //
+          svc();
+          expect(statuses).toEqual([false, true, false, true]);
+          await after(ASYNC_DELAY * 2);
+
+          expect(statuses).toEqual([false, true, false, true, false]);
+        });
+      });
+
+      describe('Toggling', () => {
+        it('toggles on and off across multiple handlings', async () => {
+          const statuses: boolean[] = [];
+          const svc = createTogglingService<void, string, Error>(
+            'isHandling-toggling',
+            bus,
+            () => after(ASYNC_DELAY, '3.14')
+          );
+
+          svc.isHandling.subscribe((s) => statuses.push(s));
+          expect(statuses).toEqual([false]);
+
+          svc();
+          expect(statuses).toEqual([false, true]);
+
+          //
+          svc();
+          expect(statuses).toEqual([false, true, false]);
+          await after(ASYNC_DELAY * 2);
+
+          expect(statuses).toEqual([false, true, false]);
+        });
+      });
+
       it('terminates on a reset', () => {
         // our stream will close - we'll get no statuses after
         let didClose = false;
-        asyncService.isActive.subscribe({
+        asyncService.isHandling.subscribe({
           complete() {
             didClose = true;
           },
         });
 
         bus.reset();
-        expect(asyncService.isActive.isStopped).toBeTruthy();
+        expect(asyncService.isHandling.isStopped).toBeTruthy();
         expect(didClose).toBeTruthy();
-        expect(asyncService.isActive.observers).toHaveLength(0);
+        expect(asyncService.isHandling.observers).toHaveLength(0);
       });
 
       it('has a final value of false on bus.reset()', async () => {
         const statuses: boolean[] = [];
-        asyncService.isActive.subscribe((s) => statuses.push(s));
+        asyncService.isHandling.subscribe((s) => statuses.push(s));
 
         asyncService(); // true
         bus.reset(); // to false
-        expect(asyncService.isActive.isStopped).toBeTruthy();
+        expect(asyncService.isHandling.isStopped).toBeTruthy();
         expect(statuses).toEqual([false, true, false]);
 
         await after(ASYNC_DELAY);
@@ -253,16 +349,149 @@ describe('createService', () => {
 
       it('has a final value of false on stop()', async () => {
         const statuses: boolean[] = [];
-        asyncService.isActive.subscribe((s) => statuses.push(s));
+        asyncService.isHandling.subscribe((s) => statuses.push(s));
 
         asyncService(); // to true
         asyncService.stop(); // to false
-        expect(asyncService.isActive.isStopped).toBeTruthy();
+        expect(asyncService.isHandling.isStopped).toBeTruthy();
 
         expect(statuses).toEqual([false, true, false]);
 
         await after(ASYNC_DELAY);
         expect(statuses).toEqual([false, true, false]);
+      });
+    });
+
+    describe('#isActive', () => {
+      const ASYNC_DELAY = 10;
+
+      describe('Immediate', () => {
+        it('stays true across multiple activities (F, T, F)', async () => {
+          const statuses: boolean[] = [];
+          const svc = createService<void, string, Error>(
+            'isActive-immediate',
+            bus,
+            () => after(ASYNC_DELAY, '3.14')
+          );
+
+          svc.isActive.subscribe((s) => statuses.push(s));
+          expect(statuses).toEqual([false]);
+
+          svc();
+          expect(statuses).toEqual([false]);
+          await Promise.resolve();
+          expect(statuses).toEqual([false, true]);
+
+          //
+          svc();
+          expect(statuses).toEqual([false, true]);
+          await after(ASYNC_DELAY * 3);
+
+          expect(statuses).toEqual([false, true, false]); // YAY!
+        });
+      });
+
+      describe('Queueing', () => {
+        it('stays true across multiple activities (F, T, F)', async () => {
+          const statuses: boolean[] = [];
+          const svc = createQueueingService<void, string, Error>(
+            'isActive-immediate',
+            bus,
+            () => after(ASYNC_DELAY, '3.14')
+          );
+
+          svc.isActive.subscribe((s) => statuses.push(s));
+          expect(statuses).toEqual([false]);
+
+          svc();
+          expect(statuses).toEqual([false]);
+          await Promise.resolve();
+          expect(statuses).toEqual([false, true]);
+
+          //
+          svc();
+          expect(statuses).toEqual([false, true]);
+          await after(ASYNC_DELAY * 3);
+
+          expect(statuses).toEqual([false, true, false]); // YAY!
+        });
+      });
+
+      describe('Replacing', () => {
+        it('stays true across multiple activities (F, T, F)', async () => {
+          const statuses: boolean[] = [];
+          const svc = createReplacingService<void, string, Error>(
+            'isActive-replacing',
+            bus,
+            () => after(ASYNC_DELAY, '3.14')
+          );
+
+          svc.isActive.subscribe((s) => statuses.push(s));
+          expect(statuses).toEqual([false]);
+
+          svc();
+          expect(statuses).toEqual([false]);
+          await Promise.resolve();
+          expect(statuses).toEqual([false, true]);
+
+          //
+          svc();
+          expect(statuses).toEqual([false, true]);
+          await after(ASYNC_DELAY * 3);
+
+          expect(statuses).toEqual([false, true, false]); // YAY!
+        });
+      });
+
+      describe('Blocking', () => {
+        it('stays true across multiple activities (F, T, F)', async () => {
+          const statuses: boolean[] = [];
+          const svc = createReplacingService<void, string, Error>(
+            'isActive-blocking',
+            bus,
+            () => after(ASYNC_DELAY, '3.14')
+          );
+
+          svc.isActive.subscribe((s) => statuses.push(s));
+          expect(statuses).toEqual([false]);
+
+          svc();
+          expect(statuses).toEqual([false]);
+          await Promise.resolve();
+          expect(statuses).toEqual([false, true]);
+
+          //
+          svc();
+          expect(statuses).toEqual([false, true]);
+          await after(ASYNC_DELAY * 3);
+
+          expect(statuses).toEqual([false, true, false]); // YAY!
+        });
+      });
+      describe('Toggling', () => {
+        it('stays true across multiple activities (F, T, F)', async () => {
+          const statuses: boolean[] = [];
+          const svc = createTogglingService<void, string, Error>(
+            'isActive-toggling',
+            bus,
+            () => after(ASYNC_DELAY, '3.14')
+          );
+
+          svc.isActive.subscribe((s) => statuses.push(s));
+          expect(statuses).toEqual([false]);
+
+          svc();
+          expect(statuses).toEqual([false]);
+          await Promise.resolve();
+          expect(statuses).toEqual([false, true]);
+
+          //
+          svc();
+          expect(statuses).toEqual([false, true]);
+          await after(ASYNC_DELAY * 3);
+
+          expect(statuses).toEqual([false, true, false]); // YAY!
+        });
       });
     });
 
@@ -344,7 +573,7 @@ describe('createService', () => {
 
           qService.cancelCurrentAndQueued();
 
-          expect(qService.isActive.value).toBeFalsy();
+          expect(qService.isHandling.value).toBeFalsy();
           qService(3);
 
           // long enough to see completion

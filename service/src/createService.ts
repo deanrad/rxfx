@@ -1,7 +1,7 @@
 // prettier-ignore
 import { BehaviorSubject, EMPTY, firstValueFrom, from, Observable, Subscription } from 'rxjs';
 // prettier-ignore
-import { concatMap, distinctUntilChanged, endWith, exhaustMap, map, mergeMap, scan, switchMap, takeUntil } from 'rxjs/operators';
+import { concatMap, debounce, distinctUntilChanged, endWith, exhaustMap, map, mergeMap, scan, switchMap, takeUntil } from 'rxjs/operators';
 
 import { Action, ActionCreator, actionCreatorFactory } from 'typescript-fsa';
 
@@ -22,12 +22,6 @@ export interface ActionCreators<TRequest, TNext, TError> {
   complete: ActionCreator<void>;
   canceled: ActionCreator<void>;
 }
-
-/** Helpful, optional interface to differentiate service actions. */
-export interface HasSubtype<T = string> {
-  subtype: T;
-}
-
 interface Stoppable {
   /** Terminates the listener, any of its Observable handlings.
    * @returns The closed subscription.
@@ -80,6 +74,8 @@ export interface Service<TRequest, TNext, TError, TState>
   /** An Observable of just the events of this service on the bus */
   events: Observable<Action<void | TRequest | TNext | TError>>;
   /** Indicates whether a handling is in progress. Use `.value`, or `subscribe()` for updates.  */
+  isHandling: BehaviorSubject<boolean>;
+  /** Becomes false the Promise after isHandling becomes false, when no more requests are scheduled to start. */
   isActive: BehaviorSubject<boolean>;
   /** Uses the reducer to aggregate the events that are produced from its handlers, emitting a new state for each action (de-duping is not done). Use `.value`, or `subscribe()` for updates. */
   state: BehaviorSubject<TState>;
@@ -132,29 +128,46 @@ export function createService<TRequest, TNext, TError, TState = object>(
     canceled: namespacedAction<void>('canceled'),
   };
 
+  const allSubscriptions = new Subscription();
+
+  const isHandling = new BehaviorSubject(false);
+  allSubscriptions.add(
+    bus
+      .query(matchesAny(ACs.started, ACs.error, ACs.complete, ACs.canceled))
+      .pipe(
+        scan((all, e) => all + (ACs.started.match(e) ? 1 : -1), 0),
+        map(Boolean),
+        distinctUntilChanged(),
+        endWith(false)
+      )
+      .subscribe(isHandling)
+  );
+
   const isActive = new BehaviorSubject(false);
-  const isActiveSub = bus
-    .query(matchesAny(ACs.started, ACs.error, ACs.complete, ACs.canceled))
-    .pipe(
-      scan((all, e) => all + (ACs.started.match(e) ? 1 : -1), 0),
-      map(Boolean),
-      distinctUntilChanged(),
-      endWith(false)
-    )
-    .subscribe(isActive);
+  allSubscriptions.add(
+    isHandling
+      .asObservable()
+      .pipe(
+        debounce(() => Promise.resolve()),
+        distinctUntilChanged()
+      )
+      .subscribe(isActive)
+  );
 
   const reducer = reducerProducer(ACs);
   const state = new BehaviorSubject<TState>(
     // @ts-ignore // RTK reducers use this style
     reducer.getInitialState ? reducer.getInitialState() : reducer()
   );
-  const stateSub = bus
-    .query(matchesAny(...Object.values(ACs)))
-    .pipe(
-      scan((all, e) => reducer(all, e), state.value),
-      distinctUntilChanged()
-    )
-    .subscribe(state);
+  allSubscriptions.add(
+    bus
+      .query(matchesAny(...Object.values(ACs)))
+      .pipe(
+        scan((all, e) => reducer(all, e), state.value),
+        distinctUntilChanged()
+      )
+      .subscribe(state)
+  );
 
   let cancelCounter = new BehaviorSubject<number>(0);
 
@@ -191,8 +204,8 @@ export function createService<TRequest, TNext, TError, TState = object>(
     }) as Observable<TNext>;
   };
 
-  /** The main subscription of this service */
-  const sub = bus.listen(
+  /** The main bus listener of this service */
+  const mainListener = bus.listen(
     ACs.request.match,
     wrappedHandler,
     bus.observeWith({
@@ -213,15 +226,14 @@ export function createService<TRequest, TNext, TError, TState = object>(
   // Enhance and return
   const controls: Stoppable = {
     stop() {
-      sub.unsubscribe();
-      isActiveSub.unsubscribe(); // flow no more values to it
-      isActive.complete(); // make isStopped = true
-      stateSub.unsubscribe(); // flow no more values to it
+      mainListener.unsubscribe();
+      allSubscriptions.unsubscribe();
+      isHandling.complete(); // make isStopped = true
       state.complete(); // make isStopped = true
-      return sub;
+      return allSubscriptions;
     },
     addTeardown(teardownFn: Subscription['add']) {
-      sub.add(teardownFn);
+      allSubscriptions.add(teardownFn);
     },
     cancelCurrent() {
       bus.trigger(ACs.cancel());
@@ -232,6 +244,7 @@ export function createService<TRequest, TNext, TError, TState = object>(
     },
   };
   const returnValue = Object.assign(requestor, { actions: ACs }, controls, {
+    isHandling,
     isActive,
     state,
     bus,
