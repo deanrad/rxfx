@@ -378,8 +378,6 @@ describe('createService', () => {
           expect(statuses).toEqual([false]);
 
           svc();
-          expect(statuses).toEqual([false]);
-          await Promise.resolve();
           expect(statuses).toEqual([false, true]);
 
           //
@@ -404,8 +402,6 @@ describe('createService', () => {
           expect(statuses).toEqual([false]);
 
           svc();
-          expect(statuses).toEqual([false]);
-          await Promise.resolve();
           expect(statuses).toEqual([false, true]);
 
           //
@@ -430,8 +426,6 @@ describe('createService', () => {
           expect(statuses).toEqual([false]);
 
           svc();
-          expect(statuses).toEqual([false]);
-          await Promise.resolve();
           expect(statuses).toEqual([false, true]);
 
           //
@@ -456,8 +450,6 @@ describe('createService', () => {
           expect(statuses).toEqual([false]);
 
           svc();
-          expect(statuses).toEqual([false]);
-          await Promise.resolve();
           expect(statuses).toEqual([false, true]);
 
           //
@@ -481,8 +473,6 @@ describe('createService', () => {
           expect(statuses).toEqual([false]);
 
           svc();
-          expect(statuses).toEqual([false]);
-          await Promise.resolve();
           expect(statuses).toEqual([false, true]);
 
           //

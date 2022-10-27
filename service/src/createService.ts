@@ -1,7 +1,7 @@
 // prettier-ignore
-import { BehaviorSubject, EMPTY, firstValueFrom, from, Observable, Subscription } from 'rxjs';
+import { BehaviorSubject, EMPTY, firstValueFrom, from, Observable, of, Subscription } from 'rxjs';
 // prettier-ignore
-import { concatMap, debounce, distinctUntilChanged, endWith, exhaustMap, map, mergeMap, scan, switchMap, takeUntil } from 'rxjs/operators';
+import { concatMap, distinctUntilChanged, endWith, exhaustMap, map, mergeMap, scan, switchMap, takeUntil } from 'rxjs/operators';
 
 import { Action, ActionCreator, actionCreatorFactory } from 'typescript-fsa';
 
@@ -148,7 +148,7 @@ export function createService<TRequest, TNext, TError, TState = object>(
     isHandling
       .asObservable()
       .pipe(
-        debounce(() => Promise.resolve()),
+        switchMap((status) => (status ? of(status) : Promise.resolve(status))),
         distinctUntilChanged()
       )
       .subscribe(isActive)
