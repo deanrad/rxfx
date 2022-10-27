@@ -2,10 +2,12 @@
 // @ts-ignore // i cant workspace :)
 import { toggleMap } from '@rxfx/operators';
 import {
+  BehaviorSubject,
   EMPTY,
   from,
   Observable,
   ObservableInput,
+  of,
   OperatorFunction,
   PartialObserver,
   Subject,
@@ -16,11 +18,15 @@ import {
 import {
   catchError,
   concatMap,
+  
+  distinctUntilChanged,
   exhaustMap,
   filter,
   first,
+  map,
   mergeMap,
   retry,
+  scan,
   switchMap,
   takeUntil,
   tap,
@@ -186,13 +192,16 @@ export class Bus<TBusItem> {
     handler: ResultCreator<TMatchType, TConsequence>,
     observer?: TapObserver<TConsequence>,
     operator = mergeMap
-  ) {
+  ): Subscription & { isActive: BehaviorSubject<boolean> } {
     /* A listener is basically: 
       this.channel.pipe(
         filter(matcher),
         combiner(errWrappedHandler)
       ).subscribe(errorNotifier);
     */
+    const activityCounter = new Subject<number>();
+    const isActive = new BehaviorSubject<boolean>(false);
+
     // @ts-ignore dynamic
     const consequences = this.query(matcher).pipe(
       operator((event) => {
@@ -202,8 +211,18 @@ export class Bus<TBusItem> {
         // @ts-ignore
         const errorCallback = observer?.error;
         const errLessObserver = { ...observer, error: undefined };
+
+        // prettier-ignore
+        const activityObserver = {
+          subscribe() { activityCounter.next(1); },
+          complete() { activityCounter.next(-1); },
+          error() { activityCounter.next(-1); },
+          unsubscribe() { activityCounter.next(-1); },
+        };
+
         const pipes: OperatorFunction<TConsequence, unknown>[] = [
           tap(errLessObserver),
+          tap(activityObserver),
         ];
         if (errorCallback) {
           pipes.push(
@@ -222,7 +241,21 @@ export class Bus<TBusItem> {
         this.errors.next(e);
       },
     };
-    return consequences.subscribe(errorNotifier);
+    const sub = consequences.subscribe(errorNotifier);
+    sub.add(
+      activityCounter
+        .pipe(
+          scan((all, inc) => all + inc, 0),
+          map(Boolean),
+          // Spare saying 'false' until we've flushed any pending handlings
+          switchMap((status) =>
+            status ? of(status) : Promise.resolve(status)
+          ),
+          distinctUntilChanged()
+        )
+        .subscribe(isActive)
+    );
+    return Object.assign(sub, { isActive });
   }
 
   /** Triggers effects upon matching events, using a Queueing Concurrency Strategy.

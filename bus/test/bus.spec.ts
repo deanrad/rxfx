@@ -5,6 +5,7 @@ import {
   concat,
   empty,
   EMPTY,
+  Observable,
   of,
   throwError,
   timer,
@@ -444,6 +445,61 @@ describe('Bus', () => {
     describe('Observer', () => {
       it.todo('contains callbacks attached to the handler lifecycle');
     });
+    describe('Return value', () => {
+      it.todo('is a Subscription');
+      it('has an isActive BehaviorSubject', async () => {
+        const DELAY = 10;
+        const delayedTaxBus = new Bus();
+        const taxResolver = delayedTaxBus.listen(
+          () => true,
+          (n) => {
+            return after(DELAY, n * 1.05);
+          }
+        );
+        const activities = [];
+        taxResolver.isActive.subscribe((isActive) => {
+          activities.push(isActive);
+        });
+        expect(taxResolver.isActive.value).toBeFalsy();
+        delayedTaxBus.trigger(100);
+
+        expect(taxResolver.isActive.value).toBeTruthy();
+        expect(activities).toEqual([false, true]);
+        await after(DELAY);
+        expect(taxResolver.isActive.value).toBeFalsy();
+        expect(activities).toEqual([false, true, false]);
+      });
+
+      it('works even with multiple handlings', async () => {
+        const DELAY = 100;
+        const delayedTaxBus = new Bus();
+        // Immediate concurrency mode
+        const taxResolver = delayedTaxBus.listenSwitching(
+          () => true,
+          (n) => {
+            return after(DELAY, n * 1.05);
+          }
+        );
+        const activities = [];
+        taxResolver.isActive.subscribe((isActive) => {
+          activities.push(isActive);
+        });
+
+        delayedTaxBus.trigger(100);
+
+        // immediately a yes
+        expect(taxResolver.isActive.value).toBeTruthy();
+        await after(DELAY * 0.5);
+        // trigger 2nd, overlapping handling
+        delayedTaxBus.trigger(100);
+        await after(DELAY * 0.6);
+        expect(taxResolver.isActive.value).toBeTruthy();
+        await after(DELAY * 0.6);
+        expect(taxResolver.isActive.value).toBeFalsy();
+        expect(activities).toEqual([false, true, false]);
+      });
+    });
+
     describe('triggering synchronously from within a listener', () => {
       it('preserves listener order', () => {
         const heardViaEarlyListen = [];
@@ -480,6 +536,7 @@ describe('Bus', () => {
         expect(heardViaLateListen).toEqual([1, 2]);
         sub.unsubscribe();
       });
+
       it('via after(0), ', async () => {
         const heardViaEarlyListen = [];
         const heardViaLateListen = [];
@@ -518,6 +575,7 @@ describe('Bus', () => {
       });
     });
   });
+
   describe('#listenQueueing (same signature as #listen, but with concatMap)', () => {
     it('serializes execution', async () => {
       const calls = [];
@@ -539,6 +597,7 @@ describe('Bus', () => {
       ]);
     });
   });
+
   describe('#listenSwitching (same signature as #listen, but with switchMap)', () => {
     it('cancels existing, and starts a new Subscription', async () => {
       const calls = [];
@@ -561,6 +620,7 @@ describe('Bus', () => {
       ]);
     });
   });
+
   describe('#listenBlocking (same signature as #listen, but with exhaustMap)', () => {
     it('cancels existing, and starts a new Subscription', async () => {
       const calls = [];
@@ -580,6 +640,26 @@ describe('Bus', () => {
         'start:1',
         'done:1',
       ]);
+    });
+  });
+
+  describe('#listenToggling (same signature as #listen, but with toggleMap)', () => {
+    it('calls listen', async () => {
+      let on: boolean = false;
+
+      //prettier-ignore
+      miniBus.listenToggling(
+        () => true,
+        () => new Observable(() => { 
+          on=true;
+          return () => on=false;
+        })
+      );
+
+      miniBus.trigger();
+      expect(on).toBeTruthy();
+      miniBus.trigger();
+      expect(on).toBeFalsy();
     });
   });
 
@@ -605,6 +685,7 @@ describe('Bus', () => {
           expect(seen).toEqual(['foo']);
         });
       });
+
       describe('Rescued', () => {
         it('continues listening', () => {
           const seen = [];
@@ -633,6 +714,7 @@ describe('Bus', () => {
         });
       });
     });
+
     it('does not insert a tick between each trigger', async () => {
       const seen = [];
       const micro = new Bus<number>();
@@ -669,6 +751,7 @@ describe('Bus', () => {
       // and our listener is forever closed
       expect(listener).toHaveProperty('closed', true);
     });
+
     it(
       'ends all handlers',
       capturing(miniBus, async (events) => {
