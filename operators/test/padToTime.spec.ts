@@ -1,4 +1,4 @@
-import { concat, timer } from 'rxjs';
+import { concat, from, timer } from 'rxjs';
 import { padToTime } from '../src/padToTime';
 import { after } from './util/after';
 
@@ -44,9 +44,7 @@ describe('padToTime', () => {
         // prettier-ignore
         const observe = {next: v => {seen.push(v)} };
 
-        const subject = concat(after(0, 1.1), after(0, 2.2)).pipe(
-          padToTime(PAD_TIME)
-        );
+        const subject = from([1.1, 2.2]).pipe(padToTime(PAD_TIME));
         const subs = subject.subscribe(observe);
         expect(seen).toEqual([]);
 
