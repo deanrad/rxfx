@@ -13,13 +13,17 @@ export type ProcessLifecycleEvent =
 export interface ProcessEvents<TRequest, TNext, TError> {
   /** invokes the service */
   request: ActionCreator<TRequest>;
-  /** cancels the current invocation of the service */
+  /** cancels the current invocation  */
   cancel: ActionCreator<void>;
-  /** cancels the current invocation of the service */
+  /** an invocation has begun */
   started: ActionCreator<void>;
+  /** an invocation has produced data */
   next: ActionCreator<TNext>;
+  /** an invocation has terminated with an error */
   error: ActionCreator<TError>;
+  /** an invocation has terminated successfully */
   complete: ActionCreator<void>;
+  /** an invocation was canceled by a subscriber */
   canceled: ActionCreator<void>;
 }
 
