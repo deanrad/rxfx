@@ -18,7 +18,6 @@ import {
 import {
   catchError,
   concatMap,
-  
   distinctUntilChanged,
   exhaustMap,
   filter,
@@ -37,7 +36,7 @@ import {
 export type Predicate<T> = (item: T) => boolean;
 
 /** A function accepting an item and returning a value, an Observable constructor, an ObservableInput, or void */
-export type ResultCreator<T, TConsequence> = (
+export type EventHandler<T, TConsequence> = (
   item: T
 ) =>
   | ((
@@ -189,7 +188,7 @@ export class Bus<TBusItem> {
    */
   public listen<TConsequence, TMatchType extends TBusItem = TBusItem>(
     matcher: ((i: TBusItem) => i is TMatchType) | ((i: TBusItem) => boolean),
-    handler: ResultCreator<TMatchType, TConsequence>,
+    handler: EventHandler<TMatchType, TConsequence>,
     observer?: TapObserver<TConsequence>,
     operator = mergeMap
   ): Subscription & { isActive: BehaviorSubject<boolean> } {
@@ -267,7 +266,7 @@ export class Bus<TBusItem> {
    */
   public listenQueueing<TConsequence, TMatchType extends TBusItem = TBusItem>(
     matcher: ((i: TBusItem) => i is TMatchType) | ((i: TBusItem) => boolean),
-    handler: ResultCreator<TMatchType, TConsequence>,
+    handler: EventHandler<TMatchType, TConsequence>,
     observer?: TapObserver<TConsequence>
   ) {
     return this.listen(matcher, handler, observer, concatMap);
@@ -282,7 +281,7 @@ export class Bus<TBusItem> {
    */
   public listenSwitching<TConsequence, TMatchType extends TBusItem = TBusItem>(
     matcher: ((i: TBusItem) => i is TMatchType) | ((i: TBusItem) => boolean),
-    handler: ResultCreator<TMatchType, TConsequence>,
+    handler: EventHandler<TMatchType, TConsequence>,
     observer?: TapObserver<TConsequence>
   ) {
     return this.listen(matcher, handler, observer, switchMap);
@@ -297,7 +296,7 @@ export class Bus<TBusItem> {
    */
   public listenBlocking<TConsequence, TMatchType extends TBusItem = TBusItem>(
     matcher: ((i: TBusItem) => i is TMatchType) | ((i: TBusItem) => boolean),
-    handler: ResultCreator<TMatchType, TConsequence>,
+    handler: EventHandler<TMatchType, TConsequence>,
     observer?: TapObserver<TConsequence>
   ) {
     return this.listen(matcher, handler, observer, exhaustMap);
@@ -312,7 +311,7 @@ export class Bus<TBusItem> {
    */
   public listenToggling<TConsequence, TMatchType extends TBusItem = TBusItem>(
     matcher: ((i: TBusItem) => i is TMatchType) | ((i: TBusItem) => boolean),
-    handler: ResultCreator<TMatchType, TConsequence>,
+    handler: EventHandler<TMatchType, TConsequence>,
     observer?: TapObserver<TConsequence>
   ) {
     // @ts-ignore
@@ -323,8 +322,9 @@ export class Bus<TBusItem> {
    * Throwing an exception will raise to the triggerer, but not terminate the guard.*/
   public guard<TMatchType extends TBusItem = TBusItem>(
     matcher: ((i: TBusItem) => i is TMatchType) | ((i: TBusItem) => boolean),
-    fn: (item: TBusItem) => void
+    fn: (item: TMatchType) => void
   ) {
+    // @ts-ignore
     this.guards.push([matcher, fn]);
     return this.createRemovalSub(matcher, fn, this.guards);
   }
@@ -333,8 +333,9 @@ export class Bus<TBusItem> {
    * Throwing an exception will raise to the triggerer, but not terminate the guard.*/
   public filter<TMatchType extends TBusItem = TBusItem>(
     matcher: ((i: TBusItem) => i is TMatchType) | ((i: TBusItem) => boolean),
-    fn: (item: TBusItem) => TBusItem | null | undefined
+    fn: (item: TMatchType) => TBusItem | null | undefined
   ) {
+    // @ts-ignore
     this.filters.push([matcher, fn]);
     return this.createRemovalSub(matcher, fn, this.filters);
   }
@@ -391,7 +392,7 @@ export class Bus<TBusItem> {
   }
 
   private getHandlingResult<TConsequence>(
-    handler: ResultCreator<TBusItem, TConsequence>,
+    handler: EventHandler<TBusItem, TConsequence>,
     event: TBusItem
   ) {
     const oneResult = handler(event);
