@@ -485,6 +485,29 @@ describe('createService', () => {
       });
     });
 
+    describe('#currentError', () => {
+      const ex = new Error('foo');
+
+      it('gets set upon an error, cleared the next start', async () => {
+        let i = 0;
+        const svc = createService<void, string, Error>('err', bus, () => {
+          if (i++ === 0) {
+            return Promise.reject(ex);
+          }
+          return of('no error');
+        });
+
+        expect(svc.currentError.value).toBeNull();
+        svc.request();
+        await after(Promise.resolve());
+        expect(svc.currentError.value).toEqual(ex);
+        svc.request();
+        expect(svc.currentError.value).toBeNull();
+        await after(Promise.resolve());
+        expect(svc.currentError.value).toBeNull();
+      });
+    });
+
     describe('#bus', () => {
       it('refers to the bus it was created with', () => {
         const stateService = createService(testNamespace, bus, handler);

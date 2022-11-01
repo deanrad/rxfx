@@ -77,6 +77,8 @@ export interface Service<TRequest, TNext, TError, TState>
   isHandling: BehaviorSubject<boolean>;
   /** Becomes false the Promise after isHandling becomes false, when no more requests are scheduled to start. */
   isActive: BehaviorSubject<boolean>;
+  /** Contains the last error object, but becomes `null` at the start of the next handling. */
+  currentError: BehaviorSubject<TError | null>;
   /** Uses the reducer to aggregate the events that are produced from its handlers, emitting a new state for each action (de-duping is not done). Use `.value`, or `subscribe()` for updates. */
   state: BehaviorSubject<TState>;
   /** An untyped reference to the bus this service listens and triggers on */
@@ -152,6 +154,14 @@ export function createService<TRequest, TNext, TError, TState = object>(
         distinctUntilChanged()
       )
       .subscribe(isActive)
+  );
+
+  const currentError = new BehaviorSubject<TError | null>(null);
+  allSubscriptions.add(
+    bus
+      .query(matchesAny(ACs.error, ACs.started))
+      .pipe(map((e) => (ACs.error.match(e) ? e.payload : null)))
+      .subscribe(currentError)
   );
 
   const reducer = reducerProducer(ACs);
@@ -246,6 +256,7 @@ export function createService<TRequest, TNext, TError, TState = object>(
   const returnValue = Object.assign(requestor, { actions: ACs }, controls, {
     isHandling,
     isActive,
+    currentError,
     state,
     bus,
     namespace: actionNamespace,
