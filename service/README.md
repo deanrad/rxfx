@@ -22,9 +22,10 @@ const asyncCounter = createQueueingService<void, void, Error, number>(
 
 asyncCounter(); /* request a count (will complete after 1000 msec) */
 
-asyncCounter.state.subscribe(count:number => /* update your UI state */)
-asyncCounter.isActive.subscribe(isActive:boolean => /* update your UI state */)
-asyncCounter.responses.subscribe(resp:undefined => /* consume returned values of the effect */)
+asyncCounter.state.subscribe(count:number => /* update your UI non-transient state */)
+asyncCounter.isActive.subscribe(isActive:boolean => /* update your UI loading state */)
+asyncCounter.currentError.subscribe(e:Error => /* update your UI error state */)
+asyncCounter.responses.subscribe(resp => /* consume returned values of the effect */)
 asyncCounter.errors.subscribe(err:Error => /* consume returned errors of the effect */)
 
 asyncCounter.cancelCurrent() /* cancel the effect - eg upon route change */ 
