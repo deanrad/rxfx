@@ -8,7 +8,6 @@ import { useService } from '../src/serviceHooks';
 
 const defaultBus = new Bus<Action<any>>();
 const reducer = (c = 1.1, { type } = { type: '' }) => {
-  console.error({ type });
   return type === 'counter/request' ? c + 1 : c;
 };
 const testService = createService(
@@ -19,15 +18,18 @@ const testService = createService(
 );
 
 const Wrapper = () => {
-  const { request, state, isActive } = useService(testService);
+  const { request, state, isActive, currentError } = useService(testService);
   return React.createElement('div', {}, [
     React.createElement('input', {
       'data-testid': 'count',
-      readonly: true,
+      type: 'text',
+      key: 'count',
+      readOnly: true,
       value: state,
     }),
     React.createElement('button', {
       'data-testid': 'increment',
+      key: 'increment',
       onClick: () => {
         request();
       },
@@ -38,12 +40,12 @@ const Wrapper = () => {
 describe('useService', () => {
   it('is a hook function', async () => {
     const result = render(React.createElement(Wrapper));
-    const cnt = await result.findByTestId('count');
-    const btn = await result.findByTestId('increment');
+    const cnt = result.getByTestId('count');
+    const btn = result.getByTestId('increment');
     expect(cnt).toHaveProperty('value', '1.1');
   });
   describe('return value', () => {
-    it.todo('is [request, state, isActive]');
+    it.todo('is [request, state, isActive, currentError]');
   });
   it.todo('subscribes to #state and #isActive');
 });
