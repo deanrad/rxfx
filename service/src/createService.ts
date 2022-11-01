@@ -6,7 +6,7 @@ import { concatMap, distinctUntilChanged, endWith, exhaustMap, map, mergeMap, sc
 import { Action, ActionCreator, actionCreatorFactory } from 'typescript-fsa';
 
 import { Bus } from '@rxfx/bus';
-import type { ResultCreator } from '@rxfx/bus';
+import type { EventHandler } from '@rxfx/bus';
 
 import { toggleMap } from '@rxfx/operators';
 
@@ -109,7 +109,7 @@ export function matchesAny(...acs: ActionCreator<any>[]) {
 export function createService<TRequest, TNext, TError, TState = object>(
   actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
-  handler: ResultCreator<TRequest, TNext>,
+  handler: EventHandler<TRequest, TNext>,
   reducerProducer: (
     acs?: ActionCreators<TRequest, TNext, TError>
   ) => (state: TState, action: Action<any>) => TState = () =>
@@ -290,7 +290,7 @@ export function createService<TRequest, TNext, TError, TState = object>(
 export function createQueueingService<TRequest, TNext, TError, TState = object>(
   actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
-  handler: ResultCreator<TRequest, TNext>,
+  handler: EventHandler<TRequest, TNext>,
   reducerProducer: (
     acs?: ActionCreators<TRequest, TNext, TError>
   ) => (state: TState, action: Action<any>) => TState = () =>
@@ -325,7 +325,7 @@ export function createReplacingService<
 >(
   actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
-  handler: ResultCreator<TRequest, TNext>,
+  handler: EventHandler<TRequest, TNext>,
   reducerProducer: (
     acs?: ActionCreators<TRequest, TNext, TError>
   ) => (state: TState, action: Action<any>) => TState = () =>
@@ -355,7 +355,7 @@ export function createReplacingService<
 export function createBlockingService<TRequest, TNext, TError, TState = object>(
   actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
-  handler: ResultCreator<TRequest, TNext>,
+  handler: EventHandler<TRequest, TNext>,
   reducerProducer: (
     acs?: ActionCreators<TRequest, TNext, TError>
   ) => (state: TState, action: Action<any>) => TState = () =>
@@ -385,7 +385,7 @@ export function createBlockingService<TRequest, TNext, TError, TState = object>(
 export function createTogglingService<TRequest, TNext, TError, TState = object>(
   actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
-  handler: ResultCreator<TRequest, TNext>,
+  handler: EventHandler<TRequest, TNext>,
   reducerProducer: (
     acs?: ActionCreators<TRequest, TNext, TError>
   ) => (state: TState, action: Action<any>) => TState = () =>
