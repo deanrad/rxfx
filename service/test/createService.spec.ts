@@ -1,4 +1,4 @@
-import { concat, of, throwError } from 'rxjs';
+import { concat, Observable, of, throwError } from 'rxjs';
 import { Action } from 'typescript-fsa';
 
 import { Bus } from '@rxfx/bus';
@@ -12,6 +12,8 @@ import {
   createTogglingService,
 } from '../src/createService';
 
+import type { ProcessLifecycleCallbacks } from '../src/types';
+
 describe('createService', () => {
   const testNamespace = 'testService';
   const bus = new Bus<Action<any>>();
@@ -22,6 +24,7 @@ describe('createService', () => {
   beforeEach(() => {
     bus.reset(); // stops existing services, handlings
   });
+  const counterReducer = (s = 0, e) => (e ? s + 1 : s);
 
   it('triggers a request to the bus when called', () => {
     const seen = eventsOf(bus);
@@ -179,6 +182,51 @@ describe('createService', () => {
         expect(seenStates).toEqual([{ constants: [] }, { constants: [] }]);
 
         expect(stateService.state.value).toEqual({ constants: [] });
+      });
+
+      it('continues reducing after an error, alerting bus.errors', async () => {
+        const seenErrors: any[] = [];
+
+        let hasThrown = false;
+        const throwingReducer =
+          (ACs) =>
+          (state = 0, e) => {
+            if (!e) return state;
+            if (ACs.request.match(e)) {
+              if (state !== 1 || hasThrown) {
+                return state + 1;
+              }
+              hasThrown = true;
+              throw new Error('oops');
+            }
+            return state;
+          };
+
+        const stateService = createService<void, void, Error, number>(
+          testNamespace,
+          bus,
+          () => after(0),
+          throwingReducer
+        );
+        bus.errors.subscribe((e) => seenErrors.push(e));
+
+        expect(stateService.state.value).toBe(0);
+        expect(seenErrors).toHaveLength(0);
+
+        stateService();
+        expect(stateService.state.value).toBe(1);
+
+        // errors: return the same state, send to bus.errors, resume
+        stateService();
+        expect(stateService.state.value).toBe(1);
+        expect(seenErrors).toMatchInlineSnapshot(`
+          [
+            [Error: oops],
+          ]
+        `);
+        // continues to reduce
+        stateService();
+        expect(stateService.state.value).toBe(2);
       });
     });
 
@@ -637,10 +685,70 @@ describe('createService', () => {
         expect(testService.errors).toBeDefined();
       });
     });
+
     describe('#responses', () => {
       it('notifies of /next events', () => {
         expect(testService.responses).toBeDefined();
       });
+    });
+
+    describe('#observe', () => {
+      const spies: ProcessLifecycleCallbacks<void, string, Error> = {
+        request: jest.fn(),
+        started: jest.fn(),
+        next: jest.fn(),
+        complete: jest.fn(),
+        cancel: jest.fn(),
+        canceled: jest.fn(),
+        error: jest.fn(),
+      };
+
+      it('Handles lifecycle events with callbacks', async () => {
+        let req = 0;
+        const maybeThrow = new Observable<string>((notify) => {
+          req++;
+          if (req === 2) {
+            notify.error('fuuu');
+            return;
+          }
+          notify.next(`req-${req}`);
+          notify.complete();
+        });
+
+        const counterService = createService<void, string, Error, number>(
+          'xxx',
+          bus,
+          () => after(1, maybeThrow),
+          () => counterReducer
+        );
+        counterService.observe(spies);
+
+        // trigger
+        counterService.request(); // req 0
+
+        expect(spies.request).toHaveBeenCalledWith(undefined);
+        expect(spies.started).toHaveBeenCalled();
+        await after(1);
+
+        expect(spies.next).toHaveBeenCalledWith('req-1');
+        expect(spies.complete).toHaveBeenCalledTimes(1);
+
+        // cancelation (only gets cancel, not canceled atm)
+        counterService.request(); // req 1
+        counterService.cancelCurrent();
+        expect(spies.cancel).toHaveBeenCalled();
+        // XXX currently cancel triggers complete - not canceled
+        expect(spies.complete).toHaveBeenCalledTimes(2);
+
+        // still workin
+        counterService.request();
+        await after(1);
+
+        // error
+        counterService.request(); // req 2
+        expect(spies.error).toHaveBeenCalledWith('fuuu');
+      });
+      it.todo('doesnt stop the service sub if it errors');
     });
   });
 
@@ -693,29 +801,30 @@ describe('createService', () => {
   });
 
   it('triggers events from observable handlers, even when they error', async () => {
-    const seen = eventsOf(bus);
+    const seen = [];
     testService = createService<string, string, Error>(testNamespace, bus, () =>
       throwError(() => new Error('dang!'))
     );
+    testService.events.subscribe((e) => seen.push(e));
     testService('foo');
     await after(100);
-    expect(seen).toHaveLength(3);
-
-    expect(seen[0]).toEqual(
-      expect.objectContaining(testService.actions.request('foo'))
-    );
-    expect(seen[1]).toEqual(
-      expect.objectContaining(testService.actions.started())
-    );
-    expect(seen[2]).toEqual(
-      expect.objectContaining(testService.actions.error(new Error('dang!')))
-    );
-
-    expect(seen).toEqual([
-      expect.objectContaining(testService.actions.request('foo')),
-      expect.objectContaining(testService.actions.started()),
-      expect.objectContaining(testService.actions.error(new Error('dang!'))),
-    ]);
+    expect(seen).toMatchInlineSnapshot(`
+      [
+        {
+          "payload": "foo",
+          "type": "testService/request",
+        },
+        {
+          "payload": undefined,
+          "type": "testService/started",
+        },
+        {
+          "error": true,
+          "payload": [Error: dang!],
+          "type": "testService/error",
+        },
+      ]
+    `);
   });
 
   describe('createQueueingService', () => {

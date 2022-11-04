@@ -1,7 +1,7 @@
 // prettier-ignore
-import { BehaviorSubject, EMPTY, firstValueFrom, from, Observable, of, Subscription } from 'rxjs';
+import { BehaviorSubject, EMPTY, firstValueFrom, from, merge, Observable, Observer, of, Subscription } from 'rxjs';
 // prettier-ignore
-import { concatMap, distinctUntilChanged, endWith, exhaustMap, map, mergeMap, scan, switchMap, takeUntil } from 'rxjs/operators';
+import { concatMap, distinctUntilChanged, endWith, exhaustMap, map, mergeMap, scan, switchMap, takeUntil, tap } from 'rxjs/operators';
 
 import { Action, ActionCreator, actionCreatorFactory } from 'typescript-fsa';
 
@@ -9,6 +9,7 @@ import { Bus } from '@rxfx/bus';
 import type { EventHandler } from '@rxfx/bus';
 
 import { toggleMap } from '@rxfx/operators';
+import { ProcessLifecycleCallbacks } from './types';
 
 /** A standardized convention of actions this service listens to, and responsds with. */
 export interface ActionCreators<TRequest, TNext, TError> {
@@ -42,10 +43,33 @@ interface Stoppable {
   addTeardown(teardownFn: Subscription['add']): void;
 }
 
-interface Queryable<TReq, TRes, TErr = Error> {
-  send(arg: TReq): Promise<TRes>;
-  errors: Observable<Action<TErr>>;
-  responses: Observable<TRes>;
+interface Queryable<TRequest, TNext, TError, TState> {
+  /** An Observable of just the values of this service */
+  responses: Observable<Action<TNext>>;
+  /** An Observable of just the error events of this service */
+  errors: Observable<Action<TError>>;
+  /** Uses the reducer to aggregate the events that are produced from its handlers, emitting a new state for each action (de-duping is not done). Use `.value`, or `subscribe()` for updates. */
+  state: BehaviorSubject<TState>;
+  /** An Observable of all events of this service */
+  events: Observable<Action<void | TRequest | TNext | TError>>;
+  /** Becomes false the Promise after isHandling becomes false, when no more requests are scheduled to start. */
+  isActive: BehaviorSubject<boolean>;
+  /** Indicates whether a handling is in progress. Use `.value`, or `subscribe()` for updates.  */
+  isHandling: BehaviorSubject<boolean>;
+  /** Contains the last error object, but becomes `null` at the start of the next handling. */
+  currentError: BehaviorSubject<TError | null>;
+  /** Creates an independent subscription, invoking callbacks on process lifecycle events */
+  observe: (
+    cbs: ProcessLifecycleCallbacks<TRequest, TNext, TError>
+  ) => Subscription;
+}
+
+interface Requestable<TRequest, TResponse> {
+  send(arg: TRequest): Promise<Action<TResponse>>;
+  /** Invoke the service as a function directly (RTK style). */
+  (req: TRequest): void;
+  /** Explicitly pass a request object */
+  request(req: TRequest): void;
 }
 
 /**
@@ -63,24 +87,11 @@ interface Queryable<TReq, TRes, TErr = Error> {
  * - `time/canceled` - server: has canceled the current request for the time
  */
 export interface Service<TRequest, TNext, TError, TState>
-  extends Stoppable,
-    Queryable<TRequest, Action<TNext>, TError> {
-  /** Invoke the service as a function directly (RTK style). */
-  (req: TRequest): void;
-  /** Explicitly pass a request object */
-  request(req: TRequest): void;
+  extends Requestable<TRequest, TNext>,
+    Queryable<TRequest, TNext, TError, TState>,
+    Stoppable {
   /** The ActionCreator factories this service listens for, and responds with. */
   actions: ActionCreators<TRequest, TNext, TError>;
-  /** An Observable of just the events of this service on the bus */
-  events: Observable<Action<void | TRequest | TNext | TError>>;
-  /** Indicates whether a handling is in progress. Use `.value`, or `subscribe()` for updates.  */
-  isHandling: BehaviorSubject<boolean>;
-  /** Becomes false the Promise after isHandling becomes false, when no more requests are scheduled to start. */
-  isActive: BehaviorSubject<boolean>;
-  /** Contains the last error object, but becomes `null` at the start of the next handling. */
-  currentError: BehaviorSubject<TError | null>;
-  /** Uses the reducer to aggregate the events that are produced from its handlers, emitting a new state for each action (de-duping is not done). Use `.value`, or `subscribe()` for updates. */
-  state: BehaviorSubject<TState>;
   /** An untyped reference to the bus this service listens and triggers on */
   bus: Bus<any>;
   /** The namespace given at construction time */
@@ -169,13 +180,19 @@ export function createService<TRequest, TNext, TError, TState = object>(
     // @ts-ignore // RTK reducers use this style
     reducer.getInitialState ? reducer.getInitialState() : reducer()
   );
+  const safeReducer = (previous: TState, e: Action<any>) => {
+    try {
+      return reducer(previous, e);
+    } catch (ex: any) {
+      bus.errors.next(ex);
+      return previous;
+    }
+  };
+
   allSubscriptions.add(
     bus
       .query(matchesAny(...Object.values(ACs)))
-      .pipe(
-        scan((all, e) => reducer(all, e), state.value),
-        distinctUntilChanged()
-      )
+      .pipe(scan(safeReducer, state.value), distinctUntilChanged())
       .subscribe(state)
   );
 
@@ -205,9 +222,11 @@ export function createService<TRequest, TNext, TError, TState = object>(
         observer.complete();
         return;
       }
-
+      // prettier-ignore
       const sub = obsResult
-        .pipe(takeUntil(bus.query(ACs.cancel.match)))
+        .pipe(
+          takeUntil(bus.query(ACs.cancel.match))
+        )
         .subscribe(observer);
 
       return () => sub.unsubscribe();
@@ -253,15 +272,27 @@ export function createService<TRequest, TNext, TError, TState = object>(
       bus.trigger(ACs.cancel());
     },
   };
+
+  const observe = (
+    cbs: ProcessLifecycleCallbacks<TRequest, TNext, TError>,
+    subscriber?: Observer<any>
+  ) => {
+    // prettier-ignore
+    const eventStreams = [
+      cbs.request && bus.query(ACs.request.match).pipe(tap(({payload}) => cbs.request(payload as TRequest))),
+      cbs.started && bus.query(ACs.started.match).pipe(tap(() => cbs.started())),
+      cbs.next && bus.query(ACs.next.match).pipe(tap(({payload}) => cbs.next(payload as TNext))),
+      cbs.complete && bus.query(ACs.complete.match).pipe(tap(() => cbs.complete())),
+      cbs.cancel && bus.query(ACs.cancel.match).pipe(tap(() => cbs.cancel())),
+      cbs.error && bus.query(ACs.error.match).pipe(tap(({payload}) => cbs.error(payload as TError))),
+    ].filter(Boolean)
+
+    const invocations = merge(...eventStreams);
+    return invocations.subscribe(subscriber);
+  };
+
   const returnValue = Object.assign(requestor, { actions: ACs }, controls, {
-    isHandling,
-    isActive,
-    currentError,
-    state,
-    bus,
-    namespace: actionNamespace,
-    request: requestor,
-    events: bus.query(matchesAny(...Object.values(ACs))),
+    // Requestable
     send(arg: TRequest) {
       const result = firstValueFrom(bus.query(ACs.next.match)) as Promise<
         Action<TNext>
@@ -269,8 +300,21 @@ export function createService<TRequest, TNext, TError, TState = object>(
       bus.trigger(ACs.request(arg));
       return result;
     },
-    errors: bus.query(ACs.error.match) as Observable<Action<TError>>,
+    request: requestor,
+    // Queryable
     responses: bus.query(ACs.next.match) as Observable<Action<TNext>>,
+    errors: bus.query(ACs.error.match) as Observable<Action<TError>>,
+    state,
+    events: bus.query(matchesAny(...Object.values(ACs))) as Observable<
+      Action<void | TRequest | TNext | TError>
+    >,
+    isActive,
+    isHandling,
+    currentError,
+    observe,
+    // The rest
+    bus,
+    namespace: actionNamespace,
   });
 
   return returnValue;

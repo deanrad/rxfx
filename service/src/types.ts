@@ -27,6 +27,23 @@ export interface ProcessEvents<TRequest, TNext, TError> {
   canceled: ActionCreator<void>;
 }
 
+export interface ProcessLifecycleCallbacks<TRequest, TNext, TError> {
+  /** invokes the service */
+  request: (r: TRequest) => void;
+  /** cancels the current invocation  */
+  cancel: () => void;
+  /** an invocation has begun */
+  started: () => void;
+  /** an invocation has produced data */
+  next: (next: TNext) => void;
+  /** an invocation has terminated with an error */
+  error: (err: TError) => void;
+  /** an invocation has terminated successfully */
+  complete: () => void;
+  /** an invocation was canceled by a subscriber */
+  canceled: () => void;
+}
+
 /** The processes and corresponding events a data collection emits or responds to throughout its lifecycle. */
 
 export interface CollectionEvents<
