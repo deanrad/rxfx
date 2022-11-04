@@ -46,12 +46,17 @@ export type EventHandler<T, TConsequence> = (
   | ObservableInput<TConsequence>
   | void;
 
-type SubscribeObserver = {
+/** Handles events of an effects' subscription, distinct from its Observable's notifications. */
+export type SubscriptionObserver = {
   subscribe: () => void;
   unsubscribe: () => void;
+  finalize: () => void;
 };
-export type TapObserver<T> = PartialObserver<T> | SubscribeObserver;
-export type ObserverKey = keyof PartialObserver<any> | keyof SubscribeObserver;
+/** Handles events of an effects' Observable, or of its Subscription. */
+export type EffectObserver<T> = PartialObserver<T> | SubscriptionObserver;
+export type ObserverKey =
+  | keyof PartialObserver<any>
+  | keyof SubscriptionObserver;
 export type MapFn<T, U> = (t?: T) => U;
 export type Mapper<T, U> = Partial<Record<ObserverKey, MapFn<T, U>>>;
 
@@ -189,7 +194,7 @@ export class Bus<TBusItem> {
   public listen<TConsequence, TMatchType extends TBusItem = TBusItem>(
     matcher: ((i: TBusItem) => i is TMatchType) | ((i: TBusItem) => boolean),
     handler: EventHandler<TMatchType, TConsequence>,
-    observer?: TapObserver<TConsequence>,
+    observer?: EffectObserver<TConsequence>,
     operator = mergeMap
   ): Subscription & { isActive: BehaviorSubject<boolean> } {
     /* A listener is basically: 
@@ -267,7 +272,7 @@ export class Bus<TBusItem> {
   public listenQueueing<TConsequence, TMatchType extends TBusItem = TBusItem>(
     matcher: ((i: TBusItem) => i is TMatchType) | ((i: TBusItem) => boolean),
     handler: EventHandler<TMatchType, TConsequence>,
-    observer?: TapObserver<TConsequence>
+    observer?: EffectObserver<TConsequence>
   ) {
     return this.listen(matcher, handler, observer, concatMap);
   }
@@ -282,7 +287,7 @@ export class Bus<TBusItem> {
   public listenSwitching<TConsequence, TMatchType extends TBusItem = TBusItem>(
     matcher: ((i: TBusItem) => i is TMatchType) | ((i: TBusItem) => boolean),
     handler: EventHandler<TMatchType, TConsequence>,
-    observer?: TapObserver<TConsequence>
+    observer?: EffectObserver<TConsequence>
   ) {
     return this.listen(matcher, handler, observer, switchMap);
   }
@@ -297,7 +302,7 @@ export class Bus<TBusItem> {
   public listenBlocking<TConsequence, TMatchType extends TBusItem = TBusItem>(
     matcher: ((i: TBusItem) => i is TMatchType) | ((i: TBusItem) => boolean),
     handler: EventHandler<TMatchType, TConsequence>,
-    observer?: TapObserver<TConsequence>
+    observer?: EffectObserver<TConsequence>
   ) {
     return this.listen(matcher, handler, observer, exhaustMap);
   }
@@ -312,7 +317,7 @@ export class Bus<TBusItem> {
   public listenToggling<TConsequence, TMatchType extends TBusItem = TBusItem>(
     matcher: ((i: TBusItem) => i is TMatchType) | ((i: TBusItem) => boolean),
     handler: EventHandler<TMatchType, TConsequence>,
-    observer?: TapObserver<TConsequence>
+    observer?: EffectObserver<TConsequence>
   ) {
     // @ts-ignore
     return this.listen(matcher, handler, observer, toggleMap);
@@ -355,7 +360,7 @@ export class Bus<TBusItem> {
    */
   public observeAll<
     TConsequence extends TBusItem
-  >(): TapObserver<TConsequence> {
+  >(): EffectObserver<TConsequence> {
     return {
       next: (c: TConsequence) => {
         this.trigger(c);
@@ -371,7 +376,7 @@ export class Bus<TBusItem> {
   public observeWith<TConsequence>(mapper: Mapper<TConsequence, TBusItem>) {
     // invariant - at least one key
     // @ts-ignore
-    const observer: PartialObserver<TConsequence> & SubscribeObserver = {};
+    const observer: PartialObserver<TConsequence> & SubscriptionObserver = {};
     ['next', 'error'].forEach((key) => {
       // @ts-ignore
       if (mapper[key]) {
