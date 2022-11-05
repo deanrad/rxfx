@@ -60,7 +60,7 @@ interface Queryable<TRequest, TNext, TError, TState> {
   currentError: BehaviorSubject<TError | null>;
   /** Creates an independent subscription, invoking callbacks on process lifecycle events */
   observe: (
-    cbs: ProcessLifecycleCallbacks<TRequest, TNext, TError>
+    cbs: Partial<ProcessLifecycleCallbacks<TRequest, TNext, TError>>
   ) => Subscription;
 }
 
@@ -222,12 +222,20 @@ export function createService<TRequest, TNext, TError, TState = object>(
         observer.complete();
         return;
       }
+
       // prettier-ignore
       const sub = obsResult
         .pipe(
+          tap({ 
+            complete: () => {bus.trigger(ACs.complete()); observer.complete()}, 
+            unsubscribe: () => {bus.trigger(ACs.canceled()); observer.complete()}
+          }),
           takeUntil(bus.query(ACs.cancel.match))
         )
-        .subscribe(observer);
+        .subscribe({
+          error(e) { observer.error(e); },
+          next(next) { observer.next(next); }          
+        });
 
       return () => sub.unsubscribe();
     }) as Observable<TNext>;
@@ -239,15 +247,11 @@ export function createService<TRequest, TNext, TError, TState = object>(
     wrappedHandler,
     bus.observeWith({
       // @ts-ignore
+      subscribe: ACs.started,
+      // @ts-ignore
       next: ACs.next,
       // @ts-ignore
       error: ACs.error,
-      // @ts-ignore
-      complete: ACs.complete,
-      // @ts-ignore
-      subscribe: ACs.started,
-      // @ts-ignore
-      unsubscribe: ACs.canceled,
     }),
     listenOp
   );
@@ -274,17 +278,27 @@ export function createService<TRequest, TNext, TError, TState = object>(
   };
 
   const observe = (
-    cbs: ProcessLifecycleCallbacks<TRequest, TNext, TError>,
+    cbs: Partial<ProcessLifecycleCallbacks<TRequest, TNext, TError>>,
     subscriber?: Observer<any>
   ) => {
     // prettier-ignore
     const eventStreams = [
+      // @ts-ignore
       cbs.request && bus.query(ACs.request.match).pipe(tap(({payload}) => cbs.request(payload as TRequest))),
+      // @ts-ignore
       cbs.started && bus.query(ACs.started.match).pipe(tap(() => cbs.started())),
+      // @ts-ignore
       cbs.next && bus.query(ACs.next.match).pipe(tap(({payload}) => cbs.next(payload as TNext))),
+      // @ts-ignore
       cbs.complete && bus.query(ACs.complete.match).pipe(tap(() => cbs.complete())),
+      // @ts-ignore
       cbs.cancel && bus.query(ACs.cancel.match).pipe(tap(() => cbs.cancel())),
+      // @ts-ignore
+      cbs.canceled && bus.query(ACs.canceled.match).pipe(tap(() => cbs.canceled())),
+      // @ts-ignore
       cbs.error && bus.query(ACs.error.match).pipe(tap(({payload}) => cbs.error(payload as TError))),
+      // @ts-ignore
+      cbs.finalized && bus.query(matchesAny(ACs.canceled, ACs.complete, ACs.error)).pipe(tap(() => cbs.finalized())),
     ].filter(Boolean)
 
     const invocations = merge(...eventStreams);
@@ -292,13 +306,14 @@ export function createService<TRequest, TNext, TError, TState = object>(
   };
 
   const returnValue = Object.assign(requestor, { actions: ACs }, controls, {
+    // Native
+    bus,
+    namespace: actionNamespace,
     // Requestable
     send(arg: TRequest) {
-      const result = firstValueFrom(bus.query(ACs.next.match)) as Promise<
-        Action<TNext>
-      >;
+      const result = firstValueFrom(bus.query(ACs.next.match));
       bus.trigger(ACs.request(arg));
-      return result;
+      return result as Promise<Action<TNext>>;
     },
     request: requestor,
     // Queryable
@@ -312,9 +327,6 @@ export function createService<TRequest, TNext, TError, TState = object>(
     isHandling,
     currentError,
     observe,
-    // The rest
-    bus,
-    namespace: actionNamespace,
   });
 
   return returnValue;

@@ -1,15 +1,5 @@
 import { ActionCreator } from 'typescript-fsa';
 
-/** The events a process emits or responds to throughout its lifecycle. */
-export type ProcessLifecycleEvent =
-  | 'request'
-  | 'cancel'
-  | 'started'
-  | 'next'
-  | 'error'
-  | 'complete'
-  | 'canceled';
-
 export interface ProcessEvents<TRequest, TNext, TError> {
   /** invokes the service */
   request: ActionCreator<TRequest>;
@@ -27,6 +17,18 @@ export interface ProcessEvents<TRequest, TNext, TError> {
   canceled: ActionCreator<void>;
 }
 
+/** The events a process emits or responds to throughout its lifecycle. */
+export enum ProcessLifecycleEvent {
+  request = 'request',
+  cancel = 'cancel',
+  started = 'started',
+  next = 'next',
+  error = 'error',
+  complete = 'complete',
+  canceled = 'canceled',
+  finalized = 'finalized',
+}
+
 export interface ProcessLifecycleCallbacks<TRequest, TNext, TError> {
   /** invokes the service */
   request: (r: TRequest) => void;
@@ -42,6 +44,8 @@ export interface ProcessLifecycleCallbacks<TRequest, TNext, TError> {
   complete: () => void;
   /** an invocation was canceled by a subscriber */
   canceled: () => void;
+  /** an invocation concluded, in any fashion */
+  finalized: () => void;
 }
 
 /** The processes and corresponding events a data collection emits or responds to throughout its lifecycle. */

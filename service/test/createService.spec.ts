@@ -290,7 +290,6 @@ describe('createService', () => {
           svc();
           expect(statuses).toEqual([false, true]);
           await after(ASYNC_DELAY * 2);
-
           expect(statuses).toEqual([false, true, false]);
         });
       });
@@ -621,37 +620,34 @@ describe('createService', () => {
           ]);
         });
         it('can cancel existing, and any queued with .cancelCurrentAndQueued()', async () => {
-          // const bus = new Bus<Action<number>();
-          const seen = eventsOf(bus);
-
           const qService = createQueueingService('number', bus, (n) =>
             after(10, n)
           );
+          const seen = [];
+          qService.events.subscribe((e) => seen.push(e.type));
 
-          const { actions: ACs } = qService;
           qService(1);
           qService(2);
 
-          qService.cancelCurrentAndQueued();
-
-          expect(qService.isHandling.value).toBeFalsy();
-          qService(3);
+          // qService.cancelCurrentAndQueued();
+          qService.cancelCurrent();
+          expect(qService.isHandling.value).toBeTruthy();
 
           // long enough to see completion
           await after(100);
-          expect(seen).toEqual([
-            ACs.request(1),
-            ACs.started(), // 1
-            ACs.request(2), // 2
-            ACs.cancel(),
-            ACs.complete(), // 1
-            ACs.started(), // 2
-            ACs.complete(), // 2
-            ACs.request(3),
-            ACs.started(), // 3
-            ACs.next(3),
-            ACs.complete(),
-          ]);
+          expect(qService.isHandling.value).toBeFalsy();
+          expect(seen).toMatchInlineSnapshot(`
+            [
+              "number/request",
+              "number/started",
+              "number/request",
+              "number/cancel",
+              "number/canceled",
+              "number/started",
+              "number/next",
+              "number/complete",
+            ]
+          `);
         });
         it('has property stop()', () => {
           expect(testService).toHaveProperty('stop');
@@ -693,7 +689,7 @@ describe('createService', () => {
     });
 
     describe('#observe', () => {
-      const spies: ProcessLifecycleCallbacks<void, string, Error> = {
+      const spies: Partial<ProcessLifecycleCallbacks<void, string, Error>> = {
         request: jest.fn(),
         started: jest.fn(),
         next: jest.fn(),
@@ -701,54 +697,144 @@ describe('createService', () => {
         cancel: jest.fn(),
         canceled: jest.fn(),
         error: jest.fn(),
+        finalized: jest.fn(),
       };
 
-      it('Handles lifecycle events with callbacks', async () => {
-        let req = 0;
-        const maybeThrow = new Observable<string>((notify) => {
-          req++;
-          if (req === 2) {
-            notify.error('fuuu');
-            return;
-          }
-          notify.next(`req-${req}`);
-          notify.complete();
-        });
-
-        const counterService = createService<void, string, Error, number>(
-          'xxx',
-          bus,
-          () => after(1, maybeThrow),
-          () => counterReducer
-        );
-        counterService.observe(spies);
-
-        // trigger
-        counterService.request(); // req 0
-
-        expect(spies.request).toHaveBeenCalledWith(undefined);
-        expect(spies.started).toHaveBeenCalled();
-        await after(1);
-
-        expect(spies.next).toHaveBeenCalledWith('req-1');
-        expect(spies.complete).toHaveBeenCalledTimes(1);
-
-        // cancelation (only gets cancel, not canceled atm)
-        counterService.request(); // req 1
-        counterService.cancelCurrent();
-        expect(spies.cancel).toHaveBeenCalled();
-        // XXX currently cancel triggers complete - not canceled
-        expect(spies.complete).toHaveBeenCalledTimes(2);
-
-        // still workin
-        counterService.request();
-        await after(1);
-
-        // error
-        counterService.request(); // req 2
-        expect(spies.error).toHaveBeenCalledWith('fuuu');
+      let req = 0;
+      const maybeThrow = new Observable<string>((notify) => {
+        req++;
+        if (req === 2) {
+          notify.error('fuuu');
+          return;
+        }
+        notify.next(`req-${req}`);
+        notify.complete();
       });
-      it.todo('doesnt stop the service sub if it errors');
+      beforeEach(() => {
+        req = 0;
+      });
+
+      describe('Immediate mode', () => {
+        it('Handles lifecycle events with callbacks', async () => {
+          const counterService = createService<void, string, Error, number>(
+            'xxx',
+            bus,
+            () => after(1, maybeThrow),
+            () => counterReducer
+          );
+          counterService.observe(spies);
+          const seen = [];
+          counterService.events.subscribe((e) => seen.push(e.type));
+          // trigger
+          counterService.request(); // req 0
+
+          expect(spies.request).toHaveBeenCalledWith(undefined);
+          expect(spies.started).toHaveBeenCalled();
+          await after(1);
+
+          expect(spies.next).toHaveBeenCalledWith('req-1');
+          expect(spies.complete).toHaveBeenCalledTimes(1);
+
+          // cancelation (only gets cancel, not canceled atm)
+          counterService.request(); // req 1
+          counterService.cancelCurrent();
+          expect(spies.cancel).toHaveBeenCalled();
+          expect(spies.canceled).toHaveBeenCalled();
+
+          expect(spies.complete).toHaveBeenCalledTimes(1);
+
+          // still workin
+          counterService.request();
+          await after(1);
+
+          // error
+          counterService.request(); // req 2
+          expect(spies.error).toHaveBeenCalledWith('fuuu');
+
+          await after(1);
+          expect(spies.finalized).toHaveBeenCalledTimes(4);
+          expect(seen).toMatchInlineSnapshot(`
+            [
+              "xxx/request",
+              "xxx/started",
+              "xxx/next",
+              "xxx/complete",
+              "xxx/request",
+              "xxx/started",
+              "xxx/cancel",
+              "xxx/canceled",
+              "xxx/request",
+              "xxx/started",
+              "xxx/error",
+              "xxx/request",
+              "xxx/started",
+              "xxx/next",
+              "xxx/complete",
+            ]
+          `);
+        });
+      });
+
+      describe('Queueing mode', () => {
+        const queuer = createQueueingService;
+        it('Handles lifecycle events with callbacks', async () => {
+          // prettier-ignore
+          const counterService = queuer<number, string, Error, number>(
+            'xyx',
+            bus,
+            () => {req++; return after(1, `req-${req}`)},
+            () => counterReducer
+          );
+          counterService.observe(spies);
+          const seen = [];
+          counterService.events.subscribe((e) => seen.push(e.type));
+          // trigger
+          counterService.request(0);
+
+          expect(spies.request).toHaveBeenCalledWith(0);
+          expect(spies.started).toHaveBeenCalled();
+          await after(1);
+
+          expect(spies.next).toHaveBeenCalledWith('req-1');
+          expect(spies.complete).toHaveBeenCalled();
+
+          // // cancelation (only gets cancel, not canceled atm)
+          counterService.request(1);
+          counterService.request(2);
+          counterService.cancelCurrent();
+          expect(seen).toMatchInlineSnapshot(`
+            [
+              "xyx/request",
+              "xyx/started",
+              "xyx/next",
+              "xyx/complete",
+              "xyx/request",
+              "xyx/started",
+              "xyx/request",
+              "xyx/cancel",
+              "xyx/canceled",
+              "xyx/started",
+            ]
+          `);
+
+          // expect(spies.cancel).toHaveBeenCalled();
+          // expect(spies.canceled).toHaveBeenCalled();
+
+          // expect(spies.complete).toHaveBeenCalledTimes(1);
+
+          // // still workin
+          // counterService.request();
+          // await after(1);
+
+          // // error
+          // counterService.request(); // req 2
+          // expect(spies.error).toHaveBeenCalledWith('fuuu');
+
+          // await after(1);
+          // expect(spies.finalized).toHaveBeenCalledTimes(4);
+          // expect(seen).toMatchInlineSnapshot();
+        });
+      });
     });
   });
 
@@ -859,7 +945,7 @@ describe('createService', () => {
   describe('createTogglingService', () => {
     it.todo('calls createService with toggleMap');
     it('can be called', async () => {
-      testService = createTogglingService<void, void, void>(
+      const testService = createTogglingService<void, void, void>(
         testNamespace,
         bus,
         (s) => after(100, s)
@@ -871,12 +957,18 @@ describe('createService', () => {
       await after(10);
       testService();
       await after(100);
+      testService();
+      await after(100);
       expect(seen.map((e) => e.type)).toMatchInlineSnapshot(`
         [
           "testService/request",
           "testService/started",
           "testService/request",
           "testService/canceled",
+          "testService/request",
+          "testService/started",
+          "testService/next",
+          "testService/complete",
         ]
       `);
     });
