@@ -788,32 +788,29 @@ describe('createService', () => {
           counterService.observe(spies);
           const seen = [];
           counterService.events.subscribe((e) => seen.push(e.type));
-          // trigger
-          counterService.request(0);
-
-          expect(spies.request).toHaveBeenCalledWith(0);
-          expect(spies.started).toHaveBeenCalled();
-          await after(1);
-
-          expect(spies.next).toHaveBeenCalledWith('req-1');
-          expect(spies.complete).toHaveBeenCalled();
-
-          // // cancelation (only gets cancel, not canceled atm)
+          // cancelation
           counterService.request(1);
-          counterService.request(2);
           counterService.cancelCurrent();
+          await after(1);
+          counterService.request(2);
+          counterService.request(3);
+          counterService.cancelCurrent(); // 2
+
+          await after(1);
           expect(seen).toMatchInlineSnapshot(`
             [
               "xyx/request",
               "xyx/started",
-              "xyx/next",
-              "xyx/complete",
+              "xyx/cancel",
+              "xyx/canceled",
               "xyx/request",
               "xyx/started",
               "xyx/request",
               "xyx/cancel",
               "xyx/canceled",
               "xyx/started",
+              "xyx/next",
+              "xyx/complete",
             ]
           `);
 
