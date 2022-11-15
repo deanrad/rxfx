@@ -1,6 +1,6 @@
 # 𝗥𝘅𝑓𝑥 `after`
 
-An insanely utility for introducing delays, or creating scripts of delays, which are cancelable or `await`-able. Part of the [𝗥𝘅𝑓𝑥](https://github.com/deanrad/rxfx) family of libraries.
+A hybrid of Promise and Observable, useful for introducing delays, or creating scripts of delays, which are cancelable or `await`-able. Part of the [𝗥𝘅𝑓𝑥](https://github.com/deanrad/rxfx) family of libraries.
 
 `after` makes common use-cases of deferred values and function calls more readable, and works in an Observable or Promise context (eg with `await`).
 
@@ -11,6 +11,7 @@ Call styles
 - `after(N, ()=>value)) `
 - `after(N, Observable))`         
 - `after(Promise, ()=>value))`
+- `after(Promise, ()=>value, { unsubscribe(){ console.log('canceled'); })`
 - `after(setTimeout, ()=>value))`
 
 Behaviors:
@@ -28,6 +29,9 @@ Assuming `const fn = ()=>value;`
   - Creates an `AwaitableObservable` of the invocation of `fn` with the resolution of `promise`. But it is cancelable: `after(Promise.resolve(), console.log).subscribe().unsubscribe()` will not invoke `console.log`.
 - `after(setTimeout, fn))`
   - Invokes `fn` ala `setTimeout(fn, 0)` to schedule `fn()` on the macro-task queue. 
+- `after(..., { unsubscribe(){ console.log('canceled'); })`
+  - Invoke a callback f the subscription of the `after` has its `unsubscribe()` method called: 
+  - `const sub = after(...).subscribe(); /* later */ sub.unsubscribe();`
 
 `after` also re-exports `concat` from RxJS, so several `after`s can be sequenced:
 
