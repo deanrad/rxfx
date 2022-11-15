@@ -99,6 +99,26 @@ describe('createService', () => {
         counterService();
         expect(counterService.state.value).toHaveProperty('count', 1);
       });
+
+      it('wont error if it doesnt default the event', () => {
+        const counterService = createService<
+          void,
+          number,
+          Error,
+          typeof initialState
+        >(
+          'counter',
+          bus,
+          () => null,
+          (ACs) =>
+            (state = initialState, e: Action<unknown>) => {
+              return { count: state.count + (ACs?.complete.match(e) ? 1 : 0) };
+            }
+        );
+        expect(counterService.state.value).toHaveProperty('count', 0);
+        counterService();
+        expect(counterService.state.value).toHaveProperty('count', 1);
+      });
     });
   });
 
