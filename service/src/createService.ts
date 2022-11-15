@@ -178,7 +178,7 @@ export function createService<TRequest, TNext, TError, TState = object>(
   const reducer = reducerProducer(ACs);
   const state = new BehaviorSubject<TState>(
     // @ts-ignore // RTK reducers use this style
-    reducer.getInitialState ? reducer.getInitialState() : reducer()
+    reducer.getInitialState ? reducer.getInitialState() : reducer(undefined, {type: '__'})
   );
   const safeReducer = (previous: TState, e: Action<any>) => {
     try {
