@@ -1,26 +1,32 @@
 import { renderHook } from '@testing-library/react-hooks';
-import { ListenerArgs, useClosureListener } from '../src/useClosureHandlers';
 import { createEvent } from '@rxfx/service';
 import { defaultBus } from '@rxfx/bus';
 import { Subscription } from 'rxjs';
-
-const UPLOAD_COMPLETE = createEvent<void>('upload/complete');
+import { ListenerArgs, useClosureListener } from '../src/useClosureHandlers';
 
 describe('useClosureListener', () => {
+  let errorSub: Subscription;
+  beforeAll(() => (errorSub = defaultBus.errors.subscribe(console.error)));
+  afterAll(() => errorSub?.unsubscribe());
+  beforeEach(() => jest.clearAllMocks());
+
+  const UPLOAD_COMPLETE = createEvent<void>('upload/complete');
   const mockResultValue = 2;
   const handlerSpy = jest.fn().mockResolvedValue(mockResultValue);
   const nextSpy = jest.fn();
+  const handlerArgs = {
+    matches: UPLOAD_COMPLETE,
+    handler: handlerSpy,
+    observeWith: { next: nextSpy },
+  };
 
   describe('First invocation', () => {
     it('subscribes its listener the first time', async () => {
-      const { result } = renderHook(() =>
-        useClosureListener<number>({
-          matches: UPLOAD_COMPLETE,
-          handler: handlerSpy,
-          observeWith: {
-            next: nextSpy,
-          },
-        })
+      const { result } = renderHook(
+        (props = []) => {
+          useClosureListener<number>(...props);
+        },
+        { initialProps: [handlerArgs, []] }
       );
       defaultBus.trigger(UPLOAD_COMPLETE());
 
@@ -29,41 +35,34 @@ describe('useClosureListener', () => {
       expect(nextSpy).toBeCalledWith(mockResultValue);
     });
   });
+
   describe('When deps change', () => {
     it('subscribes the new listener instead', async () => {
-      // LEFTOFF
-    //   let firstCall: Subscription;
+      const firstDeps = [1];
+      const secondDeps = [2];
 
-    //   const { result, rerender } = renderHook(
-    //     ({ matches, handler, observeWith, deps }) => {
-    //       firstCall = useClosureListener(
-    //         { matches, handler, observeWith },
-    //         deps
-    //       );
-    //       return firstCall;
-    //     },
-    //     {
-    //       initialProps: {
-    //         matches: UPLOAD_COMPLETE,
-    //         handler: handlerSpy,
-    //         observeWith: {
-    //           next: nextSpy,
-    //         },
-    //         deps: [1],
-    //       },
-    //     }
-    //   );
+      const { result, rerender } = renderHook(
+        (props = []) => useClosureListener<number>(...props),
+        { initialProps: [handlerArgs, firstDeps] }
+      );
 
-    //   expect(result.current.closed).toBeFalsy();
-    //   rerender({
-    //     matches: UPLOAD_COMPLETE,
-    //     handler: handlerSpy,
-    //     observeWith: {
-    //       next: nextSpy,
-    //     },
-    //     deps: [17.1],
-    //   });
-    //   expect(result.current.closed).toBeFalsy();
-    // });
+      // The first render will call through with the first handler value
+      defaultBus.trigger(UPLOAD_COMPLETE());
+      await Promise.resolve();
+      expect(nextSpy).toBeCalledWith(mockResultValue);
+
+      // The 2nd render will call through with the 2nd handler value - but not both
+      // since the subscription was unsubscribed!
+      rerender([
+        {
+          ...handlerArgs,
+          handler: jest.fn().mockResolvedValue(3.14),
+        },
+        secondDeps,
+      ]);
+      defaultBus.trigger(UPLOAD_COMPLETE());
+      await Promise.resolve();
+      expect(nextSpy.mock.calls).toEqual([[2], [3.14]]);
+    });
   });
 });

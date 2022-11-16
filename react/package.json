@@ -60,8 +60,9 @@
     "jest-silent-reporter": ">= 0.5.0",
     "lodash.merge": ">= 4.6.2",
     "prettier": ">= 2.6.2",
-    "react": ">= 18.2.0",
-    "react-dom": ">= 18.2.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-test-renderer": "^17.0.2",
     "rimraf": ">= 3.0.2",
     "rollup": ">= 2.56.2",
     "size-limit": ">= 5.0.3",
@@ -73,7 +74,7 @@
     "react": ">=16.6.0"
   },
   "prettier": {
-    "printWidth": 80,
+    "printWidth": 100,
     "tabWidth": 2,
     "semi": true,
     "singleQuote": true,
