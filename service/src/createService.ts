@@ -122,7 +122,7 @@ export function createService<TRequest, TNext, TError, TState = object>(
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
   reducerProducer: (
-    acs?: ActionCreators<TRequest, TNext, TError>
+    acs: ActionCreators<TRequest, TNext, TError>
   ) => (state: TState, action: Action<any>) => TState = () =>
     (state: TState, _: any) => {
       return state;
@@ -178,7 +178,9 @@ export function createService<TRequest, TNext, TError, TState = object>(
   const reducer = reducerProducer(ACs);
   const state = new BehaviorSubject<TState>(
     // @ts-ignore // RTK reducers use this style
-    reducer.getInitialState ? reducer.getInitialState() : reducer(undefined, {type: '__'})
+    reducer.getInitialState
+      ? reducer.getInitialState()
+      : reducer(undefined, { type: '__' })
   );
   const safeReducer = (previous: TState, e: Action<any>) => {
     try {
@@ -348,7 +350,7 @@ export function createQueueingService<TRequest, TNext, TError, TState = object>(
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
   reducerProducer: (
-    acs?: ActionCreators<TRequest, TNext, TError>
+    acs: ActionCreators<TRequest, TNext, TError>
   ) => (state: TState, action: Action<any>) => TState = () =>
     (state: TState, _: any) => {
       return state;
@@ -383,7 +385,7 @@ export function createReplacingService<
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
   reducerProducer: (
-    acs?: ActionCreators<TRequest, TNext, TError>
+    acs: ActionCreators<TRequest, TNext, TError>
   ) => (state: TState, action: Action<any>) => TState = () =>
     (state: TState, _: any) => {
       return state;
@@ -413,7 +415,7 @@ export function createBlockingService<TRequest, TNext, TError, TState = object>(
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
   reducerProducer: (
-    acs?: ActionCreators<TRequest, TNext, TError>
+    acs: ActionCreators<TRequest, TNext, TError>
   ) => (state: TState, action: Action<any>) => TState = () =>
     (state: TState, _: any) => {
       return state;
@@ -443,7 +445,7 @@ export function createTogglingService<TRequest, TNext, TError, TState = object>(
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
   reducerProducer: (
-    acs?: ActionCreators<TRequest, TNext, TError>
+    acs: ActionCreators<TRequest, TNext, TError>
   ) => (state: TState, action: Action<any>) => TState = () =>
     (state: TState, _: any) => {
       return state;

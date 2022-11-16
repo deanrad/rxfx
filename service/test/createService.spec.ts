@@ -103,13 +103,13 @@ describe('createService', () => {
       it('wont error if it doesnt default the event', () => {
         const counterService = createService<
           void,
-          number,
+          void,
           Error,
           typeof initialState
         >(
           'counter',
           bus,
-          () => null,
+          () => undefined,
           (ACs) =>
             (state = initialState, e: Action<unknown>) => {
               return { count: state.count + (ACs?.complete.match(e) ? 1 : 0) };
