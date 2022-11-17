@@ -25,7 +25,7 @@
   },
   "include": [
     "./src/**/*.ts"
-, "test/utils.spec.ts", "test/bus.spec.ts", "test/3rd-party.spec.ts"  ],
+, "test/utils.spec.ts", "test/bus.spec.ts", "test/3rd-party.spec.ts", "src/Unmounter.tsx"  ],
   "exclude": [
     "./src/**/*.spec.ts",
     "dist"
