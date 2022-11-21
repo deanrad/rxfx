@@ -183,6 +183,11 @@ export class Bus<TBusItem> {
     this.handlings.next(handling);
   }
 
+  /** Alias for @trigger, revealing its Subject-like nature */
+  public next(item: TBusItem) {
+    this.trigger(item);
+  }
+
   /** Triggers effects upon matching events, using an ASAP Concurrency Strategy.
    * Newly returned effects are begun immediately, without regard to resource constraints, and may complete in any order (ala `mergeMap`).
    *

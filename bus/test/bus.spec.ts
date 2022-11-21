@@ -248,6 +248,12 @@ describe('Bus', () => {
     });
   });
 
+  describe('#next', () => {
+    it('is an alias for trigger', () => {
+      miniBus.next(42);
+    });
+  });
+
   describe('#listen', () => {
     describe('Handler', () => {
       describe('Returning Observables', () => {
