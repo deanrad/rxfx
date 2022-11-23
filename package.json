@@ -11,7 +11,8 @@
     "after",
     "bus",
     "react",
-    "service"
+    "service",
+    "firebase"
   ],
   "dependencies": {
     "rxjs": "^7.3.0",

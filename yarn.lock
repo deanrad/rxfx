@@ -2472,6 +2472,42 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@rxfx/firebase@workspace:firebase":
+  version: 0.0.0-use.local
+  resolution: "@rxfx/firebase@workspace:firebase"
+  dependencies:
+    "@babel/core": ">= 7.15.0"
+    "@babel/preset-env": ">= 7.15.0"
+    "@babel/preset-typescript": ">= 7.15.0"
+    "@open-wc/building-rollup": ">= 1.10.0"
+    "@rollup/plugin-typescript": ">= 8.2.5"
+    "@size-limit/preset-small-lib": ">= 5.0.3"
+    "@types/jest": ">= 27.0.1"
+    "@typescript-eslint/eslint-plugin": ">= 4.31.2"
+    "@typescript-eslint/parser": ">= 4.31.2"
+    babel-jest: ">= 27.0.6"
+    deepmerge: ">= 4.2.2"
+    eslint: ">= 7.32.0"
+    eslint-plugin-jest: ">= 24.4.2"
+    husky: ">= 7.0.2"
+    immer: ">= 9.0.15"
+    jest: ">= 27.0.6"
+    jest-silent-reporter: ">= 0.5.0"
+    lodash.merge: ">= 4.6.2"
+    prettier: ">= 2.6.2"
+    react: ">= 18.2.0"
+    react-dom: ">= 18.2.0"
+    rimraf: ">= 3.0.2"
+    rollup: ">= 2.56.2"
+    rxjs: ^7.3.0
+    size-limit: ">= 5.0.3"
+    tiny-invariant: ">= 1.1.0"
+    tslib: ^2.3.1
+    typedoc: ">= 0.21.5"
+    typescript: ">= 4.3.5"
+  languageName: unknown
+  linkType: soft
+
 "@rxfx/operators@workspace:^, @rxfx/operators@workspace:operators":
   version: 0.0.0-use.local
   resolution: "@rxfx/operators@workspace:operators"
