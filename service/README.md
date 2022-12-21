@@ -1,11 +1,16 @@
 # 𝗥𝘅𝑓𝑥 `service`
 
-A typesafe, concurrency-controlled, stateful service over an `@rxfx/bus`. Part of the 𝗥𝘅𝑓𝑥 family of libraries.
+A Vanilla JS container for Effect Management and State Mangement, based on RxJS. Supports Simple Effect Cancelation and Concurrency Modes, and TypeScript.
+
+
+Part of the 𝗥𝘅𝑓𝑥 family of libraries.
 For help consuming services in React, check out [`@rxfx/react`](https://github.com/deanrad/rxfx/tree/main/react).
 
 # Example Usage
 
 ```js
+import { defaultBus as bus } from '@rxfx/bus'
+
 const reducer = (count=0, {type}) => {
   if (type === 'count/next') {
     return count++
@@ -20,7 +25,7 @@ const asyncCounter = createQueueingService<void, void, Error, number>(
   () => reducer
 );
 
-asyncCounter(); /* request a count (will complete after 1000 msec) */
+asyncCounter.request(); /* request a count (will complete after 1000 msec) */
 
 asyncCounter.state.subscribe(count:number => /* update your UI non-transient state */)
 asyncCounter.isActive.subscribe(isActive:boolean => /* update your UI loading state */)
