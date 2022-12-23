@@ -1,0 +1,30 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`UX Constants defines an ideal debounce delay 1`] = `330`;
+
+exports[`UX Constants defines an ideal throttle delay 1`] = `500`;
+
+exports[`UX Constants defines thresholds of perception 1`] = `
+{
+  "AnimationLong": 400,
+  "AnimationShort": 200,
+  "Blink": 150,
+  "Chorus": 25,
+  "Debounce": 330,
+  "DeepBreath": 4000,
+  "DoubleClick": 500,
+  "EDMBeat": 500,
+  "Echo": 100,
+  "Frame": 16,
+  "Frame60": 16,
+  "Frame90": 11,
+  "MovieFrame": 42,
+  "PageLoadMax": 2000,
+  "Sentence": 5000,
+  "Thought": 1000,
+  "TypingKey48": 250,
+  "TypingKey90": 150,
+  "TypingKeyMobile": 330,
+  "Unison": 10,
+}
+`;
