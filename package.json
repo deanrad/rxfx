@@ -8,11 +8,12 @@
   "repository": "https://github.com/deanrad/rxfx",
   "workspaces": [
     "operators",
-    "perception",
     "after",
     "bus",
     "react",
-    "service"
+    "service",
+    "perception",
+    "animation"
   ],
   "dependencies": {
     "rxjs": "^7.3.0",

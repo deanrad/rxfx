@@ -1,5 +1,5 @@
 module.exports = {
-  testEnvironment: 'node', // 'XXX do not checkin!'
+  testEnvironment: 'node',
   modulePathIgnorePatterns: ['dist/tsc'],
   verbose: true,
   silent: false,

@@ -1,5 +1,5 @@
 module.exports = {
-  testEnvironment: 'node',
+  testEnvironment: 'jsdom',
   modulePathIgnorePatterns: ['dist/tsc'],
   verbose: true,
   silent: false,
