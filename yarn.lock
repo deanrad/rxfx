@@ -2446,6 +2446,8 @@ __metadata:
     "@babel/preset-typescript": ">= 7.15.0"
     "@open-wc/building-rollup": ">= 1.10.0"
     "@rollup/plugin-typescript": ">= 8.2.5"
+    "@rxfx/after": "workspace:^"
+    "@rxfx/perception": "workspace:^"
     "@size-limit/preset-small-lib": ">= 5.0.3"
     "@types/jest": ">= 27.0.1"
     "@typescript-eslint/eslint-plugin": ">= 4.31.2"
@@ -2540,7 +2542,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@rxfx/perception@workspace:perception":
+"@rxfx/perception@workspace:^, @rxfx/perception@workspace:perception":
   version: 0.0.0-use.local
   resolution: "@rxfx/perception@workspace:perception"
   dependencies:

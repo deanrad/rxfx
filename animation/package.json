@@ -1,6 +1,6 @@
 {
   "name": "@rxfx/animation",
-  "version": "0.8.9",
+  "version": "0.9.0",
   "license": "MIT",
   "author": "Dean Radcliffe",
   "repository": "https://github.com/deanrad/rxfx",
@@ -61,5 +61,9 @@
     "semi": true,
     "singleQuote": true,
     "trailingComma": "es5"
+  },
+  "dependencies": {
+    "@rxfx/after": "workspace:^",
+    "@rxfx/perception": "workspace:^"
   }
 }
