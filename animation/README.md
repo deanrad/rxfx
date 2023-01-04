@@ -6,13 +6,13 @@ A TypeScript/Observable version [TweenJS](https://github.com/tweenjs/tween.js). 
 
 Example: 
 ```js
-import { tweenToValue, LERP } from '@rxfx/animation';
+import { tweenToValue, LERP, Easing } from '@rxfx/animation';
 
 const tweens = tweenToValue(
   { x: 1 },     // start
   { x: 100 },   // end
   100,          // duration
-  LERP          // interpolation (default linear)
+  Easing.Exponential.Out // optional - defaults linear
 );
 
 tweens.subscribe({
