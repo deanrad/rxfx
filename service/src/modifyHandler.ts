@@ -2,7 +2,6 @@ import { after } from '@rxfx/after';
 import {
   from,
   interval,
-  Observable,
   ObservableInput,
   race,
   Subscription,

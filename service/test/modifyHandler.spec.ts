@@ -48,13 +48,14 @@ describe(timeoutHandler, () => {
     });
 
     it('times out with a custom error', async () => {
+      const handler = (_req: number) => after(100, 2);
       const timedOutProc = timeoutHandler(
         {
           duration: 10,
           errorFactory: (req: number) =>
             new Error(`Request for ${req} timed out`),
         },
-        (req: number) => after(100, 2)
+        handler
       );
       const srv = createService<number, number, Error>(
         'test',
