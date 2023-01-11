@@ -24,17 +24,17 @@ function makeThenable<T>(obs: Observable<T>, observer?: TapObserver<T>) {
 }
 
 /**
- * `after` is a better setTimeout, implemented as an Observable.
+ * `after` is a better setTimeout, implemented as an `await`-able Observable.
  * `after` is both lazy, cancelable, and 'thenable'— it can be awaited like a Promise.
  * `after` returns an Observable of the value, or result of the function call, or the Observable, after the given delay.
  *  For a delay of 0, the function is executed synchronously when `.subscribe()` is called.
  *
  * @returns An delayed Observable of the object, thunk return value, or Observable's notification(s).
- * @argument ms Either a number of milliseconds, or a Promise.
+ * @argument delayArg Either a number of milliseconds, a Promise, `setTimeout`, or `requestAnimationFrame`
  * @argument valueProvider Can be a value, a function returning a value, or an Observable.
  */
 export function after<T>(
-  ms: number | Promise<any>,
+  delayArg: number | Promise<any> | typeof setTimeout,
   valueProvider?: T | ((v?: T) => T) | Observable<T>,
   observer?: TapObserver<T>
 ) {
@@ -43,15 +43,15 @@ export function after<T>(
   ) as (v?: T) => T;
 
   // case: synchronous
-  if (ms === 0) {
+  if (delayArg === 0) {
     return makeThenable(of(resultFn()), observer);
   }
 
   // case: 1st argument Promise. Errors if last argument is an Observable.
-  if (typeof ms === 'object' && (ms as PromiseLike<T>).then) {
+  if (typeof delayArg === 'object' && (delayArg as PromiseLike<T>).then) {
     const obs = new Observable((notify) => {
       let canceled = false;
-      const conditionalSeq = (ms as Promise<T>).then((resolved) => {
+      (delayArg as Promise<T>).then((resolved) => {
         if (!canceled) {
           const result = resultFn(resolved);
           notify.next(result);
@@ -68,23 +68,45 @@ export function after<T>(
 
   // Case: 2nd argument Observable. Errors unless first arg is a number.
   if ((valueProvider as Observable<T>)?.subscribe) {
-    const delay: Observable<number> = timer(ms as unknown as number);
+    const delay: Observable<number> = timer(delayArg as unknown as number);
     return makeThenable(
       delay.pipe(mergeMap(() => valueProvider as Observable<T>))
     );
   }
 
+  // Case: 1st argument requestAnimationFrame
+  if (isRaF(delayArg)) {
+    const nextFrame = new Observable<T>((notify) => {
+      const reqId = requestAnimationFrame(() => {
+        const retVal = resultFn();
+        notify.next(retVal);
+        notify.complete();
+      });
+      return cancelAnimationFrame(reqId);
+    });
+    return makeThenable(nextFrame, observer);
+  }
+
   // Default - a value or thunk and a number of milliseconds
   const obs = new Observable<T>((notify) => {
-    const id = setTimeout(() => {
-      const retVal = resultFn();
-      notify.next(retVal);
-      notify.complete();
-    }, ms as number);
+    const id = setTimeout(
+      () => {
+        const retVal = resultFn();
+        notify.next(retVal);
+        notify.complete();
+      },
+      delayArg === setTimeout ? 0 : (delayArg as number)
+    );
     return () => {
       id && clearTimeout(id);
     };
   });
 
   return makeThenable(obs, observer);
+}
+
+function isRaF(fn: any) {
+  return (
+    typeof requestAnimationFrame === 'function' && fn === requestAnimationFrame
+  );
 }

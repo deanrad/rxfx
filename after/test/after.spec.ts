@@ -8,11 +8,11 @@ describe('after', () => {
   });
   it('is awaitable', async () => {
     const result = await after(1, '1.1');
-    expect(result).toEqual('1.1');
+    expect(result).toBe('1.1');
   });
   it('is thenable', async () => {
     return after(1, () => 52).then((result) => {
-      expect(result).toEqual(52);
+      expect(result).toBe(52);
     });
   });
 
@@ -23,7 +23,7 @@ describe('after', () => {
         after(0, () => {
           result = 3;
         }).subscribe();
-        expect(result).toEqual(3);
+        expect(result).toBe(3);
       });
     });
     describe('when a Promise', () => {
@@ -31,7 +31,7 @@ describe('after', () => {
         const result = after(Promise.resolve(1), 2);
         expect(result).toHaveProperty('subscribe');
         let resultVal = await after(Promise.resolve(1), 2);
-        expect(resultVal).toEqual(2);
+        expect(resultVal).toBe(2);
       });
 
       it('doesnt evaluate the mapper unless subscribed/awaited', async () => {
@@ -48,10 +48,11 @@ describe('after', () => {
 
         let resultVal = await result;
 
-        expect(resultVal).toEqual(4);
+        expect(resultVal).toBe(4);
         expect(called).toBeTruthy();
       });
     });
+
     describe('when setTimeout', () => {
       it('defers till setTimeout(0)', async () => {
         let result = '';
@@ -59,16 +60,37 @@ describe('after', () => {
           result = 'timeout occurred';
         }).subscribe();
 
-        expect(result).toEqual('');
+        expect(result).toBe('');
 
         // flushes only the microtask queue
         await Promise.resolve();
-        expect(result).toEqual('');
+        expect(result).toBe('');
 
         // only by now is it good
         await new Promise((resolve) => setTimeout(resolve, 0));
-        expect(result).toEqual('timeout occurred');
+        expect(result).toBe('timeout occurred');
       });
+    });
+
+    describe('when requestAnimationFrame  (browser/jsdom only)', () => {
+      if (typeof window !== 'undefined') {
+        it('defers till that frame', async () => {
+          jest
+            .spyOn(window, 'requestAnimationFrame')
+            .mockImplementation((cb) => after(16).then(cb));
+
+          let result = '';
+          after(requestAnimationFrame, () => {
+            result = 'raF occurred';
+          }).subscribe();
+
+          expect(result).toBe('');
+
+          // only by now is it good
+          await after(16);
+          expect(result).toBe('raF occurred');
+        });
+      }
     });
   });
 
@@ -76,20 +98,20 @@ describe('after', () => {
     describe('when a value', () => {
       it('is returned', async () => {
         const result = await after(1, 2.718);
-        expect(result).toEqual(2.718);
+        expect(result).toBe(2.718);
       });
     });
     describe('when a function', () => {
       it('schedules its execution later', async () => {
         let counter = 0;
         let thenable = after(1, () => counter++);
-        expect(counter).toEqual(0);
+        expect(counter).toBe(0);
         await thenable;
-        expect(counter).toEqual(1);
+        expect(counter).toBe(1);
       });
       it('returns its return value', async () => {
         let result = await after(1, () => 2.71);
-        expect(result).toEqual(2.71);
+        expect(result).toBe(2.71);
       });
     });
     describe('when an Observable', () => {
@@ -110,7 +132,7 @@ describe('after', () => {
       });
       it('yields the value', async () => {
         return after(1, of(2)).then((v) => {
-          expect(v).toEqual(2);
+          expect(v).toBe(2);
         });
       });
       it('can create an error emitter', async () => {
