@@ -25,6 +25,49 @@ describe('after', () => {
         }).subscribe();
         expect(result).toBe(3);
       });
+
+      it('throws?', () => {
+        expect(() => {
+          after(0, () => {
+            throw new Error();
+          }).subscribe();
+        }).toThrow();
+      });
+    });
+    describe('when >0', () => {
+      it('throws async error, caught via subscribe', async () => {
+        let err;
+        after(100, () => {
+          throw 'async-error';
+        }).subscribe({
+          error(e) {
+            err = e;
+          },
+        });
+        await after(100);
+        expect(err).toBe('async-error');
+      });
+
+      it('throws async error, caught via then', async () => {
+        let err;
+        after(100, () => {
+          throw 'async-error2';
+        }).then(
+          () => {},
+          (ex) => (err = ex)
+        );
+        await after(100);
+        expect(err).toBe('async-error2');
+      });
+
+      it('throws async error, caught via catch', async () => {
+        let err;
+        after(100, () => {
+          throw 'async-error3';
+        }).catch((ex) => (err = ex));
+        await after(100);
+        expect(err).toBe('async-error3');
+      });
     });
     describe('when a Promise', () => {
       it('becomes a chained Promise', async () => {

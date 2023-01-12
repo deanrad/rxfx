@@ -10,17 +10,21 @@ type SubscribeObserver = {
 };
 export type TapObserver<T> = PartialObserver<T> | SubscribeObserver;
 
-function makeThenable<T>(obs: Observable<T>, observer?: TapObserver<T>) {
+function makeAwaitable<T>(obs: Observable<T>, observer?: TapObserver<T>) {
   const obsTapped = observer ? obs.pipe(tap(observer)) : obs;
+  const thenHandler = (
+    resolve: (v: T) => any,
+    reject: (e: unknown) => unknown
+  ) => {
+    return (firstValueFrom(obsTapped) as PromiseLike<T>).then(resolve, reject);
+  };
   Object.assign(obsTapped, {
-    then(resolve: (v: T) => any, reject: (e: unknown) => unknown) {
-      return (firstValueFrom(obsTapped) as PromiseLike<T>).then(
-        resolve,
-        reject
-      );
+    then: thenHandler,
+    catch(rejectHandler: (e: unknown) => unknown) {
+      return thenHandler((result: any) => result, rejectHandler);
     },
   });
-  return obsTapped as Observable<T> & PromiseLike<T>;
+  return obsTapped as Observable<T> & Promise<T>;
 }
 
 /**
@@ -44,7 +48,7 @@ export function after<T>(
 
   // case: synchronous
   if (delayArg === 0) {
-    return makeThenable(of(resultFn()), observer);
+    return makeAwaitable(of(resultFn()), observer);
   }
 
   // case: 1st argument Promise. Errors if last argument is an Observable.
@@ -63,13 +67,13 @@ export function after<T>(
       };
     });
     // @ts-ignore
-    return makeThenable(obs, observer);
+    return makeAwaitable(obs, observer);
   }
 
   // Case: 2nd argument Observable. Errors unless first arg is a number.
   if ((valueProvider as Observable<T>)?.subscribe) {
     const delay: Observable<number> = timer(delayArg as unknown as number);
-    return makeThenable(
+    return makeAwaitable(
       delay.pipe(mergeMap(() => valueProvider as Observable<T>))
     );
   }
@@ -84,16 +88,20 @@ export function after<T>(
       });
       return cancelAnimationFrame(reqId);
     });
-    return makeThenable(nextFrame, observer);
+    return makeAwaitable(nextFrame, observer);
   }
 
   // Default - a value or thunk and a number of milliseconds
   const obs = new Observable<T>((notify) => {
     const id = setTimeout(
       () => {
-        const retVal = resultFn();
-        notify.next(retVal);
-        notify.complete();
+        try {
+          const retVal = resultFn();
+          notify.next(retVal);
+          notify.complete();
+        } catch (ex) {
+          notify.error(ex);
+        }
       },
       delayArg === setTimeout ? 0 : (delayArg as number)
     );
@@ -102,7 +110,7 @@ export function after<T>(
     };
   });
 
-  return makeThenable(obs, observer);
+  return makeAwaitable(obs, observer);
 }
 
 function isRaF(fn: any) {
