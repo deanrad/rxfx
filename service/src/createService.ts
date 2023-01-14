@@ -117,7 +117,7 @@ export function matchesAny(...acs: ActionCreator<any>[]) {
  * @param listenOp - RxJS Operator to control what to do when an existing handler is in progress. Defaults to `mergeMap` (Immediate)
  * @returns
  */
-export function createService<TRequest, TNext, TError, TState = object>(
+export function createService<TRequest, TNext, TError = Error, TState = object>(
   actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
