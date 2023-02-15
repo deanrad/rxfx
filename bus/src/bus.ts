@@ -1,5 +1,6 @@
 //#region imports
-// @ts-ignore // i cant workspace :)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import symbol_Observable from 'symbol-observable';
 import { toggleMap } from '@rxfx/operators';
 import {
   BehaviorSubject,
@@ -106,6 +107,12 @@ export class Bus<TBusItem> {
         retry()
       )
       .subscribe();
+
+    const bus = this;
+
+    Object.assign(bus, {
+      [symbol_Observable]: () => bus.query(() => true),
+    });
   }
 
   /**

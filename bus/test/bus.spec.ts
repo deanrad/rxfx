@@ -1,10 +1,12 @@
-//@ts-nocheck
+// @ts-nocheck
+import symbol_Observable from 'symbol-observable';
 import {
   asapScheduler as promiseScheduler,
   asyncScheduler as timeoutScheduler,
   concat,
   empty,
   EMPTY,
+  from,
   Observable,
   of,
   throwError,
@@ -1150,6 +1152,63 @@ describe('Bus', () => {
         expect(seen).toEqual([-1, 1, 2, 3]);
         expect(heard).toEqual([-1, 3]);
       });
+    });
+  });
+
+  describe('RxJS interop (https://codesandbox.io/s/rxfx-bus-as-observable-m6e41v)', () => {
+    it('can be treated as an Observable via from()', () => {
+      const seen = [] as number[];
+      // @ts-ignore
+      const obsFromBus = from(miniBus);
+
+      obsFromBus.subscribe({
+        next(num) {
+          seen.push(num);
+        },
+      });
+      miniBus.trigger(1.2);
+      expect(seen).toEqual([1.2]);
+    });
+
+    it('is canceled by a reset', () => {
+      const seen = [] as number[];
+      const obsFromBus = miniBus[Symbol.observable]();
+
+      obsFromBus.subscribe({
+        next(num) {
+          seen.push(num);
+        },
+      });
+      miniBus.trigger(1.1);
+      miniBus.reset();
+      miniBus.trigger(2.2);
+      expect(seen).toEqual([1.1]);
+    });
+
+    it('can be treated as an Observable through the symbol-observable package', () => {
+      const seen = [] as number[];
+      const obsFromBus = miniBus[symbol_Observable]();
+
+      obsFromBus.subscribe({
+        next(num) {
+          seen.push(num);
+        },
+      });
+      miniBus.trigger(1.1);
+      expect(seen).toEqual([1.1]);
+    });
+
+    it('can be treated as an Observable through the Symbol.observable property', () => {
+      const seen = [] as number[];
+      const obsFromBus = miniBus[Symbol.observable]();
+
+      obsFromBus.subscribe({
+        next(num) {
+          seen.push(num);
+        },
+      });
+      miniBus.trigger(1.1);
+      expect(seen).toEqual([1.1]);
     });
   });
 });
