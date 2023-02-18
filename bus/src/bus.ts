@@ -37,14 +37,14 @@ import {
 export type Predicate<T> = (item: T) => boolean;
 
 /** A function accepting an item and returning a value, an Observable constructor, an ObservableInput, or void */
-export type EventHandler<T, TConsequence> = (
+export type EventHandler<T, HandlerReturnType> = (
   item: T
 ) =>
   | ((
-      this: Observable<TConsequence>,
-      subscriber: Subscriber<TConsequence>
+      this: Observable<HandlerReturnType>,
+      subscriber: Subscriber<HandlerReturnType>
     ) => TeardownLogic)
-  | ObservableInput<TConsequence>
+  | ObservableInput<HandlerReturnType>
   | void;
 
 /** Handles events of an effects' subscription, distinct from its Observable's notifications. */
@@ -53,11 +53,13 @@ export type SubscriptionObserver = {
   unsubscribe: () => void;
   finalize: () => void;
 };
-/** Handles events of an effects' Observable, or of its Subscription. */
+
+/** An object of callbacks for `next`,`complete`,`error`,`subscribe` (started), `unsubscribe` (canceled), and `finalize` events of an effect's lifecycle. */
 export type EffectObserver<T> = PartialObserver<T> | SubscriptionObserver;
 export type ObserverKey =
   | keyof PartialObserver<any>
   | keyof SubscriptionObserver;
+
 export type MapFn<T, U> = (t?: T) => U;
 export type Mapper<T, U> = Partial<Record<ObserverKey, MapFn<T, U>>>;
 
@@ -65,33 +67,34 @@ const thunkTrue = () => true;
 //#endregion
 
 /**
- * An instance of a Bus provides type-safe ways of triggering
- * and canceling side-effects, in response to events triggered upon it.
- *
- * In addition, a Bus instance allows delcarative concurrency
- * control, and provides ample means to dispose of resources at the
- * callers' control. When the side-effects are implemented as Observables,
- * cancelation and declarative concurrency control can be applied,
- * harnessing the power of RxJS operators.
+ * A Bus instance provides transportation of events across any part of a browser, server,
+ * mobile or native app. The 𝗥𝘅𝑓𝑥 bus also allows type-safe ways of triggering,
+ * concurrency controlling, and canceling async side-effects in a framework-independent,
+ * pure JavaScript way, akin to RxJS.
  */
-export class Bus<TBusItem> {
-  private channel: Subject<TBusItem>;
+export class Bus<EventType> {
+  private events: Subject<EventType>;
   private resets: Subject<void>;
-  private guards: Array<[Predicate<TBusItem>, (item: TBusItem) => void]>;
+  private guards: Array<[Predicate<EventType>, (item: EventType) => void]>;
   private filters: Array<
-    [Predicate<TBusItem>, (item: TBusItem) => TBusItem | null | undefined]
+    [Predicate<EventType>, (item: EventType) => EventType | null | undefined]
   >;
-  private spies: Array<[Predicate<TBusItem>, (item: TBusItem) => void]>;
+  private spies: Array<[Predicate<EventType>, (item: EventType) => void]>;
   private handlings: Subject<Observable<void>>;
 
-  /** While unhandled listener errors terminate the listener,
-   * the cause of that error is available on channel.errors
+  /** Contains any un-rescued sync or async errors from listeners.
+   * Listener errors terminate their listener when unrescued, but are not propogated back
+   * to the trigger call that prompted them, rather they are consumable via `bus.errors`.
+   * Errors in one listener do not affect the trigger-er, or any other listener.
+   * In contrast, guard errors are raised to the trigger-er.
+   * @see {@link Bus.listen}  {@link Bus.trigger}  {@link Bus.guard}
+   * @example `bus.errors.subscribe(ex => { console.error(ex) })`
    */
   public errors: Subject<string | Error>;
 
   constructor() {
     this.resets = new Subject();
-    this.channel = new Subject();
+    this.events = new Subject();
     this.errors = new Subject();
     this.guards = new Array();
     this.filters = new Array();
@@ -116,26 +119,31 @@ export class Bus<TBusItem> {
   }
 
   /**
-   * Returns an Observable of events matching the given predicate
-   * @param matcher A predicate to filter only events for which it returns true
-   * @returns
+   * Returns an Observable of events for which the predicate returns `true`.
+   * The returned Observable completes upon a `bus.reset`.
+   * If the predicate is a type guard, the returned Observable will be narrowed to the matching type.
+   * @param matcher A predicate to select events for which it returns `true`.
+   * @see { @link Bus.reset }
+   * @example `bus.query(() => true).subscribe(console.log)`
    */
-  public query<TMatchType extends TBusItem = TBusItem>(
-    matcher: ((i: TBusItem) => i is TMatchType) | ((i: TBusItem) => boolean)
+  public query<MatchType extends EventType = EventType>(
+    matcher: ((i: EventType) => i is MatchType) | ((i: EventType) => boolean)
   ) {
-    return this.channel
+    return this.events
       .asObservable()
       .pipe(filter(matcher), takeUntil(this.resets));
   }
 
   /**
-   * Returns a Promise for the first event for which the predicate returns true
-   * @param matcher A predicate which selects the resolved event
+   * Returns a Promise for the first event for which the predicate returns `true`.
+   * The returned Promise will be rejected upon a `bus.reset`.
+   * If the predicate is a type guard, the returned Promise will be narrowed to the matching type.
+   * @param matcher A predicate to select the first event for which it returns `true`.
    */
-  public nextEvent<TMatchType extends TBusItem = TBusItem>(
-    matcher: ((i: TBusItem) => i is TMatchType) | ((i: TBusItem) => boolean)
+  public nextEvent<MatchType extends EventType = EventType>(
+    matcher: ((i: EventType) => i is MatchType) | ((i: EventType) => boolean)
   ) {
-    return new Promise<TMatchType>((resolve, reject) => {
+    return new Promise<MatchType>((resolve, reject) => {
       // first() errors if stream completes (which resets cause)
       const errsIfNotFirst = this.query(matcher).pipe(first());
       // @ts-ignore
@@ -143,7 +151,7 @@ export class Bus<TBusItem> {
         error() {
           reject('Bus was reset.');
         },
-        next(v: TMatchType) {
+        next(v: MatchType) {
           resolve(v);
         },
       });
@@ -151,10 +159,15 @@ export class Bus<TBusItem> {
   }
 
   /**
+   * Puts an event onto the bus, firing any listeners whose predicate returns `true`.
+   * Events go first through guards, then filters, then spies, then listeners.
    *
-   * @param item The Event or other object to place onto the event bus, once it passes all filters.
+   * @param item The item to send to listeners, once it clears guards, filters, and spies.
+   * @throws if a guard, or filter throws an exception. Listener exceptions or errors do not throw, but
+   * appear on `bus.errors`, and terminate that listener.
+   * @see { @link Bus.errors } { @link Bus.filter } { @link Bus.guard } { @link Bus.spy } { @link Bus.listen }
    */
-  public trigger(item: TBusItem) {
+  public trigger(item: EventType) {
     this.guards.forEach(([predicate, guard]) => {
       predicate(item) && guard(item);
     });
@@ -182,7 +195,7 @@ export class Bus<TBusItem> {
       this.spies.forEach(([predicate, handler]) => {
         predicate(filteredItem) && handler(filteredItem);
       });
-      this.channel.next(filteredItem);
+      this.events.next(filteredItem);
 
       notify.complete();
     });
@@ -190,31 +203,27 @@ export class Bus<TBusItem> {
     this.handlings.next(handling);
   }
 
-  /** Alias for @trigger, revealing its Subject-like nature */
-  public next(item: TBusItem) {
+  /** Alias for { @link Bus.trigger } */
+  public next(item: EventType) {
     this.trigger(item);
   }
 
-  /** Triggers effects upon matching events, using an ASAP Concurrency Strategy.
-   * Newly returned effects are begun immediately, without regard to resource constraints, and may complete in any order (ala `mergeMap`).
-   *
-   * @param matcher A predicate (returning Boolean) function to determine the subset of Event Bus events the handler will be invoked for.
-   * @param handler Called for each matching event, returns an ObservableInput (an Iterable,Promise,Observable)
-   * @param observer Provides functions to be called upon notifications of the handler
-   * @returns a subscription that can be used to unsubscribe the listener, thereby canceling work in progress.
+  /** Assigns a side-effect producing function to matching events in Concurrency Mode "Immediate".
+   * Newly returned effects are begun immediately, and so may complete in any order (ala `mergeMap`), or consume resources unboundedly.
+   * @param matcher A predicate run upon every event on the bus. The handler function is only executed if the predicate returns `true`. If the matcher provides a type guard, the handler will see its events as narrowed to that type.
+   * @param handler The side-effect producing function which will _"Return The Work"_, as an `ObservableInput` (A Promise, Observable, or async generator)
+   * @param observer An { @link EffectObserver } which provides functions to be called upon notifications of the handler
+   * @param operator Allows a custom RxJS operator to be passed to use its own ConcurrencyMode.
+   * @returns A Subscription that can be used to unsubscribe the listener from future events. If the handler returned an Observable of work, any in-progress work will be canceled upon `unsubscribe()`.
+   * @summary ![immediate mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-immediate-sm.png)
    */
-  public listen<TConsequence, TMatchType extends TBusItem = TBusItem>(
-    matcher: ((i: TBusItem) => i is TMatchType) | ((i: TBusItem) => boolean),
-    handler: EventHandler<TMatchType, TConsequence>,
-    observer?: EffectObserver<TConsequence>,
+  public listen<HandlerReturnType, MatchType extends EventType = EventType>(
+    matcher: ((i: EventType) => i is MatchType) | ((i: EventType) => boolean),
+    handler: EventHandler<MatchType, HandlerReturnType>,
+    observer?: EffectObserver<HandlerReturnType>,
+    /** @ignore */
     operator = mergeMap
   ): Subscription & { isActive: BehaviorSubject<boolean> } {
-    /* A listener is basically: 
-      this.channel.pipe(
-        filter(matcher),
-        combiner(errWrappedHandler)
-      ).subscribe(errorNotifier);
-    */
     const activityCounter = new Subject<number>();
     const isActive = new BehaviorSubject<boolean>(false);
 
@@ -236,7 +245,7 @@ export class Bus<TBusItem> {
           unsubscribe() { activityCounter.next(-1); },
         };
 
-        const pipes: OperatorFunction<TConsequence, unknown>[] = [
+        const pipes: OperatorFunction<HandlerReturnType, unknown>[] = [
           tap(errLessObserver),
           tap(activityObserver),
         ];
@@ -274,121 +283,156 @@ export class Bus<TBusItem> {
     return Object.assign(sub, { isActive });
   }
 
-  /** Triggers effects upon matching events, using a Queueing Concurrency Strategy.
+  /** Assigns a side-effect producing function to matching events in Concurrency Mode "Queueing".
    * Newly returned effects are enqueued and always complete in the order they were triggered (ala `concatMap`).
-   * @param matcher A predicate (returning Boolean) function to determine the subset of Event Bus events the handler will be invoked for.
-   * @param handler Called for each matching event, returns an ObservableInput (an Iterable,Promise,Observable)
-   * @param observer Provides functions to be called upon notifications of the handler
-   * @returns a subscription that can be used to unsubscribe the listener, thereby canceling work in progress.
+   * @param matcher A predicate run upon every event on the bus. The handler function is only executed if the predicate returns `true`. If the matcher provides a type guard, the handler will see its events as narrowed to that type.
+   * @param handler The side-effect producing function which will _"Return The Work"_, as an `ObservableInput` (A Promise, Observable, or async generator)
+   * @param observer An { @link EffectObserver } which provides functions to be called upon notifications of the handler
+   * @returns A Subscription that can be used to unsubscribe the listener from future events. If the handler returned an Observable of work, any in-progress work will be canceled upon `unsubscribe()`.
+   * @summary ![queueing mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-queueing-sm.png)
    */
-  public listenQueueing<TConsequence, TMatchType extends TBusItem = TBusItem>(
-    matcher: ((i: TBusItem) => i is TMatchType) | ((i: TBusItem) => boolean),
-    handler: EventHandler<TMatchType, TConsequence>,
-    observer?: EffectObserver<TConsequence>
+  public listenQueueing<
+    HandlerReturnType,
+    MatchType extends EventType = EventType
+  >(
+    matcher: ((i: EventType) => i is MatchType) | ((i: EventType) => boolean),
+    handler: EventHandler<MatchType, HandlerReturnType>,
+    observer?: EffectObserver<HandlerReturnType>
   ) {
     return this.listen(matcher, handler, observer, concatMap);
   }
 
-  /** Triggers effects upon matching events, using a Queueing Concurrency Strategy.
+  /** Assigns a side-effect producing function to matching events in Concurrency Mode "Switching".
    * Any existing effect is canceled (if it is an Observable, not a Promise) before the new effect is begun (ala `switchMap`).
-   * @param matcher A predicate (returning Boolean) function to determine the subset of Event Bus events the handler will be invoked for.
-   * @param handler Called for each matching event, returns an ObservableInput (an Iterable,Promise,Observable)
-   * @param observer Provides functions to be called upon notifications of the handler
-   * @returns a subscription that can be used to unsubscribe the listener, thereby canceling work in progress.
+   * @param matcher A predicate run upon every event on the bus. The handler function is only executed if the predicate returns `true`. If the matcher provides a type guard, the handler will see its events as narrowed to that type.
+   * @param handler The side-effect producing function which will _"Return The Work"_, as an `ObservableInput` (A Promise, Observable, or async generator)
+   * @param observer An { @link EffectObserver } which provides functions to be called upon notifications of the handler
+   * @returns A Subscription that can be used to unsubscribe the listener from future events. If the handler returned an Observable of work, any in-progress work will be canceled upon `unsubscribe()`.
+   * @summary ![switching mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-switching-sm.png)
    */
-  public listenSwitching<TConsequence, TMatchType extends TBusItem = TBusItem>(
-    matcher: ((i: TBusItem) => i is TMatchType) | ((i: TBusItem) => boolean),
-    handler: EventHandler<TMatchType, TConsequence>,
-    observer?: EffectObserver<TConsequence>
+  public listenSwitching<
+    HandlerReturnType,
+    MatchType extends EventType = EventType
+  >(
+    matcher: ((i: EventType) => i is MatchType) | ((i: EventType) => boolean),
+    handler: EventHandler<MatchType, HandlerReturnType>,
+    observer?: EffectObserver<HandlerReturnType>
   ) {
     return this.listen(matcher, handler, observer, switchMap);
   }
 
-  /** Triggers effects upon matching events, using a Blocking (Modal/Singleton) Concurrency Strategy.
+  /** Assigns a side-effect producing function to matching events in Concurrency Mode "Blocking" (aka singleton).
    * A new effect is not begun if one is in progress. (ala `exhaustMap`).
-   * @param matcher A predicate (returning Boolean) function to determine the subset of Event Bus events the handler will be invoked for.
-   * @param handler Called for each matching event, returns an ObservableInput (an Iterable,Promise,Observable)
-   * @param observer Provides functions to be called upon notifications of the handler
-   * @returns a subscription that can be used to unsubscribe the listener, thereby canceling work in progress.
+   * @param matcher A predicate run upon every event on the bus. The handler function is only executed if the predicate returns `true`. If the matcher provides a type guard, the handler will see its events as narrowed to that type.
+   * @param handler The side-effect producing function which will _"Return The Work"_, as an `ObservableInput` (A Promise, Observable, or async generator)
+   * @param observer An { @link EffectObserver } which provides functions to be called upon notifications of the handler
+   * @returns A Subscription that can be used to unsubscribe the listener from future events. If the handler returned an Observable of work, any in-progress work will be canceled upon `unsubscribe()`.
+   * @summary ![blocking mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-blocking-sm.png)
    */
-  public listenBlocking<TConsequence, TMatchType extends TBusItem = TBusItem>(
-    matcher: ((i: TBusItem) => i is TMatchType) | ((i: TBusItem) => boolean),
-    handler: EventHandler<TMatchType, TConsequence>,
-    observer?: EffectObserver<TConsequence>
+  public listenBlocking<
+    HandlerReturnType,
+    MatchType extends EventType = EventType
+  >(
+    matcher: ((i: EventType) => i is MatchType) | ((i: EventType) => boolean),
+    handler: EventHandler<MatchType, HandlerReturnType>,
+    observer?: EffectObserver<HandlerReturnType>
   ) {
     return this.listen(matcher, handler, observer, exhaustMap);
   }
 
   /** Triggers effects upon matching events, using a Toggling (gate) Concurrency Strategy.
    * A new effect is not begun if one is in progress, and the existing effect is canceled.
-   * @param matcher A predicate (returning Boolean) function to determine the subset of Event Bus events the handler will be invoked for.
+   * @param matcher A predicate run upon every event on the bus. The handler function is only executed if the predicate returns `true`. If the matcher provides a type guard, the handler will see its events as narrowed to that type.
    * @param handler Called for each matching event, returns an ObservableInput (an Iterable,Promise,Observable)
-   * @param observer Provides functions to be called upon notifications of the handler
-   * @returns a subscription that can be used to unsubscribe the listener, thereby canceling work in progress.
+   * @param observer An { @link EffectObserver } which provides functions to be called upon notifications of the handler
+   * @returns A subscription that can be used to unsubscribe the listener, thereby canceling work in progress.
+   * @summary ![toggling mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-toggling-sm.png)
    */
-  public listenToggling<TConsequence, TMatchType extends TBusItem = TBusItem>(
-    matcher: ((i: TBusItem) => i is TMatchType) | ((i: TBusItem) => boolean),
-    handler: EventHandler<TMatchType, TConsequence>,
-    observer?: EffectObserver<TConsequence>
+  public listenToggling<
+    HandlerReturnType,
+    MatchType extends EventType = EventType
+  >(
+    matcher: ((i: EventType) => i is MatchType) | ((i: EventType) => boolean),
+    handler: EventHandler<MatchType, HandlerReturnType>,
+    observer?: EffectObserver<HandlerReturnType>
   ) {
     // @ts-ignore
     return this.listen(matcher, handler, observer, toggleMap);
   }
 
-  /** Run a function (synchronously) for all runtime events, prior to all spies and listeners.
-   * Throwing an exception will raise to the triggerer, but not terminate the guard.*/
-  public guard<TMatchType extends TBusItem = TBusItem>(
-    matcher: ((i: TBusItem) => i is TMatchType) | ((i: TBusItem) => boolean),
-    fn: (item: TMatchType) => void
+  /** Run a function synchronously for all runtime events, prior to all filters, spies and listeners.
+   * Throwing an exception will raise to the triggerer, but not terminate the guard.
+   * @returns A subscription that can be used to deactivate the guard.
+   * */
+  public guard<MatchType extends EventType = EventType>(
+    matcher: ((i: EventType) => i is MatchType) | ((i: EventType) => boolean),
+    fn: (item: MatchType) => void
   ) {
     // @ts-ignore
     this.guards.push([matcher, fn]);
     return this.createRemovalSub(matcher, fn, this.guards);
   }
 
-  /** Run a function (synchronously) for all runtime events, prior to all spies and listeners.
-   * Throwing an exception will raise to the triggerer, but not terminate the guard.*/
-  public filter<TMatchType extends TBusItem = TBusItem>(
-    matcher: ((i: TBusItem) => i is TMatchType) | ((i: TBusItem) => boolean),
-    fn: (item: TMatchType) => TBusItem | null | undefined
+  /** Run a function synchronously for all runtime events, after guards, and prior to spies and listeners.
+   * A filter may modify, or replace an event. However the filter _must_ return an event, or that
+   * event will not be seen by spies or listeners, and it will be as if the event was never triggered.
+   * This is what is meant to 'filter' out events.
+   * Throwing an exception will raise to the triggerer, but not terminate the filter.
+   * @returns A subscription that can be used to deactivate the filter.
+   */
+  public filter<MatchType extends EventType = EventType>(
+    matcher: ((i: EventType) => i is MatchType) | ((i: EventType) => boolean),
+    fn: (item: MatchType) => EventType | null | undefined
   ) {
     // @ts-ignore
     this.filters.push([matcher, fn]);
     return this.createRemovalSub(matcher, fn, this.filters);
   }
 
-  /** Run a function (synchronously) for all runtime events, prior to all listeners. Throwing an exception will terminate the spy.*/
-  public spy(fn: (item: TBusItem) => void) {
+  /** Run a function (synchronously) for all runtime events, prior to all listeners. Throwing an exception will terminate the spy.
+   * @returns A subscription that can be used to deactivate the spy.
+   */
+  public spy(fn: (item: EventType) => void) {
     this.spies.push([thunkTrue, fn]);
     return this.createRemovalSub(thunkTrue, fn, this.spies);
   }
 
+  /** Unsubscribes all guards, filters, spies and listeners, canceling handlings-in-progress if they were returned Observables,
+   * and reverting the bus to how it was when newly constructed.  */
   public reset(): void {
     this.resets.next();
   }
 
-  /** Turns each value from the listener's return value into a new triggered event.
+  /** Creates an {@link EffectObserver} which triggers each value from the handler back onto the bus.
    * Use this when the listener returns items suitable for putting directly onto the bus.
    */
   public observeAll<
-    TConsequence extends TBusItem
-  >(): EffectObserver<TConsequence> {
+    HandlerReturnType extends EventType
+  >(): EffectObserver<HandlerReturnType> {
     return {
-      next: (c: TConsequence) => {
+      next: (c: HandlerReturnType) => {
         this.trigger(c);
       },
     };
   }
 
-  /** Turns the specified events (next, error, complete, subscribe and unsubscribe)
-   * of the listeners' observable lifetime into triggered events.
-   * Uses a map with of mapping functions, like FSA action creators, to wrap the listener's notifications.
-   * Use this when the listener's values are not compatible with the bus, or to capture lifetime events.
-   *  **/
-  public observeWith<TConsequence>(mapper: Mapper<TConsequence, TBusItem>) {
+  /** Creates an {@link EffectObserver} which triggers the handlers' lifecycle events, after running through a mapping function.
+   * Use this when the listener's values are not compatible with the bus, or to capture lifecycle events.
+   * @example ```
+   * bus.listen(
+   *   isSearchRequest,
+   *   () => from([{ result: 'foo' }]),
+   *   bus.observeWith({ subscribe: () => ({ type: 'search/started' }) })
+   * );
+   * ```
+   **/
+  public observeWith<HandlerReturnType>(
+    mapper: Mapper<HandlerReturnType, EventType>
+  ) {
     // invariant - at least one key
     // @ts-ignore
-    const observer: PartialObserver<TConsequence> & SubscriptionObserver = {};
+    const observer: PartialObserver<HandlerReturnType> & SubscriptionObserver =
+      {};
     ['next', 'error'].forEach((key) => {
       // @ts-ignore
       if (mapper[key]) {
@@ -408,12 +452,12 @@ export class Bus<TBusItem> {
     return observer;
   }
 
-  private getHandlingResult<TConsequence>(
-    handler: EventHandler<TBusItem, TConsequence>,
-    event: TBusItem
+  private getHandlingResult<HandlerReturnType>(
+    handler: EventHandler<EventType, HandlerReturnType>,
+    event: EventType
   ) {
     const oneResult = handler(event);
-    const obsResult: Observable<TConsequence> =
+    const obsResult: Observable<HandlerReturnType> =
       typeof oneResult === 'function'
         ? new Observable(oneResult)
         : from(oneResult ?? EMPTY);
@@ -423,7 +467,7 @@ export class Bus<TBusItem> {
   private createRemovalSub(
     matcher: Function,
     fn: Function,
-    all: Array<[Predicate<TBusItem>, (item: TBusItem) => unknown]>
+    all: Array<[Predicate<EventType>, (item: EventType) => unknown]>
   ) {
     return new Subscription(() => {
       const whereamI = all.findIndex((pp) => pp[0] === matcher && pp[1] === fn);
