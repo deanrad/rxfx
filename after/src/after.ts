@@ -1,14 +1,24 @@
-import { firstValueFrom, Observable, of, timer, PartialObserver } from 'rxjs';
+import {
+  firstValueFrom,
+  Observable,
+  of,
+  timer,
+  PartialObserver,
+  Observer,
+} from 'rxjs';
 import { mergeMap, tap } from 'rxjs/operators';
 
 export interface Thunk<T> {
   (): T;
 }
-type SubscribeObserver = {
+
+export interface SubscribeObserver<T> extends Observer<T> {
   subscribe: () => void;
   unsubscribe: () => void;
-};
-export type TapObserver<T> = PartialObserver<T> | SubscribeObserver;
+  finalize: () => void;
+}
+
+export type TapObserver<T> = PartialObserver<T> | SubscribeObserver<T>;
 
 function makeAwaitable<T>(obs: Observable<T>, observer?: TapObserver<T>) {
   const obsTapped = observer ? obs.pipe(tap(observer)) : obs;
@@ -28,14 +38,29 @@ function makeAwaitable<T>(obs: Observable<T>, observer?: TapObserver<T>) {
 }
 
 /**
- * `after` is a better setTimeout, implemented as an `await`-able Observable.
- * `after` is both lazy, cancelable, and 'thenable'— it can be awaited like a Promise.
- * `after` returns an Observable of the value, or result of the function call, or the Observable, after the given delay.
- *  For a delay of 0, the function is executed synchronously when `.subscribe()` is called.
+ * `after` is a more readable version of `setTimeout`, implemented as an `await`-able Observable.
+ * `after` is lazy, and cancelable like an Observable, and `then`-able and `await`-able like a Promise.
  *
- * @returns An delayed Observable of the object, thunk return value, or Observable's notification(s).
- * @argument delayArg Either a number of milliseconds, a Promise, `setTimeout`, or `requestAnimationFrame`
- * @argument valueProvider Can be a value, a function returning a value, or an Observable.
+ * `after` is single-valued if a primitive or thunk is its 2nd argument, multivalued if an Observable.
+ *  For a delay of 0, the value is given synchronously when `.subscribe()` is called.
+ *
+ * @returns An `await`-able Observable of the object, thunk return value, or Observable's notification(s).
+ * @argument `delayArg` Either a number of milliseconds, a Promise, `setTimeout`, or `requestAnimationFrame`
+ * @argument `valueProvider` Can be a value, a function returning a value, or an Observable.
+ * @argument `observer` A `TapObserver` that can handle subscription or value events.
+ * @see https://www.youtube.com/watch?v=Bvsb9Qy1V9g for how `after` can be thought of as a 2-dimensional value, a
+ * composable vector in the 2-D space of time and values.
+ * @example
+ * ```typescript
+ * after(0, value)            # sync value
+ * after(N, value)            # delayed value
+ * after(N, ()=>value))       # delayed call
+ * after(N, Observable))      # delayed Obs.
+ * after(Promise, ()=>value)) # chained Promise
+ * after(N, value, {next})    # with Observer
+ * after(setTimeout, v)       # setTimeout(0)
+ * after(rAF, v)              # ani. frame
+ * ```
  */
 export function after<T>(
   delayArg: number | Promise<any> | typeof setTimeout,
@@ -74,7 +99,8 @@ export function after<T>(
   if ((valueProvider as Observable<T>)?.subscribe) {
     const delay: Observable<number> = timer(delayArg as unknown as number);
     return makeAwaitable(
-      delay.pipe(mergeMap(() => valueProvider as Observable<T>))
+      delay.pipe(mergeMap(() => valueProvider as Observable<T>)),
+      observer
     );
   }
 

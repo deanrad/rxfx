@@ -32,7 +32,7 @@
     "@rxfx/after": "workspace:^",
     "@rxfx/bus": "workspace:^",
     "@rxfx/operators": "workspace:^",
-    "rxjs": "^7.3.0",
+    "rxjs": "^7.8.0",
     "tslib": "^2.3.1"
   },
   "devDependencies": {

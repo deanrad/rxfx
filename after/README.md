@@ -8,11 +8,12 @@ A hybrid of Promise and Observable, useful for introducing delays, or creating s
 Call styles
 - `after(0, value)`
 - `after(N, value)`
-- `after(N, ()=>value)) `
+- `after(N, ()=>value))`
 - `after(N, Observable))`         
 - `after(Promise, ()=>value))`
 - `after(Promise, ()=>value, { unsubscribe(){ console.log('canceled'); })`
 - `after(setTimeout, ()=>value))`
+- `after(requestAnimationFrame, ()=>value))`
 
 Behaviors:
 Assuming `const fn = ()=>value;`

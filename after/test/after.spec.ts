@@ -6,10 +6,12 @@ describe('after', () => {
   it('is an Observable', () => {
     expect(after(1, 1)).toBeInstanceOf(Observable);
   });
+
   it('is awaitable', async () => {
     const result = await after(1, '1.1');
     expect(result).toBe('1.1');
   });
+  
   it('is thenable', async () => {
     return after(1, () => 52).then((result) => {
       expect(result).toBe(52);
@@ -34,6 +36,7 @@ describe('after', () => {
         }).toThrow();
       });
     });
+
     describe('when >0', () => {
       it('throws async error, caught via subscribe', async () => {
         let err;
@@ -69,6 +72,7 @@ describe('after', () => {
         expect(err).toBe('async-error3');
       });
     });
+
     describe('when a Promise', () => {
       it('becomes a chained Promise', async () => {
         const result = after(Promise.resolve(1), 2);
@@ -144,6 +148,7 @@ describe('after', () => {
         expect(result).toBe(2.718);
       });
     });
+
     describe('when a function', () => {
       it('schedules its execution later', async () => {
         let counter = 0;
@@ -152,11 +157,13 @@ describe('after', () => {
         await thenable;
         expect(counter).toBe(1);
       });
+
       it('returns its return value', async () => {
         let result = await after(1, () => 2.71);
         expect(result).toBe(2.71);
       });
     });
+
     describe('when an Observable', () => {
       it('defers subscription', async () => {
         const events: Array<string> = [];
@@ -173,11 +180,13 @@ describe('after', () => {
         await after(2);
         expect(events).toEqual(['subscribe']);
       });
+
       it('yields the value', async () => {
         return after(1, of(2)).then((v) => {
           expect(v).toBe(2);
         });
       });
+
       it('can create an error emitter', async () => {
         const seen = [];
         const errThrower = after(50, throwError('oops')).pipe(
@@ -191,6 +200,12 @@ describe('after', () => {
           // Note the lack of a kind:"N" 'next' notification
           { kind: 'E', error: 'oops', hasValue: false, value: undefined },
         ]);
+      });
+
+      it('invokes the observer for a delayed observable', async () => {
+        const observer = jest.fn();
+        await after(1, of(2), { next: observer });
+        expect(observer).toHaveBeenCalled();
       });
     });
   });

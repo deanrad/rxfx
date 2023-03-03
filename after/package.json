@@ -1,6 +1,6 @@
 {
   "name": "@rxfx/after",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "license": "MIT",
   "author": "Dean Radcliffe",
   "repository": "https://github.com/deanrad/rxfx",
@@ -25,12 +25,12 @@
     "test:coverage": "jest --coverage",
     "test:quiet": "jest --silent --reporters=jest-silent-reporter",
     "test:full": "yarn test:fast && yarn test:jsdom && yarn test:quiet && echo 'Retest successful' && yarn lint && yarn build",
-    "doc": "typedoc",
+    "doc": "typedoc --out dist/docs/after",
     "doctoc": "doctoc .",
     "build": "rimraf dist && tsc && timeout --foreground --preserve-status 10 rollup -c rollup.config.js"
   },
   "dependencies": {
-    "rxjs": "^7.3.0",
+    "rxjs": "^7.8.0",
     "tslib": "^2.3.1"
   },
   "devDependencies": {
@@ -59,7 +59,7 @@
     "rollup": ">= 2.56.2",
     "size-limit": ">= 5.0.3",
     "tiny-invariant": ">= 1.1.0",
-    "typedoc": ">= 0.21.5",
+    "typedoc": "latest",
     "typescript": ">= 4.3.5"
   },
   "prettier": {
