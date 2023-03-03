@@ -74,7 +74,8 @@ const thunkTrue = () => true;
  */
 export class Bus<EventType> {
   private events: Subject<EventType>;
-  private resets: Subject<void>;
+  /** A Subject that notifies each time `bus.reset()` is called */
+  public resets: Subject<void>;
   private guards: Array<[Predicate<EventType>, (item: EventType) => void]>;
   private filters: Array<
     [Predicate<EventType>, (item: EventType) => EventType | null | undefined]
