@@ -930,6 +930,18 @@ describe('createService', () => {
     `);
   });
 
+  it('terminates effects on a bus.reset', async () => {
+    const afterFinishedSpy = jest.fn();
+
+    testService = createService<string, string, Error>(testNamespace, bus, () =>
+      after(10, afterFinishedSpy)
+    );
+    testService('foo');
+    bus.reset();
+    await after(10);
+    expect(afterFinishedSpy).not.toBeCalled();
+  });
+
   describe('createQueueingService', () => {
     it.todo('calls createService with concatMap');
     it('can be called', () => {

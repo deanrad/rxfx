@@ -241,7 +241,8 @@ export function createService<TRequest, TNext, TError = Error, TState = object>(
         });
 
       return () => sub.unsubscribe();
-    }) as Observable<TNext>;
+      //@ts-ignore
+    }).pipe(takeUntil(bus.resets)) as Observable<TNext>;
   };
 
   /** The main bus listener of this service */
