@@ -1,0 +1,38 @@
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>𝗥𝘅𝑓𝑥 Example - SLAYr Specification Language</title>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"
+    />
+    <link rel="stylesheet" href="https://s3.amazonaws.com/www.deanius.com/rxfx-demos.css">
+    <link rel="stylesheet" href="./index.scss">
+  </head>
+
+  <body>
+			<div class="window">
+        <header>SlAY Playground (Specification Language, Almost YAML)</header>
+					<div id="app">
+            <fieldset>
+              <div>SlAY specs</div>
+              <textarea class="slay" id="txt-slay" rows="10">Describe: 𝗥𝘅𝑓𝑥
+  It: Rocks
+              </textarea>
+            </fieldset>
+            <div>
+              <button id="btn-convert">&gt;&gt;</button>
+            </div>
+            <fieldset>
+              <div>Jest specs</div>
+              <textarea class="jest" id="txt-jest">describe('𝗥𝘅𝑓𝑥', () => {
+  it('rocks');
+});
+              </textarea>
+            </fieldset>
+          </div>
+					
+				
+    <script type="module" src="./index.tsx"></script>
+  </body>
+</html>
