@@ -13,7 +13,8 @@
     "react",
     "service",
     "perception",
-    "animation"
+    "animation",
+    "peer"
   ],
   "dependencies": {
     "rxjs": "^7.8.0",
