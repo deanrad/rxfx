@@ -1,6 +1,11 @@
 # 𝗥𝘅𝑓𝑥 `peer`
 
-Can help a mesh of peers coordinate a single LEAD, even as peers come and go.
+Can help a mesh of peers coordinate a single LEAD, even as peers come and go. Part of the [𝗥𝘅𝑓𝑥](https://github.com/deanrad/rxfx) family of libraries.
+
+## Demo
+[CodeSandbox](https://codesandbox.io/s/rxfx-peer-example-fk32ds)
+
+## Specifications 
 
 ```yaml
 Describe: createPeer
