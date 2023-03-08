@@ -35,7 +35,7 @@ export interface LeadPeerProps<T = any> {
 /**
  * Helps a mesh of agents coordinate a single leader, even as some come and go.
  * @param props - The options — including inbox and outbox — with which the peer will negotiate lead.
- * @see https://codesandbox.io/s/rxfx-peer-tab-synched-bell-fk32ds
+ * @see https://codesandbox.io/s/rxfx-peer-example-fk32ds
  */
 export const createPeer = (
   props: LeadPeerProps

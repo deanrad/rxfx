@@ -1,11 +1,11 @@
 {
   "name": "@rxfx/peer",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "license": "MIT",
   "author": "Dean Radcliffe",
   "repository": "https://github.com/deanrad/rxfx",
-  "main": "dist/rxfx-after.min.js",
-  "module": "dist/rxfx-after.esm.js",
+  "main": "dist/rxfx-peer.min.js",
+  "module": "dist/rxfx-peer.esm.js",
   "typings": "dist/tsc/types/src/index.d.ts",
   "sideEffects": false,
   "files": [
@@ -25,7 +25,7 @@
     "test:coverage": "jest --coverage",
     "test:quiet": "jest --silent --reporters=jest-silent-reporter",
     "test:full": "yarn test:fast && yarn test:jsdom && yarn test:quiet && echo 'Retest successful' && yarn lint && yarn build",
-    "doc": "typedoc --out dist/docs/after",
+    "doc": "typedoc --out dist/docs/peer",
     "doctoc": "doctoc .",
     "build": "rimraf dist && tsc && timeout --foreground --preserve-status 10 rollup -c rollup.config.js"
   },
