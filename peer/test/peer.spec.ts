@@ -73,7 +73,9 @@ describe('createPeer', () => {
           inbox.next(PROMOTE({ origin: 'foo' }));
 
           // Assert
-          expect(sent[0]).toEqual(DEMOTE({ target: 'foo' }));
+          expect(sent[0]).toEqual(
+            DEMOTE({ target: 'foo', leader: 'test user 1' })
+          );
         });
       });
 
@@ -86,7 +88,7 @@ describe('createPeer', () => {
           });
 
           // Act
-          inbox.next(DEMOTE({ target: whoami1() }));
+          inbox.next(DEMOTE({ target: whoami1(), leader: 'test user 1' }));
 
           // Assert
         });

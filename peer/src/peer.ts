@@ -19,7 +19,10 @@ export enum Role {
 
 // Originated by user or browser events
 export const PROMOTE = createEvent<{ origin: string }>('lead/promote');
-export const DEMOTE = createEvent<{ target: string }>('lead/demote');
+// LEFTOFF - making leader property more crazy
+export const DEMOTE = createEvent<{ target: string; leader: string }>(
+  'lead/demote'
+);
 export const LEAVE = createEvent<{ origin: string }>('lead/leave');
 
 /* The parameters of any LeadPeer */
@@ -39,16 +42,19 @@ export interface LeadPeerProps<T = any> {
  */
 export const createPeer = (
   props: LeadPeerProps
-): Subscription & { role: BehaviorSubject<Role> } => {
+): Subscription & {
+  role: BehaviorSubject<Role>;
+} => {
   // The followable role
-  const role = new BehaviorSubject(Role.LEAD);
   const {
     whoami,
     inbox,
     outbox,
     delayTillClaim = () => 500 + 500 * Math.random(),
     shouldLeave = NEVER,
+    initialRole = Role.LEAD,
   } = props;
+  const role = new BehaviorSubject(initialRole);
 
   ////// The implementations
 
@@ -64,7 +70,8 @@ export const createPeer = (
         inbox,
         (e) => PROMOTE.match(e) && e.payload.origin !== whoami(),
         outbox,
-        ({ payload: { origin } }) => DEMOTE({ target: origin })
+        ({ payload: { origin } }) =>
+          DEMOTE({ target: origin, leader: whoami() })
       )
     );
 
@@ -122,15 +129,15 @@ export const createPeer = (
   // On: Startup
   // Set: role: LEAD
   // Outbox:  PROMOTE({ origin, MY_ID })
-  role.next(props.initialRole || Role.LEAD);
-  props.outbox(PROMOTE({ origin: whoami() }));
+  role.next(initialRole || Role.LEAD);
+  outbox(PROMOTE({ origin: whoami() }));
 
   // On: Exit
   // Condtion: role: LEAD
   //   Outbox: LEAVE({ origin })
   const leaver = shouldLeave.subscribe(() => {
     if (role.value === Role.LEAD) {
-      props.outbox(LEAVE({ origin: whoami() }));
+      outbox(LEAVE({ origin: whoami() }));
     }
   });
   switcher.add(leaver); // bundle cancelation
