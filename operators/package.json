@@ -1,6 +1,6 @@
 {
   "name": "@rxfx/operators",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "license": "MIT",
   "author": "Dean Radcliffe",
   "repository": "https://github.com/deanrad/rxfx",
@@ -24,7 +24,7 @@
     "test:coverage": "jest --coverage",
     "test:quiet": "jest --silent --reporters=jest-silent-reporter",
     "test:full": "yarn test:fast && yarn test:quiet && echo 'Retest successful' && yarn lint && yarn build",
-    "doc": "typedoc",
+    "doc": "typedoc --out dist/docs/operators",
     "doctoc": "doctoc .",
     "build": "rimraf dist && tsc && timeout --foreground --preserve-status 10 rollup -c rollup.config.js"
   },
