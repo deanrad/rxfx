@@ -74,7 +74,11 @@ describe('createPeer', () => {
 
           // Assert
           expect(sent[0]).toEqual(
-            DEMOTE({ target: 'foo', leader: 'test user 1' })
+            DEMOTE({
+              origin: 'foo',
+              target: 'foo',
+              leader: 'test user 1',
+            })
           );
         });
       });

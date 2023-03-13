@@ -20,9 +20,11 @@ export enum Role {
 // Originated by user or browser events
 export const PROMOTE = createEvent<{ origin: string }>('lead/promote');
 // LEFTOFF - making leader property more crazy
-export const DEMOTE = createEvent<{ target: string; leader: string }>(
-  'lead/demote'
-);
+export const DEMOTE = createEvent<{
+  origin: string;
+  target: string;
+  leader: string;
+}>('lead/demote');
 export const LEAVE = createEvent<{ origin: string }>('lead/leave');
 
 /* The parameters of any LeadPeer */
@@ -71,7 +73,7 @@ export const createPeer = (
         (e) => PROMOTE.match(e) && e.payload.origin !== whoami(),
         outbox,
         ({ payload: { origin } }) =>
-          DEMOTE({ target: origin, leader: whoami() })
+          DEMOTE({ origin, target: origin, leader: whoami() })
       )
     );
 
