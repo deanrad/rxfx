@@ -24,7 +24,7 @@
     "test:coverage": "jest --coverage",
     "test:quiet": "jest --silent --reporters=jest-silent-reporter",
     "test:full": "yarn test:fast && yarn test:quiet && echo 'Retest successful' && yarn lint && yarn build",
-    "doc": "typedoc",
+    "doc": "typedoc --out dist/docs/react",
     "doctoc": "doctoc .",
     "build": "rimraf dist && tsc && timeout --foreground --preserve-status 10 rollup -c rollup.config.js"
   },

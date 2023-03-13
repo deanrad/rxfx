@@ -32,6 +32,7 @@ export function useClosureListener<TConsequence, TMatchType extends TBusItem = T
 ): Subscription {
   const lastSub = useRef(new Subscription()); /* just to make .unsubscribe() safe */
   useEffect(() => {
+    // @ts-ignore
     lastSub.current = bus.listen(args.matches.match, args.handler, args.observeWith);
 
     return () => lastSub.current.unsubscribe();
@@ -50,6 +51,7 @@ export function useClosureFilter<TMatchType extends TBusItem = TBusItem>(
 ): Subscription {
   const lastSub = useRef(new Subscription()); /* just to make .unsubscribe() safe */
   useEffect(() => {
+    // @ts-ignore
     lastSub.current = bus.filter(args.matches.match, args.filter);
 
     return () => lastSub.current.unsubscribe();

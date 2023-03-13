@@ -1,4 +1,7 @@
-// See https://dev.to/deanius/the-thresholds-of-perception-in-ux-435g
+/**
+ * Contains constants reflecting thresholds of human perception and expectation.
+ * @see https://dev.to/deanius/the-thresholds-of-perception-in-ux-435g
+ */
 export const THRESHOLD = {
   Frame: 16,
   Frame60: 16,
