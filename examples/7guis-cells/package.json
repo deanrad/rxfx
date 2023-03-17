@@ -1,0 +1,40 @@
+{
+  "name": "rxfx-examples-7guis-cells",
+  "version": "0.0.0",
+  "license": "MIT",
+  "bin": "cli.js",
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "start": "node cli.js"
+  },
+  "files": [
+    "cli.js"
+  ],
+  "dependencies": {
+    "@rxfx/bus": "^1.0.1",
+    "clear": "^0.1.0",
+    "import-jsx": "^4.0.0",
+    "ink": "^3.0.9",
+    "ink-text-input": "^4.0.1",
+    "meow": "^9.0.0",
+    "react": "^17.0.2",
+    "rxjs": "^7.3.0"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.15.6",
+    "@babel/preset-react": "^7.14.5",
+    "@babel/register": "^7.15.3",
+    "chalk": "^4.1.2",
+    "eslint-plugin-react": "^7.25.1",
+    "eslint-plugin-react-hooks": "^4.2.0",
+    "nodemon": "^2.0.12"
+  },
+  "babel": {
+    "presets": [
+      "@babel/preset-env",
+      "@babel/preset-react"
+    ]
+  }
+}
