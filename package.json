@@ -9,6 +9,7 @@
   "workspaces": [
     "operators",
     "after",
+    "ajax",
     "bus",
     "react",
     "service",

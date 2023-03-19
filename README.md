@@ -6,6 +6,8 @@ A family of RxJS enhancers and abstractions for asynchronous event handling.
 
 - [`@rxfx/after`](https://github.com/deanrad/rxfx/tree/main/after) A utility for introducing delays, or creating scripts of delays. 
 
+- [`@rxfx/ajax`](https://github.com/deanrad/rxfx/tree/main/ajax) `fetchMany` - gives you a Streaming Observable of a plural endpoint (e.g. `users/`) instead of the all-at-the-end delivery of Promises. (Is Cancelable too).
+
 - [`@rxfx/bus`](https://github.com/deanrad/rxfx/tree/main/bus) - A Low-level effect execution and event observation with ordering, concurrency, and error isolation.
 
 - [`@rxfx/service`](https://github.com/deanrad/rxfx/tree/main/service)
