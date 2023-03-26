@@ -1,5 +1,5 @@
 import { actionCreatorFactory } from 'typescript-fsa';
-import { ProcessEvents, CollectionEvents } from './types';
+import { ProcessLifecycleActions } from './types';
 /**
  *
  * @param type - the action/event/subevent
@@ -18,7 +18,7 @@ export function createEvent<T>(type: string) {
 
 export function createProcessEvents<TRequest, TNext, TError>(
   ns: string
-): ProcessEvents<TRequest, TNext, TError> {
+): ProcessLifecycleActions<TRequest, TNext, TError> {
   return {
     request: createEvent<TRequest>(`${ns}/request`),
     cancel: createEvent<void>(`${ns}/cancel`),
@@ -27,24 +27,5 @@ export function createProcessEvents<TRequest, TNext, TError>(
     error: createEvent<TError>(`${ns}/error`),
     complete: createEvent<void>(`${ns}/complete`),
     canceled: createEvent<void>(`${ns}/canceled`),
-  };
-}
-
-export function createCollectionEvents<
-  TFetcher = void,
-  TRecord = any,
-  TResponse extends TRecord = TRecord,
-  TError = Error
->(ns: string): CollectionEvents<TFetcher, TRecord, TResponse, TError> {
-  return {
-    load: createProcessEvents<TFetcher, TRecord, TError>(`${ns}/load`),
-    refresh: createProcessEvents<TFetcher, TRecord, TError>(`${ns}/refresh`),
-    post: createProcessEvents<TRecord, TResponse, TError>(`${ns}/post`),
-    update: createProcessEvents<Partial<TRecord>, TResponse, TError>(
-      `${ns}/update`
-    ),
-    delete: createProcessEvents<Partial<TRecord>, TResponse, TError>(
-      `${ns}/delete`
-    ),
   };
 }

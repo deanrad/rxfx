@@ -12,7 +12,7 @@ import {
   createTogglingService,
 } from '../src/createService';
 
-import type { ProcessLifecycleCallbacks } from '../src/types';
+import type { ProcessLifecycleCallbacks, ReducerProducer } from '../src/types';
 
 describe('createService', () => {
   const testNamespace = 'testService';
@@ -52,7 +52,7 @@ describe('createService', () => {
         );
         const seen: Action<unknown>[] = [];
         bus.spy((e) => seen.push(e));
-        service();
+        service.request();
         await Promise.resolve();
         expect(seen).toContainEqual({
           type: 'testService/next',
@@ -69,6 +69,16 @@ describe('createService', () => {
 
         return { count: state.count + 1 };
       };
+
+      const typeSafeStyle: ReducerProducer<void, number, Error, number> =
+        (events) =>
+        (count = 0, event) => {
+          if (events.started.match(event)) {
+            return count + 1;
+          }
+          return count;
+        };
+
       const rtkStyle = (state: typeof initialState, e: Action<unknown>) => {
         if (e?.type !== 'counter/started') return state;
 
@@ -84,7 +94,7 @@ describe('createService', () => {
           typeof initialState
         >('counter', bus, handler, () => reduxStyle);
         expect(counterService.state.value).toHaveProperty('count', 0);
-        counterService();
+        counterService.request();
         expect(counterService.state.value).toHaveProperty('count', 1);
       });
 
@@ -96,8 +106,20 @@ describe('createService', () => {
           typeof initialState
         >('counter', bus, handler, () => rtkStyle);
         expect(counterService.state.value).toHaveProperty('count', 0);
-        counterService();
+        counterService.request();
         expect(counterService.state.value).toHaveProperty('count', 1);
+      });
+
+      it('can use a typesafe reducerproducer', () => {
+        const counterService = createService<void, number, Error, number>(
+          'counter',
+          bus,
+          handler,
+          typeSafeStyle
+        );
+        expect(counterService.state.value).toBe(0);
+        counterService.request();
+        expect(counterService.state.value).toBe(1);
       });
 
       it('wont error if it doesnt default the event', () => {
@@ -110,15 +132,14 @@ describe('createService', () => {
           'counter',
           bus,
           () => undefined,
-          (ACs) =>
-            (state = initialState, e: Action<unknown>) => {
-              return { count: state.count + (ACs?.complete.match(e) ? 1 : 0) };
-            }
+          () => reduxStyle
         );
         expect(counterService.state.value).toHaveProperty('count', 0);
-        counterService();
+        counterService.request();
         expect(counterService.state.value).toHaveProperty('count', 1);
       });
+
+      it('can be created ', () => {});
     });
   });
 
@@ -149,7 +170,7 @@ describe('createService', () => {
 
         expect(stateService.state.value).toEqual({ constants: [] });
 
-        stateService();
+        stateService.request();
         expect(stateService.state.value).toEqual({ constants: [3.14, 2.718] });
       });
 
@@ -170,10 +191,10 @@ describe('createService', () => {
 
         expect(stateService.state.value).toEqual({ constants: [] });
 
-        stateService();
+        stateService.request()
         expect(seenStates).toEqual([{ constants: [] }]);
 
-        stateService();
+        stateService.request()
         expect(seenStates).toEqual([{ constants: [] }, { constants: [1] }]);
 
         expect(stateService.state.value).toEqual({ constants: [1, 2] });
@@ -195,10 +216,10 @@ describe('createService', () => {
 
         expect(stateService.state.value).toEqual({ constants: [] });
 
-        stateService();
+        stateService.request()
         expect(seenStates).toEqual([{ constants: [] }]);
 
-        stateService();
+        stateService.request()
         expect(seenStates).toEqual([{ constants: [] }, { constants: [] }]);
 
         expect(stateService.state.value).toEqual({ constants: [] });
@@ -233,11 +254,11 @@ describe('createService', () => {
         expect(stateService.state.value).toBe(0);
         expect(seenErrors).toHaveLength(0);
 
-        stateService();
+        stateService.request()
         expect(stateService.state.value).toBe(1);
 
         // errors: return the same state, send to bus.errors, resume
-        stateService();
+        stateService.request()
         expect(stateService.state.value).toBe(1);
         expect(seenErrors).toMatchInlineSnapshot(`
           [
@@ -245,7 +266,7 @@ describe('createService', () => {
           ]
         `);
         // continues to reduce
-        stateService();
+        stateService.request()
         expect(stateService.state.value).toBe(2);
       });
     });
@@ -939,7 +960,7 @@ describe('createService', () => {
     testService('foo');
     bus.reset();
     await after(10);
-    expect(afterFinishedSpy).not.toBeCalled();
+    expect(afterFinishedSpy).not.toHaveBeenCalled();
   });
 
   describe('createQueueingService', () => {

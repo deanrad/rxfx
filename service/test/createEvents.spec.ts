@@ -1,9 +1,5 @@
 import { Action } from 'typescript-fsa';
-import {
-  createEvent,
-  createProcessEvents,
-  createCollectionEvents,
-} from '../src/createEvents';
+import { createEvent, createProcessEvents } from '../src/createEvents';
 
 interface Indexed {
   idx: number;
@@ -62,26 +58,6 @@ describe(createProcessEvents, () => {
           "error",
           "complete",
           "canceled",
-        ]
-      `);
-    });
-  });
-});
-
-describe(createCollectionEvents, () => {
-  describe('return value', () => {
-    it('creates types', () => {
-      const BOOKS = createCollectionEvents('books');
-      expect(BOOKS.load.request.type).toBe('books/load/request');
-    });
-    it('has the keys', () => {
-      expect(Object.keys(createCollectionEvents('inc'))).toMatchInlineSnapshot(`
-        [
-          "load",
-          "refresh",
-          "post",
-          "update",
-          "delete",
         ]
       `);
     });
