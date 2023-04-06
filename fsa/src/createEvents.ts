@@ -1,5 +1,22 @@
-import { actionCreatorFactory } from 'typescript-fsa';
-import { ProcessLifecycleActions } from './types';
+import { actionCreatorFactory, ActionCreator } from './typescript-fsa';
+
+/** A dictionary of ActionCreators corresponding to lifecycle events of a process. */
+export interface ProcessLifecycleActions<TRequest, TNext, TError> {
+  /** Invokes the service. */
+  request: ActionCreator<TRequest>;
+  /** Cancels the current invocation.  */
+  cancel: ActionCreator<void>;
+  /** Notifies an invocation has begun. */
+  started: ActionCreator<void>;
+  /** Notifies an invocation has produced data. */
+  next: ActionCreator<TNext>;
+  /** Notifies an invocation has terminated with an error. */
+  error: ActionCreator<TError>;
+  /** Notifies an invocation has terminated successfully. */
+  complete: ActionCreator<void>;
+  /** Notifies an invocation was canceled by a subscriber. */
+  canceled: ActionCreator<void>;
+}
 /**
  *
  * @param type - the action/event/subevent

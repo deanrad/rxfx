@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react-hooks';
-import { createEvent } from '@rxfx/service';
+import { createEvent } from '@rxfx/fsa';
 import { defaultBus } from '@rxfx/bus';
 import { Subscription } from 'rxjs';
 import { useClosureFilter, useClosureListener } from '../src/useClosureHandlers';

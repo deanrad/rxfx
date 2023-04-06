@@ -3,7 +3,7 @@ import { BehaviorSubject, EMPTY, firstValueFrom, from, merge, Observable, Observ
 // prettier-ignore
 import { concatMap, distinctUntilChanged, endWith, exhaustMap, map, mergeMap, scan, switchMap, takeUntil, tap } from 'rxjs/operators';
 
-import { Action, ActionCreator, actionCreatorFactory } from 'typescript-fsa';
+import { Action, ActionCreator, actionCreatorFactory } from '@rxfx/fsa';
 
 import { Bus } from '@rxfx/bus';
 import type { EventHandler } from '@rxfx/bus';

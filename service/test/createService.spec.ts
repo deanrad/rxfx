@@ -1,5 +1,5 @@
 import { concat, Observable, of, throwError } from 'rxjs';
-import { Action } from 'typescript-fsa';
+import { Action } from '@rxfx/fsa';
 
 import { Bus } from '@rxfx/bus';
 import { after } from '@rxfx/after';
@@ -191,10 +191,10 @@ describe('createService', () => {
 
         expect(stateService.state.value).toEqual({ constants: [] });
 
-        stateService.request()
+        stateService.request();
         expect(seenStates).toEqual([{ constants: [] }]);
 
-        stateService.request()
+        stateService.request();
         expect(seenStates).toEqual([{ constants: [] }, { constants: [1] }]);
 
         expect(stateService.state.value).toEqual({ constants: [1, 2] });
@@ -216,10 +216,10 @@ describe('createService', () => {
 
         expect(stateService.state.value).toEqual({ constants: [] });
 
-        stateService.request()
+        stateService.request();
         expect(seenStates).toEqual([{ constants: [] }]);
 
-        stateService.request()
+        stateService.request();
         expect(seenStates).toEqual([{ constants: [] }, { constants: [] }]);
 
         expect(stateService.state.value).toEqual({ constants: [] });
@@ -254,11 +254,11 @@ describe('createService', () => {
         expect(stateService.state.value).toBe(0);
         expect(seenErrors).toHaveLength(0);
 
-        stateService.request()
+        stateService.request();
         expect(stateService.state.value).toBe(1);
 
         // errors: return the same state, send to bus.errors, resume
-        stateService.request()
+        stateService.request();
         expect(stateService.state.value).toBe(1);
         expect(seenErrors).toMatchInlineSnapshot(`
           [
@@ -266,7 +266,7 @@ describe('createService', () => {
           ]
         `);
         // continues to reduce
-        stateService.request()
+        stateService.request();
         expect(stateService.state.value).toBe(2);
       });
     });

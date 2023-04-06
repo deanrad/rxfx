@@ -1,16 +1,4 @@
-import { Action, ActionCreator } from 'typescript-fsa';
-
-/** The events a process emits or responds to throughout its lifecycle. */
-export enum ProcessLifecycleEvent {
-  request = 'request',
-  cancel = 'cancel',
-  started = 'started',
-  next = 'next',
-  error = 'error',
-  complete = 'complete',
-  canceled = 'canceled',
-  finalized = 'finalized',
-}
+import { Action, ActionCreator } from '@rxfx/fsa';
 
 /** A dictionary of ActionCreators corresponding to lifecycle events of a process. */
 export interface ProcessLifecycleActions<TRequest, TNext, TError> {
@@ -55,7 +43,6 @@ interface ServiceReducer<TRequest, TNext = void, TError = Error, TState = {}> {
   (state: TState, action: Action<TRequest | TNext | TError | void>): TState;
   getInitialState?: () => TState;
 }
-
 
 /** Signature for a function that closes over action creators and returns a Producer */
 export type ReducerProducer<

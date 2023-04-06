@@ -19,16 +19,16 @@ describe('useWhileMounted', () => {
 
     describe('at mount time', () => {
       it('calls the factory', () => {
-        const result = render(React.createElement(Example));
-        expect(count).toEqual(1);
+        render(React.createElement(Example));
+        expect(count).toBe(1);
       });
     });
     describe('at unmount time', () => {
       it('unsubscribes the subscription', () => {
         const { unmount } = render(React.createElement(Example));
-        expect(count).toEqual(1);
+        expect(count).toBe(1);
         unmount();
-        expect(count).toEqual(0);
+        expect(count).toBe(0);
       });
     });
   });
@@ -46,16 +46,16 @@ describe('useWhileMounted', () => {
 
     describe('at mount time', () => {
       it('calls the factory', () => {
-        const result = render(React.createElement(Example));
-        expect(count).toEqual(1);
+        render(React.createElement(Example));
+        expect(count).toBe(1);
       });
     });
     describe('at unmount time', () => {
       it('unsubscribes the subscription', () => {
         const { unmount } = render(React.createElement(Example));
-        expect(count).toEqual(1);
+        expect(count).toBe(1);
         unmount();
-        expect(count).toEqual(0);
+        expect(count).toBe(0);
       });
     });
     describe('with no teardown', () => {
@@ -72,14 +72,14 @@ describe('useWhileMounted', () => {
 
       describe('at mount time', () => {
         it('calls the factory', () => {
-          const result = render(React.createElement(Example));
-          expect(count).toEqual(1);
+          render(React.createElement(Example));
+          expect(count).toBe(1);
         });
       });
       describe('at unmount time', () => {
         it('doesnt err', () => {
           const { unmount } = render(React.createElement(Example));
-          expect(count).toEqual(1);
+          expect(count).toBe(1);
           unmount();
         });
       });
@@ -101,16 +101,16 @@ describe('useWhileMounted', () => {
 
     describe('at mount time', () => {
       it('calls the factory', () => {
-        const result = render(React.createElement(Example));
-        expect(count).toEqual(1);
+        render(React.createElement(Example));
+        expect(count).toBe(1);
       });
     });
     describe('at unmount time', () => {
       it('unsubscribes the subscription', () => {
         const { unmount } = render(React.createElement(Example));
-        expect(count).toEqual(1);
+        expect(count).toBe(1);
         unmount();
-        expect(count).toEqual(0);
+        expect(count).toBe(0);
       });
     });
   });
@@ -119,9 +119,7 @@ describe('useWhileMounted', () => {
     describe('called with a Subscription factory', () => {
       const mockSub = new Subscription();
       const mockUnsub = jest.spyOn(mockSub, 'unsubscribe');
-      const mockSubFactory = jest.fn(
-        () => mockSub
-      ) as unknown as () => Subscription;
+      const mockSubFactory = jest.fn(() => mockSub) as unknown as () => Subscription;
       const Example = () => {
         useWhileMounted(mockSubFactory);
         return null;
@@ -129,7 +127,7 @@ describe('useWhileMounted', () => {
 
       describe('at mount time', () => {
         it('calls the factory', () => {
-          const result = render(React.createElement(Example));
+          render(React.createElement(Example));
           expect(mockSubFactory).toHaveBeenCalled();
         });
       });

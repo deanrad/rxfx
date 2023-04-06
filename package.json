@@ -15,7 +15,8 @@
     "service",
     "perception",
     "animation",
-    "peer"
+    "peer",
+    "fsa"
   ],
   "dependencies": {
     "rxjs": "^7.8.0",
