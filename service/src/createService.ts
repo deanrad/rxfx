@@ -40,10 +40,12 @@ interface Queryable<TRequest, TNext, TError, TState> {
   commands: Observable<Action<TRequest | void>>;
   /** An Observable of just `started` events. */
   starts: Observable<Action<void>>;
-  /** An Observable of just `canceled` events. */
+  /** An Observable of just `canceled` events of this service. */
   cancelations: Observable<Action<void>>;
-  /** An Observable of just `start` and `canceled`. */
+  /** An Observable of just `start` and `canceled` events of this service. */
   acks: Observable<Action<void>>;
+  /** An Observable of just `started`, `next`, `complete`, `error `, and `canceled` events. */
+  updates: Observable<Action<TNext | TError | void>>;
   /** An Observable of just the `next` events of this service. */
   responses: Observable<Action<TNext>>;
   /** An Observable of just the `error` events of this service. */
@@ -321,6 +323,9 @@ export function createService<TRequest, TNext, TError = Error, TState = object>(
     acks: bus.query(matchesAny(ACs.started, ACs.canceled)) as Observable<
       Action<void>
     >,
+    updates: bus.query(
+      matchesAny(ACs.started, ACs.next, ACs.complete, ACs.error, ACs.canceled)
+    ) as Observable<Action<TNext | TError | void>>,
     responses: bus.query(ACs.next.match) as Observable<Action<TNext>>,
     errors: bus.query(ACs.error.match) as Observable<Action<TError>>,
     endings: bus.query(matchesAny(ACs.complete, ACs.error)) as Observable<

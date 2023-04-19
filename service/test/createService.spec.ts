@@ -973,6 +973,11 @@ describe('createService', () => {
         expect(testService.acks).toHaveProperty('subscribe');
       });
     });
+    describe('updates', () => {
+      it('contains started, next, complet, error canceled', () => {
+        expect(testService.updates).toHaveProperty('subscribe');
+      });
+    });
     describe('responses', () => {
       it('contains next', () => {
         expect(testService.responses).toHaveProperty('subscribe');
