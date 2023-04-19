@@ -717,18 +717,6 @@ describe('createService', () => {
       });
     });
 
-    describe('#errors', () => {
-      it('notifies of /error events', () => {
-        expect(testService.errors).toBeDefined();
-      });
-    });
-
-    describe('#responses', () => {
-      it('notifies of /next events', () => {
-        expect(testService.responses).toBeDefined();
-      });
-    });
-
     describe('#observe', () => {
       const spies: Partial<ProcessLifecycleCallbacks<void, string, Error>> = {
         request: jest.fn(),
@@ -961,6 +949,53 @@ describe('createService', () => {
     bus.reset();
     await after(10);
     expect(afterFinishedSpy).not.toHaveBeenCalled();
+  });
+
+  // drive-by coverage only on these simple ones
+  describe('Service Substream Observables', () => {
+    describe('commands', () => {
+      it('contains request, cancel', () => {
+        expect(testService.commands).toHaveProperty('subscribe');
+      });
+    });
+    describe('starts', () => {
+      it('contains started', () => {
+        expect(testService.starts).toHaveProperty('subscribe');
+      });
+    });
+    describe('cancelations', () => {
+      it('contains canceled', () => {
+        expect(testService.cancelations).toHaveProperty('subscribe');
+      });
+    });
+    describe('acks', () => {
+      it('contains started, canceled', () => {
+        expect(testService.acks).toHaveProperty('subscribe');
+      });
+    });
+    describe('responses', () => {
+      it('contains next', () => {
+        expect(testService.responses).toHaveProperty('subscribe');
+      });
+    });
+    describe('errors', () => {
+      it('contains error', () => {
+        expect(testService.errors).toHaveProperty('subscribe');
+      });
+    });
+    describe('endings', () => {
+      it('contains complete, error', () => {
+        expect(testService.endings).toHaveProperty('subscribe');
+      });
+    });
+    describe('finalizers', () => {
+      it('contains complete, error, canceled', () => {
+        expect(testService.endings).toHaveProperty('subscribe');
+      });
+    });
+    describe('events', () => {
+      it.todo('contains .notifications, .acks');
+    });
   });
 
   describe('createQueueingService', () => {

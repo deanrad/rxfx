@@ -36,14 +36,26 @@ interface Stoppable {
 }
 
 interface Queryable<TRequest, TNext, TError, TState> {
-  /** An Observable of just the values of this service */
+  /** An Observable of just `request`, `cancel` events. */
+  commands: Observable<Action<TRequest | void>>;
+  /** An Observable of just `started` events. */
+  starts: Observable<Action<void>>;
+  /** An Observable of just `canceled` events. */
+  cancelations: Observable<Action<void>>;
+  /** An Observable of just `start` and `canceled`. */
+  acks: Observable<Action<void>>;
+  /** An Observable of just the `next` events of this service. */
   responses: Observable<Action<TNext>>;
-  /** An Observable of just the error events of this service */
+  /** An Observable of just the `error` events of this service. */
   errors: Observable<Action<TError>>;
+  /** An Observable of just the `complete` and `error` events of this service. */
+  endings: Observable<Action<TError | void>>;
+  /** An Observable of just the `complete`, `error`, and `canceled` events of this service. */
+  finalizers: Observable<Action<TError | void>>;
+  /** An Observable of all events of this service. */
+  events: Observable<Action<void | TRequest | TNext | TError>>;
   /** Uses the reducer to aggregate the events that are produced from its handlers, emitting a new state for each action (de-duping is not done). Use `.value`, or `subscribe()` for updates. */
   state: BehaviorSubject<TState>;
-  /** An Observable of all events of this service */
-  events: Observable<Action<void | TRequest | TNext | TError>>;
   /** Becomes false the Promise after isHandling becomes false, when no more requests are scheduled to start. */
   isActive: BehaviorSubject<boolean>;
   /** Indicates whether a handling is in progress. Use `.value`, or `subscribe()` for updates.  */
@@ -300,6 +312,28 @@ export function createService<TRequest, TNext, TError = Error, TState = object>(
     return invocations.subscribe(subscriber);
   };
 
+  const queries = {
+    commands: bus.query(matchesAny(ACs.request, ACs.cancel)) as Observable<
+      Action<TRequest | void>
+    >,
+    starts: bus.query(ACs.started.match) as Observable<Action<void>>,
+    cancelations: bus.query(ACs.canceled.match) as Observable<Action<void>>,
+    acks: bus.query(matchesAny(ACs.started, ACs.canceled)) as Observable<
+      Action<void>
+    >,
+    responses: bus.query(ACs.next.match) as Observable<Action<TNext>>,
+    errors: bus.query(ACs.error.match) as Observable<Action<TError>>,
+    endings: bus.query(matchesAny(ACs.complete, ACs.error)) as Observable<
+      Action<TError | void>
+    >,
+    finalizers: bus.query(
+      matchesAny(ACs.complete, ACs.error, ACs.canceled)
+    ) as Observable<Action<TError | void>>,
+    state,
+    events: bus.query(matchesAny(...Object.values(ACs))) as Observable<
+      Action<void | TRequest | TNext | TError>
+    >,
+  };
   const returnValue = Object.assign(requestor, { actions: ACs }, controls, {
     // Native
     bus,
@@ -312,12 +346,7 @@ export function createService<TRequest, TNext, TError = Error, TState = object>(
     },
     request: requestor,
     // Queryable
-    responses: bus.query(ACs.next.match) as Observable<Action<TNext>>,
-    errors: bus.query(ACs.error.match) as Observable<Action<TError>>,
-    state,
-    events: bus.query(matchesAny(...Object.values(ACs))) as Observable<
-      Action<void | TRequest | TNext | TError>
-    >,
+    ...queries,
     isActive,
     isHandling,
     currentError,
