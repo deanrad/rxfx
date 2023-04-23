@@ -478,3 +478,12 @@ export class Bus<EventType> {
 }
 
 export const defaultBus = new Bus<any>();
+
+/** A predicate returning true for any event.
+ * @example bus.query(ANY).subscribe(...)
+ */
+export const ANY = (_: any) => true;
+/** A predicate returning true for any event.
+ * @example bus.query(ALL).subscribe(...)
+ */
+export const ALL = (_: any) => true;
