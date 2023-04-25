@@ -2,7 +2,9 @@
 
 Create JS-driven animations without recursive `requestAnimationFrame` calls, and with appropriate cancelation and timeouts.
 
-A TypeScript/Observable version [TweenJS](https://github.com/tweenjs/tween.js). Includes `@rxfx/perception`, `@rxfx/after`.
+A TypeScript/Observable version of [TweenJS](https://github.com/tweenjs/tween.js). 
+
+Includes `@rxfx/perception`, `@rxfx/after`.
 
 Example: 
 ```js

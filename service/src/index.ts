@@ -1,5 +1,6 @@
 export * from './createService';
 export * from './modifyHandler';
+export * from './types';
 
 export * from '@rxfx/after';
 export * from '@rxfx/bus';

@@ -7,102 +7,10 @@ import { Action, ActionCreator, actionCreatorFactory } from '@rxfx/fsa';
 
 import { Bus } from '@rxfx/bus';
 import type { EventHandler } from '@rxfx/bus';
+import type { ProcessLifecycleActions } from '@rxfx/fsa';
 
 import { toggleMap } from '@rxfx/operators';
-import {
-  ProcessLifecycleCallbacks,
-  ProcessLifecycleActions,
-  ReducerProducer,
-} from './types';
-
-interface Stoppable {
-  /** Terminates the listener, any of its Observable handlings.
-   * @returns The closed subscription.
-   */
-  stop(): Subscription;
-  /** Cancels the current handling by triggering service.actions.cancel.
-   * The effect is truly canceled if it was started from an Observable.
-   * The canceled event will appear on the bus, and no more next events.
-   */
-  cancelCurrent(): void;
-  /** Cancels the current handling by triggering service.actions.cancel.
-   * In addition, any operations enqueued will not be begun. (Safe to call even if not a queueing service.)
-   */
-  cancelCurrentAndQueued(): void;
-  /**
-   * Adds a function to be called only once when stop() is invoked
-   */
-  addTeardown(teardownFn: Subscription['add']): void;
-}
-
-interface Queryable<TRequest, TNext, TError, TState> {
-  /** An Observable of just `request`, `cancel` events. */
-  commands: Observable<Action<TRequest | void>>;
-  /** An Observable of just `started` events. */
-  starts: Observable<Action<void>>;
-  /** An Observable of just `canceled` events of this service. */
-  cancelations: Observable<Action<void>>;
-  /** An Observable of just `start` and `canceled` events of this service. */
-  acks: Observable<Action<void>>;
-  /** An Observable of just `started`, `next`, `complete`, `error `, and `canceled` events. */
-  updates: Observable<Action<TNext | TError | void>>;
-  /** An Observable of just the `next` events of this service. */
-  responses: Observable<Action<TNext>>;
-  /** An Observable of just the `error` events of this service. */
-  errors: Observable<Action<TError>>;
-  /** An Observable of just the `complete` and `error` events of this service. */
-  endings: Observable<Action<TError | void>>;
-  /** An Observable of just the `complete`, `error`, and `canceled` events of this service. */
-  finalizers: Observable<Action<TError | void>>;
-  /** An Observable of all events of this service. */
-  events: Observable<Action<void | TRequest | TNext | TError>>;
-  /** Uses the reducer to aggregate the events that are produced from its handlers, emitting a new state for each action (de-duping is not done). Use `.value`, or `subscribe()` for updates. */
-  state: BehaviorSubject<TState>;
-  /** Becomes false the Promise after isHandling becomes false, when no more requests are scheduled to start. */
-  isActive: BehaviorSubject<boolean>;
-  /** Indicates whether a handling is in progress. Use `.value`, or `subscribe()` for updates.  */
-  isHandling: BehaviorSubject<boolean>;
-  /** Contains the last error object, but becomes `null` at the start of the next handling. */
-  currentError: BehaviorSubject<TError | null>;
-  /** Creates an independent subscription, invoking callbacks on process lifecycle events */
-  observe: (
-    cbs: Partial<ProcessLifecycleCallbacks<TRequest, TNext, TError>>
-  ) => Subscription;
-}
-
-interface Requestable<TRequest, TResponse> {
-  send(arg: TRequest): Promise<Action<TResponse>>;
-  /** Invoke the service as a function directly (RTK style). */
-  (req: TRequest): void;
-  /** Explicitly pass a request object */
-  request(req: TRequest): void;
-}
-
-/**
- * A service is a listener over a bus, which triggers responses in some combination to
- * the requests it recieves. On each request it runs a handler
- *  (subject to its concurrency strategy) then triggers events based on that handler's lifecycle.
- *  For a service defined with the prefix "time", its event schema would be:
- *
- * - `time/request` - client: requests the time
- * - `time/cancel` - client: cancel the current request for the time
- * - `time/started` - server: time resolution has begun
- * - `time/next` - server: contains the time as a payload
- * - `time/complete` - server: no more times will be sent
- * - `time/error` - server: an error occurred (the listener remains alive due to internal rescueing)
- * - `time/canceled` - server: has canceled the current request for the time
- */
-export interface Service<TRequest, TNext, TError, TState>
-  extends Requestable<TRequest, TNext>,
-    Queryable<TRequest, TNext, TError, TState>,
-    Stoppable {
-  /** The ActionCreator factories this service listens for, and responds with. */
-  actions: ProcessLifecycleActions<TRequest, TNext, TError>;
-  /** An untyped reference to the bus this service listens and triggers on */
-  bus: Bus<any>;
-  /** The namespace given at construction time */
-  namespace: string;
-}
+import { ReducerProducer, ProcessLifecycleCallbacks, Service, Stoppable } from './types';
 
 /** @example bus.listen(matchesAny(Actions.complete, Actions.error), handler) */
 export function matchesAny(...acs: ActionCreator<any>[]) {
