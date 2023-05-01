@@ -1,7 +1,7 @@
 import fs from "fs";
 import { defaultBus as bus } from "@rxfx/bus";
 import { createEvent } from "@rxfx/fsa";
-import { Observable } from "rxjs";
+import { Observable as Process } from "rxjs";
 
 export const CONFIG_PATH = "./config.json";
 export const CONFIG_CHANGED = createEvent("next/config");
@@ -24,11 +24,11 @@ export const configFileAsObject = () =>
 const runConfig = (config) => {
   const { SECRET_KEY } = config;
 
-  return new Observable(() => {
+  return new Process(() => {
     console.log(`Configuring for SECRET_KEY: ${SECRET_KEY}`);
     CURRENT_SECRET_KEY = SECRET_KEY;
 
-    return function cleanup() {
+    return function handleCancelation() {
       console.log(`Shutting down for SECRET_KEY: ${SECRET_KEY}`);
       CURRENT_SECRET_KEY = null;
     };
