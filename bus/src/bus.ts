@@ -15,6 +15,7 @@ import {
   Subscriber,
   Subscription,
   TeardownLogic,
+  firstValueFrom,
 } from 'rxjs';
 import {
   catchError,
@@ -62,6 +63,11 @@ export type ObserverKey =
 
 export type MapFn<T, U> = (t?: T) => U;
 export type Mapper<T, U> = Partial<Record<ObserverKey, MapFn<T, U>>>;
+
+export interface ActivityTracked {
+  isActive: BehaviorSubject<boolean>;
+  
+}
 
 const thunkTrue = () => true;
 //#endregion
@@ -224,7 +230,7 @@ export class Bus<EventType> {
     observer?: EffectObserver<HandlerReturnType>,
     /** @ignore */
     operator = mergeMap
-  ): Subscription & { isActive: BehaviorSubject<boolean> } {
+  ): Subscription & ActivityTracked {
     const activityCounter = new Subject<number>();
     const isActive = new BehaviorSubject<boolean>(false);
 
@@ -487,3 +493,9 @@ export const ANY = (_: any) => true;
  * @example bus.query(ALL).subscribe(...)
  */
 export const ALL = (_: any) => true;
+
+export function becomesInactive(activity: ActivityTracked) {
+  return firstValueFrom(
+    activity.isActive.pipe(filter((isActive) => !isActive))
+  );
+}

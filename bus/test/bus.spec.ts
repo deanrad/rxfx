@@ -2,10 +2,7 @@
 import symbol_Observable from 'symbol-observable';
 import {
   asapScheduler as promiseScheduler,
-  asyncScheduler as timeoutScheduler,
   concat,
-  empty,
-  EMPTY,
   from,
   Observable,
   of,
@@ -20,7 +17,7 @@ import {
   resultCreator,
   searchRequestCreator,
 } from './example/searchService';
-import { Bus } from '../src/bus';
+import { Bus, becomesInactive } from '../src/bus';
 import { after } from '@rxfx/after';
 
 export const anyEvent = () => true;
@@ -40,22 +37,6 @@ function capturing<T>(bus: Bus<T>, testFn: (arg: T[]) => void | Promise<any>) {
     return result;
   };
 }
-
-/** Concatenable Observables corresponding to DURATION.
- * Keyed off:
- *   V - a value (synchronous unless preceeded by t/T)
- *   E - an error
- *   t - a microtask tick (Promise resolution)
- *   T - a macrotask tick (setTimeout(fn,0))
- *   C - a completion
- */
-export const EXECUTION = {
-  V: () => of('V'),
-  C: () => EMPTY,
-  E: () => throwError(() => new Error('planned error')),
-  t: () => empty(promiseScheduler),
-  T: () => empty(timeoutScheduler),
-};
 
 const withTiming = (events) => {
   return concat(
@@ -476,6 +457,22 @@ describe('Bus', () => {
         await after(DELAY);
         expect(taxResolver.isActive.value).toBeFalsy();
         expect(activities).toEqual([false, true, false]);
+      });
+
+      it('can have its return to inactivity awaited', async () => {
+        const DELAY = 10;
+
+        const taxResolver = miniBus.listen(
+          () => true,
+          (n) => {
+            return after(DELAY, n * 1.05);
+          }
+        );
+        miniBus.trigger(1);
+
+        expect(taxResolver.isActive.value).toBeTruthy();
+        await becomesInactive(taxResolver);
+        expect(taxResolver.isActive.value).toBeFalsy();
       });
 
       it('works even with multiple handlings', async () => {
@@ -1211,4 +1208,8 @@ describe('Bus', () => {
       expect(seen).toEqual([1.1]);
     });
   });
+});
+
+describe('becomesInactive', () => {
+  it('returns an awaitable for the next inactivity', () => {});
 });
