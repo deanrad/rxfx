@@ -10,7 +10,12 @@ import type { EventHandler } from '@rxfx/bus';
 import type { ProcessLifecycleActions } from '@rxfx/fsa';
 
 import { toggleMap } from '@rxfx/operators';
-import { ReducerProducer, ProcessLifecycleCallbacks, Service, Stoppable } from './types';
+import {
+  ReducerProducer,
+  ProcessLifecycleCallbacks,
+  Service,
+  Stoppable,
+} from './types';
 
 /** @example bus.listen(matchesAny(Actions.complete, Actions.error), handler) */
 export function matchesAny(...acs: ActionCreator<any>[]) {
@@ -32,7 +37,7 @@ export function matchesAny(...acs: ActionCreator<any>[]) {
  * @returns A service in immediate mode, or the mode implemented by its `concurrencyOperator` argument
  * @summary ![immediate mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-immediate-sm.png)
  */
-export function createService<TRequest, TNext, TError = Error, TState = object>(
+export function createService<TRequest, TNext = void, TError = Error, TState = object>(
   actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
@@ -281,7 +286,12 @@ export function createService<TRequest, TNext, TError = Error, TState = object>(
  * @returns A service in queueing mode.
  * @summary ![queueing mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-queueing-sm.png)
  */
-export function createQueueingService<TRequest, TNext, TError, TState = object>(
+export function createQueueingService<
+  TRequest,
+  TNext = void,
+  TError = Error,
+  TState = object
+>(
   actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
@@ -313,10 +323,10 @@ export function createQueueingService<TRequest, TNext, TError, TState = object>(
  * @returns A service in switching mode.
  * @summary ![switching mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-switching-sm.png)
  */
-export function createReplacingService<
+export function createSwitchingService<
   TRequest,
-  TNext,
-  TError,
+  TNext = void,
+  TError = Error,
   TState = object
 >(
   actionNamespace: string,
@@ -339,6 +349,34 @@ export function createReplacingService<
 }
 
 /**
+ * Alias for createSwitchingService
+ *
+ * @param actionNamespace - Prefix of all actions eg fetch/request
+ * @param bus - The Bus event bus read and written to
+ * @param handler - Function returning Promise, Observable or generator from which events are generated
+ * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument.
+ * @returns A service in switching mode.
+ * @summary ![switching mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-switching-sm.png)
+ */
+export function createReplacingService<
+  TRequest,
+  TNext = void,
+  TError = Error,
+  TState = object
+>(
+  actionNamespace: string,
+  bus: Bus<Action<TRequest | TNext | TError | void>>,
+  handler: EventHandler<TRequest, TNext>,
+  reducerProducer: (
+    acs: ProcessLifecycleActions<TRequest, TNext, TError>
+  ) => (state: TState, action: Action<any>) => TState = () =>
+    (state: TState, _: any) => {
+      return state;
+    }
+): Service<TRequest, TNext, TError, TState> {
+  return createSwitchingService(actionNamespace, bus, handler, reducerProducer);
+}
+/**
  * Creates a Service - a managed bus listener - for an effect and optionally state.
  * The effect can be a Promise-or Observable returning function, and is cancelable if Observable.
  * Its concurrency mode is to prevent a new handler from starting, if one is in progress.
@@ -350,7 +388,12 @@ export function createReplacingService<
  * @returns A service in blocking mode.
  * @summary ![blocking mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-blocking-sm.png)
  */
-export function createBlockingService<TRequest, TNext, TError, TState = object>(
+export function createBlockingService<
+  TRequest,
+  TNext = void,
+  TError = Error,
+  TState = object
+>(
   actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
@@ -382,7 +425,12 @@ export function createBlockingService<TRequest, TNext, TError, TState = object>(
  * @returns A service in toggling mode.
  * @summary ![toggling mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-toggling-sm.png)
  */
-export function createTogglingService<TRequest, TNext, TError, TState = object>(
+export function createTogglingService<
+  TRequest,
+  TNext = void,
+  TError = Error,
+  TState = object
+>(
   actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,

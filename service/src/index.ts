@@ -1,4 +1,5 @@
 export * from './createService';
+export * from './createEffect';
 export * from './modifyHandler';
 export * from './types';
 
