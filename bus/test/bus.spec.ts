@@ -84,11 +84,11 @@ describe('Bus', () => {
       b.trigger({ foo: 'im foo' });
       await Promise.resolve();
       expect(seen).toMatchInlineSnapshot(`
-        Array [
-          Object {
+        [
+          {
             "foo": "im foo",
           },
-          Object {
+          {
             "bar": "i was: im foo",
           },
         ]
@@ -215,7 +215,7 @@ describe('Bus', () => {
 
         // and we can see the errors
         expect(seenErrors).toMatchInlineSnapshot(`
-          Array [
+          [
             [Error: 5],
           ]
         `);
@@ -259,25 +259,25 @@ describe('Bus', () => {
               FSABus.trigger(searchRequestCreator({ query: 'app', id: 3.14 }));
 
               expect(events).toMatchInlineSnapshot(`
-                Array [
-                  Object {
-                    "payload": Object {
+                [
+                  {
+                    "payload": {
                       "id": 3.14,
                       "query": "app",
                     },
                     "type": "search/request",
                   },
-                  Object {
+                  {
                     "payload": undefined,
                     "type": "search/loading",
                   },
-                  Object {
-                    "payload": Object {
+                  {
+                    "payload": {
                       "result": "foo",
                     },
                     "type": "search/result",
                   },
-                  Object {
+                  {
                     "payload": undefined,
                     "type": "search/complete",
                   },
@@ -319,7 +319,7 @@ describe('Bus', () => {
               await after(setTimeout);
               expect(events).toHaveLength(2);
               expect(events).toMatchInlineSnapshot(`
-                Array [
+                [
                   "bang",
                   "fooP",
                 ]
@@ -377,7 +377,7 @@ describe('Bus', () => {
             StringBus.trigger('bang');
             expect(events).toHaveLength(5);
             expect(events).toMatchInlineSnapshot(`
-              Array [
+              [
                 "bang",
                 "w",
                 "h",
@@ -911,9 +911,9 @@ describe('Bus', () => {
           FSABus.trigger({ type: 'foo', payload });
 
           expect(seen).toMatchInlineSnapshot(`
-            Array [
-              Object {
-                "payload": Object {
+            [
+              {
+                "payload": {
                   "fooId": "bazž",
                   "timestamp": "2020-01-01",
                 },
