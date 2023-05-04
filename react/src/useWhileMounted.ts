@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Observable, Subscription } from 'rxjs';
 
 /**
@@ -8,10 +8,7 @@ import { Observable, Subscription } from 'rxjs';
  * runs/subscribes it at component mount time, and runs the cleanup callback/unsubscribes at unmount time.
  */
 export function useWhileMounted(
-  sourceFactory:
-    | React.EffectCallback
-    | (() => Subscription)
-    | (() => Observable<any>)
+  sourceFactory: React.EffectCallback | (() => Subscription) | (() => Observable<any>)
 ) {
   useEffect(() => {
     const source = sourceFactory();
@@ -40,4 +37,17 @@ export function useAllWhileMounted(...subFactories: Array<() => Subscription>) {
     }
     return () => allSubs.unsubscribe();
   }, []);
+}
+
+/** Initiates a subscription (for listening) on the first render, and shuts it down on unmount.
+ * Allows parents to hear events from their children's renders and mounts.
+ * @description React renders parent-to-child, but mounts child-to-parent, 
+ * so for a parent to hear a child's mount event, the parent must start listening before
+ * it renders the children - that's what useWhileRendered is for.
+ * @example `useWhileRendered(() => bus.listen(CHILD_EVENT.match, log))`
+ */
+export function useWhileRendered(listenerMaker: () => Subscription) {
+  // invoke the listenerMaker once, immediately
+  const sub = useMemo(() => listenerMaker(), []);
+  useWhileMounted(() => sub);
 }

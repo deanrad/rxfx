@@ -1,8 +1,8 @@
 import * as React from 'react';
+import { Observable, Subscription } from 'rxjs';
 import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { useWhileMounted } from '../src/useWhileMounted';
-import { Observable, Subscription } from 'rxjs';
+import { useWhileMounted, useWhileRendered } from '../src/useWhileMounted';
 
 describe('useWhileMounted', () => {
   describe('called with a Subscription factory', () => {
@@ -143,5 +143,11 @@ describe('useWhileMounted', () => {
 
   it('exists', () => {
     expect(useWhileMounted).toBeTruthy();
+  });
+});
+
+describe('useWhileRendered (https://codesandbox.io/s/rxfx-example-listeners-in-a-component-tree-dv8f0h?file=/src/Parent.tsx:226-532)', () => {
+  it('exists', () => {
+    expect(useWhileRendered).toBeTruthy();
   });
 });
