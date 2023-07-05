@@ -7,6 +7,8 @@ import {
   createTogglingService,
 } from './createService';
 import { mergeMap } from 'rxjs/operators';
+import { EMPTY, ObservableInput, concat } from 'rxjs';
+import { after } from '@rxfx/after';
 
 /**
  * Returns a random hex string, like a Git SHA. Not guaranteed to
@@ -65,6 +67,40 @@ export function createBlockingEffect<Req>(
   bus = defaultBus
 ) {
   return createBlockingService<Req>(namespace, bus, fn);
+}
+
+export function createThrottledEffect(msec: number) {
+  return function <Req>(
+    fn: (args: Req) => ObservableInput<void>,
+    namespace = randomId(),
+    bus = defaultBus
+  ) {
+    return createBlockingService<Req>(namespace, bus, (args: Req) => {
+      return concat(
+        // do the work up front
+        fn(args),
+        // include the throttling interval
+        after(msec, EMPTY)
+      );
+    });
+  };
+}
+
+export function createDebouncedEffect(msec: number) {
+  return function <Req, Res = void>(
+    fn: (args: Req) => ObservableInput<Res>,
+    namespace = randomId(),
+    bus = defaultBus
+  ) {
+    return createSwitchingService<Req, Res>(namespace, bus, (args: Req) => {
+      return concat(
+        // wait initially
+        after(msec, EMPTY),
+        // then do the work - if not yet canceled
+        fn(args)
+      );
+    });
+  };
 }
 
 export function createTogglingEffect<Req>(

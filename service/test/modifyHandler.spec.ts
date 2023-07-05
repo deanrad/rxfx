@@ -38,11 +38,7 @@ describe(timeoutHandler, () => {
       await after(20);
       expect(seen).toMatchInlineSnapshot(`
         [
-          {
-            "error": true,
-            "payload": [Error: Rxfx process timed out in 10 ms],
-            "type": "test/error",
-          },
+          [Error: Rxfx process timed out in 10 ms],
         ]
       `);
     });
@@ -72,11 +68,7 @@ describe(timeoutHandler, () => {
       await after(20);
       expect(seen).toMatchInlineSnapshot(`
         [
-          {
-            "error": true,
-            "payload": [Error: Request for 3.14 timed out],
-            "type": "test/error",
-          },
+          [Error: Request for 3.14 timed out],
         ]
       `);
     });

@@ -75,9 +75,9 @@ export interface Queryable<TRequest, TNext, TError, TState> {
   /** An Observable of just `started`, `next`, `complete`, `error `, and `canceled` events. */
   updates: Observable<Action<TNext | TError | void>>;
   /** An Observable of just the `next` events of this service. */
-  responses: Observable<Action<TNext>>;
+  responses: Observable<TNext>;
   /** An Observable of just the `error` events of this service. */
-  errors: Observable<Action<TError>>;
+  errors: Observable<TError>;
   /** An Observable of just the `complete` and `error` events of this service. */
   endings: Observable<Action<TError | void>>;
   /** An Observable of just the `complete`, `error`, and `canceled` events of this service. */
@@ -136,16 +136,17 @@ export interface Service<TRequest, TNext, TError, TState>
  * Infers the type of the service's request, so callers can typecheck their requests.
  * @example `let req: ServiceRequestType<typeof mathService> = // type-checked `
  */
-export type ServiceRequestType<ServiceType extends Service<any, any, any, any>> =
-  ServiceType['actions']['request'] extends ActionCreator<
-    infer ActionPayloadType
-  >
-    ? ActionPayloadType
-    : never;
-    
+export type ServiceRequestType<
+  ServiceType extends Service<any, any, any, any>
+> = ServiceType['actions']['request'] extends ActionCreator<
+  infer ActionPayloadType
+>
+  ? ActionPayloadType
+  : never;
+
 /**
  * Infers the type of the `.state` Subject, to which callers of the service may subscribe.
- * @example `let state : ServiceStateType<typeof mathService>;` 
+ * @example `let state : ServiceStateType<typeof mathService>;`
  */
 export type ServiceStateType<ServiceType extends Service<any, any, any, any>> =
   ServiceType['state'] extends Subject<infer StateType> ? StateType : never;

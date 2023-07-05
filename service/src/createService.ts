@@ -37,7 +37,12 @@ export function matchesAny(...acs: ActionCreator<any>[]) {
  * @returns A service in immediate mode, or the mode implemented by its `concurrencyOperator` argument
  * @summary ![immediate mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-immediate-sm.png)
  */
-export function createService<TRequest, TNext = void, TError = Error, TState = object>(
+export function createService<
+  TRequest,
+  TNext = void,
+  TError = Error,
+  TState = object
+>(
   actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
@@ -239,8 +244,12 @@ export function createService<TRequest, TNext = void, TError = Error, TState = o
     updates: bus.query(
       matchesAny(ACs.started, ACs.next, ACs.complete, ACs.error, ACs.canceled)
     ) as Observable<Action<TNext | TError | void>>,
-    responses: bus.query(ACs.next.match) as Observable<Action<TNext>>,
-    errors: bus.query(ACs.error.match) as Observable<Action<TError>>,
+    responses: bus
+      .query(ACs.next.match)
+      .pipe(map((e) => e.payload)) as Observable<TNext>,
+    errors: bus
+      .query(ACs.error.match)
+      .pipe(map((e) => e.payload)) as Observable<TError>,
     endings: bus.query(matchesAny(ACs.complete, ACs.error)) as Observable<
       Action<TError | void>
     >,

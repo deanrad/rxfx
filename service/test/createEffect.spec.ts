@@ -1,21 +1,26 @@
 import { after } from '@rxfx/after';
 import {
   createBlockingEffect,
+  createDebouncedEffect,
   createEffect,
   createQueueingEffect,
   createSwitchingEffect,
+  createThrottledEffect,
   createTogglingEffect,
 } from '../src/createEffect';
 
 describe('createEffect', () => {
   it('runs asap', async () => {
     const liked = [] as string[];
-
+    const responses = [] as string[];
     const likePost = createEffect((postId: number) => {
       return after(10, () => {
-        liked.push(`post liked ${postId}`);
+        const msg = `post liked ${postId}`;
+        liked.push(msg);
+        return msg;
       });
     });
+    likePost.responses.subscribe((r) => responses.push(r));
     likePost(123);
     likePost(234);
 
@@ -27,6 +32,12 @@ describe('createEffect', () => {
         "post liked 234",
       ]
     `);
+    expect(responses).toMatchInlineSnapshot(`
+    [
+      "post liked 123",
+      "post liked 234",
+    ]
+  `);
   });
 });
 
@@ -83,6 +94,31 @@ describe('createSwitchingEffect', () => {
   });
 });
 
+describe('createDebouncedEffect', () => {
+  it('runs debounced', async () => {
+    const liked = [] as string[];
+
+    const likePost = createDebouncedEffect(5)((postId: number) => {
+      return after(10, () => {
+        const msg = `post liked ${postId}`;
+        liked.push(msg);
+        return msg; // provide via `responses` as well
+      });
+    });
+
+    likePost(123);
+    likePost(234);
+
+    // The first has been switched off by the second
+    await after(10 * 2 + 1);
+    expect(liked).toMatchInlineSnapshot(`
+      [
+        "post liked 234",
+      ]
+    `);
+  });
+});
+
 describe('createBlockingEffect', () => {
   it('runs blocking', async () => {
     const liked = [] as string[];
@@ -105,6 +141,28 @@ describe('createBlockingEffect', () => {
   });
 });
 
+describe('createThrottledEffect', () => {
+  it('runs throttling', async () => {
+    const liked = [] as string[];
+
+    const likePost = createThrottledEffect(10)((postId: number) => {
+      return after(10, () => {
+        liked.push(`post liked ${postId}`);
+      });
+    });
+    likePost(123);
+    likePost(234);
+
+    // The first has blocked the second
+    await after(10 * 2 + 1);
+    expect(liked).toMatchInlineSnapshot(`
+      [
+        "post liked 123",
+      ]
+    `);
+  });
+});
+
 describe('createTogglingEffect', () => {
   it('runs toggling', async () => {
     const liked = [] as string[];
@@ -114,6 +172,7 @@ describe('createTogglingEffect', () => {
         liked.push(`post liked ${postId}`);
       });
     });
+
     likePost(123);
     likePost(234);
 
