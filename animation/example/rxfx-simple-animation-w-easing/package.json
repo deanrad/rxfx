@@ -8,10 +8,10 @@
     "build": "parcel build index.html"
   },
   "dependencies": {
-    "@rxfx/after": "1.0.1",
-    "@rxfx/animation": "0.8.9",
-    "@rxfx/bus": "1.0.5",
-    "@rxfx/perception": "1.0.0",
+    "@rxfx/after": "^1.0.1",
+    "@rxfx/animation": "^0.8.9",
+    "@rxfx/bus": "^1.0.5",
+    "@rxfx/perception": "^1.0.0",
     "parcel-bundler": "^1.6.1"
   },
   "devDependencies": {

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Action } from 'typescript-fsa';
+import { Action } from '@rxfx/fsa';
 import { createService } from '@rxfx/service';
 import { Bus } from '@rxfx/bus';
 import { render } from '@testing-library/react';

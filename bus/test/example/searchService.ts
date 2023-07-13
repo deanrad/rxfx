@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { actionCreatorFactory } from 'typescript-fsa';
+import { actionCreatorFactory } from '@rxfx/fsa';
 
 const searchAction = actionCreatorFactory('search');
 export interface SearchRequest {

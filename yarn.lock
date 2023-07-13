@@ -2535,7 +2535,6 @@ __metadata:
     tslib: ^2.3.1
     typedoc: latest
     typescript: ^4.3.5
-    typescript-fsa: ^3.0.0
   languageName: unknown
   linkType: soft
 
@@ -8757,7 +8756,6 @@ __metadata:
     scripty: ^2.1.1
     ts-node: ^10.9.1
     tslib: ^2.3.1
-    typescript-fsa: ^3.0.0
   languageName: unknown
   linkType: soft
 
@@ -9671,13 +9669,6 @@ __metadata:
   bin:
     typedoc: bin/typedoc
   checksum: a46a14497f789fb3594e6c3af2e45276934ac46df40b7ed15a504ee51dc7a8013a2ffb3a54fd73abca6a2b71f97d3ec9ad356fa9aa81d29743e4645a965a2ae0
-  languageName: node
-  linkType: hard
-
-"typescript-fsa@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "typescript-fsa@npm:3.0.0"
-  checksum: 5c84a6cf1c8a4b87f5623854b21819355139686ec45e191da3c5d89bb40fee3d949dde49a58ed396f98f709b8f0c878e4920bbc572cc45c71ca7d9e0deab4930
   languageName: node
   linkType: hard
 

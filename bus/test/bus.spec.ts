@@ -1,24 +1,24 @@
 // @ts-nocheck
-import symbol_Observable from 'symbol-observable';
+import { after } from '@rxfx/after';
+import { Action } from '@rxfx/fsa';
 import {
-  asapScheduler as promiseScheduler,
+  Observable,
   concat,
   from,
-  Observable,
   of,
+  asapScheduler as promiseScheduler,
   throwError,
   timer,
 } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { Action } from 'typescript-fsa';
+import symbol_Observable from 'symbol-observable';
+import { Bus, becomesInactive } from '../src/bus';
 import {
   completeCreator,
   loadingCreator,
   resultCreator,
   searchRequestCreator,
 } from './example/searchService';
-import { Bus, becomesInactive } from '../src/bus';
-import { after } from '@rxfx/after';
 
 export const anyEvent = () => true;
 
