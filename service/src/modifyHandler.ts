@@ -2,6 +2,7 @@ import { after } from '@rxfx/after';
 import {
   from,
   interval,
+  Observable,
   ObservableInput,
   race,
   Subscription,
@@ -48,14 +49,15 @@ export function timeoutHandler<TRequest, TNext, TError = Error>(
   };
 }
 
-/** Decorates a handler such that when it is running, the given callback is invoked at the specified
- * interval, passing the elapsed number of ms as an argument.
+/** Decorates a handler such that when it is running, the given `progressCallback` is invoked
+ * at the specified interval, passing the duration of the interval as an argument.
+ * Does not change the return type of the decorated handler - it is still `TNext`.
  * Useful for Observables that don't notify of progress intrinsically.
  */
 export function monitorHandler<TRequest, TNext>(
   opts: MonitorOptions,
   handler: (req: TRequest) => ObservableInput<TNext>
-) {
+): (req: TRequest) => Observable<TNext> {
   const { duration, progressCallback } = opts;
   return (req: TRequest) => {
     const monitorElapsed = interval(duration).pipe(

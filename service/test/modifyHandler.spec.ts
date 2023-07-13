@@ -80,7 +80,7 @@ describe(monitorHandler, () => {
     bus.reset();
   });
 
-  it('can run a callback periodically while handling', async () => {
+  it('can run a callback periodically while handling (https://codesandbox.io/s/bold-voice-xxlng6', async () => {
     let elapsed = [] as number[];
     const progressCallback = (i: number) => {
       elapsed.push(i);
