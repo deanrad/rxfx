@@ -113,7 +113,7 @@ Now, a request arrives that we log clicks to the Analytics Service whenever the 
 
 You might be wondering now whether the UI `onClick` handler, or the `gifService` Observable ought to change. 𝗥𝘅𝑓𝑥 says - change neither, they're done already! 
 
-Handle it by observing the service's requests, and fiting off there:
+Handle it by observing the service's requests, and firing off there:
 
 
 ```js
