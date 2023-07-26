@@ -16,6 +16,7 @@ interface THRESHOLDS {
   AnimationLong: 400;
   EDMBeat: 500;
   DoubleClick: 500;
+  Swipe: 1000;
   Thought: 1000;
   PageLoadMax: 2000;
   DeepBreath: 4000;
@@ -43,6 +44,7 @@ export const THRESHOLD: THRESHOLDS = {
   AnimationLong: 400,
   EDMBeat: 500,
   DoubleClick: 500,
+  Swipe: 1000,
   Thought: 1000,
   PageLoadMax: 2000,
   DeepBreath: 4000,
