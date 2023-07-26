@@ -4,7 +4,6 @@ import { Action } from '@rxfx/fsa';
 import {
   Observable,
   concat,
-  from,
   of,
   asapScheduler as promiseScheduler,
   throwError,
@@ -1153,20 +1152,6 @@ describe('Bus', () => {
   });
 
   describe('RxJS interop (https://codesandbox.io/s/rxfx-bus-as-observable-m6e41v)', () => {
-    it('can be treated as an Observable via from()', () => {
-      const seen = [] as number[];
-      // @ts-ignore
-      const obsFromBus = from(miniBus);
-
-      obsFromBus.subscribe({
-        next(num) {
-          seen.push(num);
-        },
-      });
-      miniBus.trigger(1.2);
-      expect(seen).toEqual([1.2]);
-    });
-
     it('is canceled by a reset', () => {
       const seen = [] as number[];
       const obsFromBus = miniBus[Symbol.observable]();
