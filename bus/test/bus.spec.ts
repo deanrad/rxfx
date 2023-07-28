@@ -146,6 +146,19 @@ describe('Bus', () => {
         });
       });
     });
+
+    describe('With a Matcher object (ala @rxfx/fsa)', () => {
+      it('finds matching events', () => {
+        const events = [];
+        miniBus
+          .query({ match: anyEvent })
+          .pipe(tap((e) => events.push(e)))
+          .subscribe();
+        miniBus.trigger(3.14);
+        miniBus.trigger(2.71828);
+        expect(events).toEqual([3.14, 2.71828]);
+      });
+    });
   });
 
   describe('#nextEvent', () => {

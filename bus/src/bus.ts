@@ -66,8 +66,16 @@ export type Mapper<T, U> = Partial<Record<ObserverKey, MapFn<T, U>>>;
 
 export interface ActivityTracked {
   isActive: BehaviorSubject<boolean>;
-  
 }
+
+export type MatchPredicate<
+  EventType,
+  MatchType extends EventType = EventType
+> = ((i: EventType) => i is MatchType) | ((i: EventType) => boolean);
+
+export type Matcher<EventType, MatchType extends EventType = EventType> =
+  | MatchPredicate<EventType, MatchType>
+  | { match: MatchPredicate<EventType, MatchType> };
 
 const thunkTrue = () => true;
 //#endregion
@@ -134,11 +142,17 @@ export class Bus<EventType> {
    * @example `bus.query(() => true).subscribe(console.log)`
    */
   public query<MatchType extends EventType = EventType>(
-    matcher: ((i: EventType) => i is MatchType) | ((i: EventType) => boolean)
+    matcher: Matcher<EventType, MatchType>
   ) {
+    // @ts-ignore
+    const predicate: MatchPredicate<EventType, MatchType> = matcher.match
+      ? // @ts-ignore
+        matcher.match
+      : matcher;
+
     return this.events
       .asObservable()
-      .pipe(filter(matcher), takeUntil(this.resets));
+      .pipe(filter(predicate), takeUntil(this.resets));
   }
 
   /**
@@ -148,7 +162,7 @@ export class Bus<EventType> {
    * @param matcher A predicate to select the first event for which it returns `true`.
    */
   public nextEvent<MatchType extends EventType = EventType>(
-    matcher: ((i: EventType) => i is MatchType) | ((i: EventType) => boolean)
+    matcher: Matcher<EventType, MatchType>
   ) {
     return new Promise<MatchType>((resolve, reject) => {
       // first() errors if stream completes (which resets cause)
@@ -225,7 +239,7 @@ export class Bus<EventType> {
    * @summary ![immediate mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-immediate-sm.png)
    */
   public listen<HandlerReturnType, MatchType extends EventType = EventType>(
-    matcher: ((i: EventType) => i is MatchType) | ((i: EventType) => boolean),
+    matcher: Matcher<EventType, MatchType>,
     handler: EventHandler<MatchType, HandlerReturnType>,
     observer?: EffectObserver<HandlerReturnType>,
     /** @ignore */
@@ -302,7 +316,7 @@ export class Bus<EventType> {
     HandlerReturnType,
     MatchType extends EventType = EventType
   >(
-    matcher: ((i: EventType) => i is MatchType) | ((i: EventType) => boolean),
+    matcher: Matcher<EventType, MatchType>,
     handler: EventHandler<MatchType, HandlerReturnType>,
     observer?: EffectObserver<HandlerReturnType>
   ) {
@@ -321,7 +335,7 @@ export class Bus<EventType> {
     HandlerReturnType,
     MatchType extends EventType = EventType
   >(
-    matcher: ((i: EventType) => i is MatchType) | ((i: EventType) => boolean),
+    matcher: Matcher<EventType, MatchType>,
     handler: EventHandler<MatchType, HandlerReturnType>,
     observer?: EffectObserver<HandlerReturnType>
   ) {
@@ -340,7 +354,7 @@ export class Bus<EventType> {
     HandlerReturnType,
     MatchType extends EventType = EventType
   >(
-    matcher: ((i: EventType) => i is MatchType) | ((i: EventType) => boolean),
+    matcher: Matcher<EventType, MatchType>,
     handler: EventHandler<MatchType, HandlerReturnType>,
     observer?: EffectObserver<HandlerReturnType>
   ) {
@@ -359,7 +373,7 @@ export class Bus<EventType> {
     HandlerReturnType,
     MatchType extends EventType = EventType
   >(
-    matcher: ((i: EventType) => i is MatchType) | ((i: EventType) => boolean),
+    matcher: Matcher<EventType, MatchType>,
     handler: EventHandler<MatchType, HandlerReturnType>,
     observer?: EffectObserver<HandlerReturnType>
   ) {
@@ -372,12 +386,18 @@ export class Bus<EventType> {
    * @returns A subscription that can be used to deactivate the guard.
    * */
   public guard<MatchType extends EventType = EventType>(
-    matcher: ((i: EventType) => i is MatchType) | ((i: EventType) => boolean),
+    matcher: Matcher<EventType, MatchType>,
     fn: (item: MatchType) => void
   ) {
     // @ts-ignore
-    this.guards.push([matcher, fn]);
-    return this.createRemovalSub(matcher, fn, this.guards);
+    const predicate: MatchPredicate<EventType, MatchType> = matcher.match
+      ? // @ts-ignore
+        matcher.match
+      : matcher;
+
+    // @ts-ignore
+    this.guards.push([predicate, fn]);
+    return this.createRemovalSub(predicate, fn, this.guards);
   }
 
   /** Run a function synchronously for all runtime events, after guards, and prior to spies and listeners.
@@ -388,12 +408,18 @@ export class Bus<EventType> {
    * @returns A subscription that can be used to deactivate the filter.
    */
   public filter<MatchType extends EventType = EventType>(
-    matcher: ((i: EventType) => i is MatchType) | ((i: EventType) => boolean),
+    matcher: Matcher<EventType, MatchType>,
     fn: (item: MatchType) => EventType | null | undefined
   ) {
     // @ts-ignore
-    this.filters.push([matcher, fn]);
-    return this.createRemovalSub(matcher, fn, this.filters);
+    const predicate: MatchPredicate<EventType, MatchType> = matcher.match
+      ? // @ts-ignore
+        matcher.match
+      : matcher;
+
+    // @ts-ignore
+    this.filters.push([predicate, fn]);
+    return this.createRemovalSub(predicate, fn, this.filters);
   }
 
   /** Run a function (synchronously) for all runtime events, prior to all listeners. Throwing an exception will terminate the spy.
