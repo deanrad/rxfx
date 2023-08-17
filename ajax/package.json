@@ -1,6 +1,6 @@
 {
   "name": "@rxfx/ajax",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "author": "Dean Radcliffe",
   "repository": "https://github.com/deanrad/rxfx",
@@ -23,7 +23,7 @@
     "test:watch": "jest --verbose=false --watch",
     "test:coverage": "jest --coverage",
     "test:quiet": "jest --silent --reporters=jest-silent-reporter",
-    "test:full": "yarn test:fast && yarn test:jsdom && yarn test:quiet && echo 'Retest successful' && yarn lint && yarn build",
+    "test:full": "yarn test:fast && yarn test:quiet && echo 'Retest successful' && yarn lint && yarn build",
     "doc": "typedoc --out dist/docs/ajax",
     "doctoc": "doctoc .",
     "build": "rimraf dist && tsc && timeout --foreground --preserve-status 10 rollup --bundleConfigAsCjs -c rollup.config.js"

@@ -2,6 +2,8 @@
 
 ## For JavaScript developers who code for older or special-needs users.
 
+^ Even with accessibility issues fully addressed in an app or site, there are often usability issues that bother older users, particularly. We recognize and admit they can be issues, but with today's tools, implementing all of them feels almost too challenging. Let's see how we can easily help those who are easily-confused, or on underpowered Consumer Cellular devices - in short, let's help Grandma be able to use our apps!
+
 ---
 
 Problems:
@@ -116,15 +118,14 @@ import { gifReducer } from "./gifReducer";
 // A service will handle errors, activity, loading, cancelation
 // Provides gifService.request(), .isActive and .state Observables
 export const gifService = createService(
-  "gif",
-  bus,
   "gif", // namespace for actions requested,started,next,complete,error,etc
-  bus, // bus to read consequences and requests from
+  bus, // bus to subscribe and publish to
   fetchRandomGIFPromised, // the Promise-or-Observable-returning effect function
-  (ACTIONS) => gifReducer(ACTIONS) // the reducer for non-transient state
+  (ACTIONS) => gifReducer(ACTIONS) // the reducer for accumulating state across events
 );
 
-// Bonus: bus.spy(console.log)
+// Bonus:
+bus.spy(console.log);
 ```
 
 ---
@@ -241,7 +242,7 @@ function preloadImagePromised(url) {
 
 # Queueing?
 
-![right fit](./cat-queueing-analysis.png)
+![right fit](https://d2jksv3bi9fv68.cloudfront.net/cat-queueing-analysis.png)
 
 ^ But how hard will it be to add to my code?
 
@@ -283,38 +284,63 @@ or cancelable?
 
 ---
 
-# Cancel on User Button Press\*
+# Cancel on User Button Press - Initiation
 
 ```ts
 <button onClick={() => gifService.cancelCurrent()}>Cancel</button>
 ```
 
-- (Cancelation requires the service handler return an Observable)
+_* Cancelation requires the service handler return an Observable_
 
 ---
 
-# Cancel on User Button Press - Observable endpoint
+# Issue 4.1 - Cancel during search
 
-```ts
-import { ajax } from "rxjs/ajax"; // cancelable version of fetch
+---
 
-function fetchGIF() {
-  return ajax({
-    url: "https://api.thecatapi.com/v1/images/search",
-    method: "GET",
-  }).pipe(map((r) => r.response[0].url));
+# Cancelation - Abortable-Promise style
+```js
+import { makeAbortableHandler } from '@rxfx/ajax';
+import { createService } from '@rxfx/service';
+
+function fetchRandomGIF(_req, signal) {
+  return fetch("https://api.thecatapi.com/v1/images/search", { signal })  /* <<<<< */
+    .then((res) => res.json())
+    .then((data) => data[0].url);
 }
 
-// Define the service around this function
-const gifService = createQueueingService("gif", bus, fetchGIF);
+const gifService = createService("gif", bus, makeAbortableHandler(fetchRandomGIF));
+
 ```
 
 ---
 
-# Cancel on User Button Press - Observable Preloader
+# Demo - Cancelation During Search
+
+---
+
+# Issue 4.2 - Extend Cancelability to image bytes
+
+---
+
+# Cancelation - From a Promise-returning preloader...
 
 ```ts
-export function preloadImage(url) {
+function preloadImagePromised(url) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(url); // <-- the consumer needs the url
+    img.src = url;
+  });
+}
+```
+
+---
+
+# ... To an Observable Preloader !!!
+
+```ts
+export function preloadImageObservable(url) {
   return new Observable((notify) => {
     const img = new Image();
 
@@ -334,23 +360,51 @@ export function preloadImage(url) {
 
 ---
 
-# Cancel on User Button Press - Chain Preloader
+# Cancelation - Refactor to Observable 
 
-```diff
-function fetchAndPreloadGIF() {
+```ts
+import { ajax } from "rxjs/ajax"; // cancelable version of fetch
+
+function fetchGIF() {
   return ajax({
     url: "https://api.thecatapi.com/v1/images/search",
-    method: "GET"
+    method: "GET",
   }).pipe(
     map((r) => r.response[0].url)
-+   mergeMap(preloadImage)
   );
 }
+
+const gifService = createQueueingService("gif", bus, fetchGIF);
+```
+
+
+---
+
+# Cancelation - Chain in Preloader
+
+```js
+import { ajax } from "rxjs/ajax"; // cancelable version of fetch
+
+function fetchGIF() {
+  return ajax({
+    url: "https://api.thecatapi.com/v1/images/search",
+    method: "GET",
+  }).pipe(
+    map((r) => r.response[0].url),
+    mergeMap(preloadImageObservable) /* <<<<<<<< */
+  );
+}
+
+const gifService = createQueueingService("gif", bus, fetchGIF);
 ```
 
 ---
 
-# Kitty Factory Demo - Cancel Button
+# Kitty Factory Demo - Cancel Through Image Bytes
+
+---
+
+# Issue 4.3 - Cancel on Unmount 
 
 ---
 
@@ -375,6 +429,10 @@ useWhileMounted(() => {
 
 ---
 
+# Issue 4.4 - Cancel on Timeout 
+
+---
+
 # Canceling on a Timeout (2 Deep Breaths)
 
 ```diff
@@ -394,7 +452,7 @@ export const gifService = createService(
 
 ---
 
-# Issue #4 Solved - Uncancelability
+# Issue #4 Solved - Uncancelability!
 
 ---
 
@@ -404,7 +462,7 @@ export const gifService = createService(
 
 ---
 
-# Non-Animated
+# Non-Animated Slide Transition
 
 ```ts
 export const Figure = ({ url }) => {
@@ -420,36 +478,52 @@ export const Figure = ({ url }) => {
 
 ---
 
-# Kitty Factory Demo - Slide Transition
+# Animated Transition, No Concurrency
 
-## Find the race condition!
+```js
+export const Figure = ({ url }) => {
+  const [currentURL, setCurrentURL] = useState(url);
+
+  useEffect(() => {
+    if (url !== currentURL) {
+      /************ BEGIN ANIMATION ************/
+    }
+  }, [url]);
+
+```
 
 ---
 
-# Animated, Queued
+# Kitty Factory Demo - Slide Transition No Concurrency
 
-```ts
-const SlideShow = ({ url }) => {
+##  [Live](https://codesandbox.io/s/rxfx-service-example-kitty-factory-slider-with-race-condition-4sjkyp)
+
+---
+
+# Slide Transition, Queued
+
+```js
+function SlideShow({ url }) {
   useWhileMounted(() =>
-    bus.listenQueueing(NEW_SLIDE.match, ({ payload: url }) => {
-      // ...
-      existing.current.style.setProperty("transform", `translateX(-${x}vw)`);
+    bus.listenQueueing(NEW_SLIDE, ({ payload: url }) => {
+      const existing = container.current.lastElementChild;
+
+      return tweenToValue( { x: 0 }, { x: 100 }, 250).pipe(
+        tap(({ x }) => {
+          existing.style.setProperty("transform", `translateX(-${x}vw)`);
+        }),
+        finalize(() => {/* remove existing from DOM */})
+      );
     })
   );
 
-  return (
-    <div id="slide-container">
-      <div ref={existing} className="slide cat">
-        <img src={url} alt="fun cat" />
-      </div>
-    </div>
-  );
+  return <div ref={container}  id="slide-container">...</div>;
 };
 ```
 
 ---
 
-# Issue #5 Solved - Animate Slide Transition
+# Issue #5 Solved - Animated Slide Transition!
 
 ---
 
