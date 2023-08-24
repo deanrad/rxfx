@@ -20,7 +20,8 @@
     "perception",
     "animation",
     "peer",
-    "fsa"
+    "fsa",
+    "effect"
   ],
   "dependencies": {
     "rxjs": "^7.8.1",
