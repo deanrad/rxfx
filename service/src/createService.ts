@@ -15,6 +15,7 @@ import {
   ProcessLifecycleCallbacks,
   Service,
   Stoppable,
+  EventActionCreators,
 } from './types';
 
 /** @example bus.listen(matchesAny(Actions.complete, Actions.error), handler) */
@@ -261,6 +262,17 @@ export function createService<
       Action<void | TRequest | TNext | TError>
     >,
   };
+
+  const EventACs: EventActionCreators<TRequest, TNext, TError> = {
+    REQUEST: ACs.request,
+    CANCEL: ACs.cancel,
+    STARTED: ACs.started,
+    NEXT: ACs.next,
+    ERROR: ACs.error,
+    COMPLETE: ACs.complete,
+    CANCELED: ACs.canceled,
+  };
+
   const returnValue = Object.assign(requestor, { actions: ACs }, controls, {
     // Native
     bus,
@@ -278,6 +290,7 @@ export function createService<
     isHandling,
     currentError,
     observe,
+    ...EventACs,
   });
 
   return returnValue;

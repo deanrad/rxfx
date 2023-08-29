@@ -63,6 +63,24 @@ export interface ProcessLifecycleCallbacks<TRequest, TNext, TError> {
   finalized: () => void;
 }
 
+/** A dictionary of action creators assigned to the service */
+export interface EventActionCreators<TRequest, TNext, TError> {
+  /** Creates an event which invokes the service. */
+  REQUEST: ActionCreator<TRequest>;
+  /** Creates an event which cancels the current invocation.  */
+  CANCEL: ActionCreator<void>;
+  /** Creates an event which signals an invocation has begun. */
+  STARTED: ActionCreator<void>;
+  /** Creates an event which indicates an invocation has produced data. */
+  NEXT: ActionCreator<TNext>;
+  /** Creates an event which indicates an invocation has terminated with an error. */
+  ERROR: ActionCreator<TError>;
+  /** Creates an event which indicates an invocation has terminated successfully. */
+  COMPLETE: ActionCreator<void>;
+  /** Creates an event which indicates an invocation was canceled by a subscriber. */
+  CANCELED: ActionCreator<void>;
+}
+
 export interface Queryable<TRequest, TNext, TError, TState> {
   /** An Observable of just `request`, `cancel` events. */
   commands: Observable<Action<TRequest | void>>;
@@ -123,7 +141,8 @@ export interface Requestable<TRequest, TResponse> {
 export interface Service<TRequest, TNext, TError, TState>
   extends Requestable<TRequest, TNext>,
     Queryable<TRequest, TNext, TError, TState>,
-    Stoppable {
+    Stoppable,
+    EventActionCreators<TRequest, TNext, TError> {
   /** The ActionCreator factories this service listens for, and responds with. */
   actions: ProcessLifecycleActions<TRequest, TNext, TError>;
   /** An untyped reference to the bus this service listens and triggers on */

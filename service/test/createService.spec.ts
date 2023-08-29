@@ -704,6 +704,16 @@ describe('createService', () => {
       });
     });
 
+    describe('ActionCreator direct properties', () => {
+      expect(testService.REQUEST).toBeDefined();
+      expect(testService.CANCEL).toBeDefined();
+      expect(testService.STARTED).toBeDefined();
+      expect(testService.CANCELED).toBeDefined();
+      expect(testService.NEXT).toBeDefined();
+      expect(testService.ERROR).toBeDefined();
+      expect(testService.COMPLETE).toBeDefined();
+    });
+
     describe('#send', () => {
       it('gets a Promise for a response', async () => {
         const counterService = createService<number, number, Error>(
