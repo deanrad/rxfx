@@ -1,6 +1,6 @@
 import { Observable, of, throwError } from 'rxjs';
 import { tap, materialize } from 'rxjs/operators';
-import { after } from '../src/after';
+import { after, pause } from '../src/after';
 
 describe('after', () => {
   it('is an Observable', () => {
@@ -11,7 +11,7 @@ describe('after', () => {
     const result = await after(1, '1.1');
     expect(result).toBe('1.1');
   });
-  
+
   it('is thenable', async () => {
     return after(1, () => 52).then((result) => {
       expect(result).toBe(52);
@@ -223,6 +223,16 @@ describe('after', () => {
         miniSub.unsubscribe();
         expect(unsubbed).toBeTruthy();
       });
+    });
+  });
+});
+
+describe('pause', () => {
+  it('produces a valueless-Observable of a given duration', () => {
+    const result = pause(100);
+    expect(result).toMatchObject({
+      then: expect.anything(),
+      subscribe: expect.anything(),
     });
   });
 });

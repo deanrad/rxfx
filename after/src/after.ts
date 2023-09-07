@@ -5,6 +5,7 @@ import {
   timer,
   PartialObserver,
   Observer,
+  EMPTY,
 } from 'rxjs';
 import { mergeMap, tap } from 'rxjs/operators';
 
@@ -143,4 +144,8 @@ function isRaF(fn: any) {
   return (
     typeof requestAnimationFrame === 'function' && fn === requestAnimationFrame
   );
+}
+
+export function pause(duration: number) {
+  return after(duration, EMPTY);
 }
