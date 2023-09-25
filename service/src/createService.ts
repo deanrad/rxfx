@@ -1,5 +1,5 @@
 // prettier-ignore
-import { BehaviorSubject, EMPTY, firstValueFrom, from, merge, Observable, Observer, of, Subscription } from 'rxjs';
+import { BehaviorSubject, EMPTY, firstValueFrom, from, merge, Observable, Observer, of, race, Subscription, throwError } from 'rxjs';
 // prettier-ignore
 import { concatMap, distinctUntilChanged, endWith, exhaustMap, map, mergeMap, scan, switchMap, takeUntil, tap } from 'rxjs/operators';
 
@@ -279,9 +279,13 @@ export function createService<
     namespace: actionNamespace,
     // Requestable
     send(arg: TRequest) {
-      const result = firstValueFrom(bus.query(ACs.next.match));
+      const resultOrError = race(
+        queries.responses,
+        queries.errors.pipe(mergeMap((e) => throwError(() => e)))
+      );
+
       bus.trigger(ACs.request(arg));
-      return result as Promise<Action<TNext>>;
+      return firstValueFrom(resultOrError);
     },
     request: requestor,
     // Queryable

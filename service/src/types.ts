@@ -117,7 +117,8 @@ export interface Queryable<TRequest, TNext, TError, TState> {
 }
 
 export interface Requestable<TRequest, TResponse> {
-  send(arg: TRequest): Promise<Action<TResponse>>;
+  /** Get a promise for the next response or error. Note: works best for a queueing service, otherwise may not be the response/error that was triggered by the request. */
+  send(arg: TRequest): Promise<TResponse>;
   /** Invoke the service as a function directly (RTK style). */
   (req: TRequest): void;
   /** Explicitly pass a request object */

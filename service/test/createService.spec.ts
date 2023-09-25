@@ -723,7 +723,22 @@ describe('createService', () => {
         );
 
         const response = await counterService.send(3);
-        expect(response.payload).toBe(4);
+        expect(response).toBe(4);
+      });
+
+      it('returns a rejected promise if an error occurs before a response', async () => {
+        const counterService = createService<number, number, Error>(
+          'counter',
+          bus,
+          () =>
+            after(
+              50,
+              throwError(() => 'Oops')
+            )
+        );
+
+        const response = counterService.send(3);
+        await expect(response).rejects.toBe('Oops');
       });
     });
 
