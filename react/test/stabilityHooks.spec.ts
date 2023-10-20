@@ -25,5 +25,15 @@ describe('Stability Hooks', () => {
       const result2 = result.current;
       expect(result1).toBe(result2);
     });
+
+    it('works with argument-accepting functions', () => {
+      const takesArgs = (where) => ({ hello: () => where });
+      const { result, rerender } = renderHook(() => useStableCallback(takesArgs));
+      const result1 = result.current;
+
+      rerender();
+      const result2 = result.current;
+      expect(result1).toBe(result2);
+    });
   });
 });
