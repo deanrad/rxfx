@@ -3,7 +3,7 @@ import {
   EventHandler,
   ReducerProducer,
   Service,
-  createService,
+  createServiceListener,
   randomId,
 } from '@rxfx/service';
 
@@ -20,7 +20,7 @@ export function createStatefulEffect<
   TRequest,
   TNext = void,
   TState = object,
-  TError = Error,
+  TError = Error
 >(
   handler: EventHandler<TRequest, TNext>,
   reducerProducer: ReducerProducer<TRequest, TNext, TError, TState> = () =>
@@ -30,5 +30,5 @@ export function createStatefulEffect<
   namespace = randomId(),
   bus = defaultBus
 ): Service<TRequest, TNext, TError, TState> {
-  return createService(namespace, bus, handler, reducerProducer);
+  return createServiceListener(namespace, bus, handler, reducerProducer);
 }
