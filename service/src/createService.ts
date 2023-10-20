@@ -5,7 +5,7 @@ import { concatMap, distinctUntilChanged, endWith, exhaustMap, map, mergeMap, sc
 
 import { Action, ActionCreator, actionCreatorFactory } from '@rxfx/fsa';
 
-import { Bus } from '@rxfx/bus';
+import { Bus, defaultBus } from '@rxfx/bus';
 import type { EventHandler } from '@rxfx/bus';
 import type { ProcessLifecycleActions } from '@rxfx/fsa';
 
@@ -26,7 +26,7 @@ export function matchesAny(...acs: ActionCreator<any>[]) {
 }
 
 /**
- * Creates a Service - a managed bus listener - for an effect and optionally state.
+ * Creates a Service - a managed bus listener - for an effect and its state.
  * The effect can be a Promise-or Observable returning function, and is cancelable if Observable.
  * By default its concurrency is to run handlers immediately, but this is overridable with a 5th parameter - an RxJS operator implmenting the desired concurrency.
  *
@@ -38,7 +38,7 @@ export function matchesAny(...acs: ActionCreator<any>[]) {
  * @returns A service in immediate mode, or the mode implemented by its `concurrencyOperator` argument
  * @summary ![immediate mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-immediate-sm.png)
  */
-export function createService<
+export function createServiceListener<
   TRequest,
   TNext = void,
   TError = Error,
@@ -301,7 +301,77 @@ export function createService<
 }
 
 /**
- * Creates a Service - a managed bus listener - for an effect and optionally state.
+ * Creates a Service - a listener on the default bus - for an effect and its state.
+ * The effect can be a Promise-or Observable returning function, and is cancelable if Observable.
+ * Its concurrency mode is to run handlers immediately.
+ *
+ * @param actionNamespace - Prefix of all actions eg fetch/request
+ * @param handler - Function returning Promise, Observable or generator from which events are generated
+ * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument.
+ * @returns A service in immediate mode.
+ * @summary ![queueing mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-queueing-sm.png)
+ */
+export function createService<
+  TRequest,
+  TNext = void,
+  TError = Error,
+  TState = object
+>(
+  actionNamespace: string,
+  handler: EventHandler<TRequest, TNext>,
+  reducerProducer: (
+    acs: ProcessLifecycleActions<TRequest, TNext, TError>
+  ) => (state: TState, action: Action<any>) => TState = () =>
+    (state: TState, _: any) => {
+      return state;
+    }
+): Service<TRequest, TNext, TError, TState> {
+  return createServiceListener(
+    actionNamespace,
+    defaultBus,
+    handler,
+    reducerProducer
+  );
+}
+/**
+ * Creates a Service - a managed bus listener - for an effect and its state.
+ * The effect can be a Promise-or Observable returning function, and is cancelable if Observable.
+ * Its concurrency mode is to queue up handlers.
+ *
+ * @param actionNamespace - Prefix of all actions eg fetch/request
+ * @param bus - The Bus event bus read and written to
+ * @param handler - Function returning Promise, Observable or generator from which events are generated
+ * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument.
+ * @returns A service in queueing mode.
+ * @summary ![queueing mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-queueing-sm.png)
+ */
+export function createQueueingServiceListener<
+  TRequest,
+  TNext = void,
+  TError = Error,
+  TState = object
+>(
+  actionNamespace: string,
+  bus: Bus<Action<TRequest | TNext | TError | void>>,
+  handler: EventHandler<TRequest, TNext>,
+  reducerProducer: (
+    acs: ProcessLifecycleActions<TRequest, TNext, TError>
+  ) => (state: TState, action: Action<any>) => TState = () =>
+    (state: TState, _: any) => {
+      return state;
+    }
+): Service<TRequest, TNext, TError, TState> {
+  return createServiceListener(
+    actionNamespace,
+    bus,
+    handler,
+    reducerProducer,
+    concatMap
+  );
+}
+
+/**
+ * Creates a Service - a listener on the default bus - for an effect and its state.
  * The effect can be a Promise-or Observable returning function, and is cancelable if Observable.
  * Its concurrency mode is to queue up handlers.
  *
@@ -319,6 +389,41 @@ export function createQueueingService<
   TState = object
 >(
   actionNamespace: string,
+  handler: EventHandler<TRequest, TNext>,
+  reducerProducer: (
+    acs: ProcessLifecycleActions<TRequest, TNext, TError>
+  ) => (state: TState, action: Action<any>) => TState = () =>
+    (state: TState, _: any) => {
+      return state;
+    }
+): Service<TRequest, TNext, TError, TState> {
+  return createServiceListener(
+    actionNamespace,
+    defaultBus,
+    handler,
+    reducerProducer,
+    concatMap
+  );
+}
+/**
+ * Creates a Service - a managed bus listener - for an effect and its state.
+ * The effect can be a Promise-or Observable returning function, and is cancelable if Observable.
+ * Its concurrency mode is to cancel a running effect, and switch to a new one.
+ *
+ * @param actionNamespace - Prefix of all actions eg fetch/request
+ * @param bus - The Bus event bus read and written to
+ * @param handler - Function returning Promise, Observable or generator from which events are generated
+ * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument.
+ * @returns A service in switching mode.
+ * @summary ![switching mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-switching-sm.png)
+ */
+export function createSwitchingServiceListener<
+  TRequest,
+  TNext = void,
+  TError = Error,
+  TState = object
+>(
+  actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
   reducerProducer: (
@@ -328,17 +433,17 @@ export function createQueueingService<
       return state;
     }
 ): Service<TRequest, TNext, TError, TState> {
-  return createService(
+  return createServiceListener(
     actionNamespace,
     bus,
     handler,
     reducerProducer,
-    concatMap
+    switchMap
   );
 }
 
 /**
- * Creates a Service - a managed bus listener - for an effect and optionally state.
+ * Creates a Service - a managed bus listener - for an effect and its state.
  * The effect can be a Promise-or Observable returning function, and is cancelable if Observable.
  * Its concurrency mode is to cancel a running effect, and switch to a new one.
  *
@@ -356,6 +461,40 @@ export function createSwitchingService<
   TState = object
 >(
   actionNamespace: string,
+  handler: EventHandler<TRequest, TNext>,
+  reducerProducer: (
+    acs: ProcessLifecycleActions<TRequest, TNext, TError>
+  ) => (state: TState, action: Action<any>) => TState = () =>
+    (state: TState, _: any) => {
+      return state;
+    }
+): Service<TRequest, TNext, TError, TState> {
+  return createServiceListener(
+    actionNamespace,
+    defaultBus,
+    handler,
+    reducerProducer,
+    switchMap
+  );
+}
+
+/**
+ * Alias for createSwitchingServiceListener
+ *
+ * @param actionNamespace - Prefix of all actions eg fetch/request
+ * @param bus - The Bus event bus read and written to
+ * @param handler - Function returning Promise, Observable or generator from which events are generated
+ * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument.
+ * @returns A service in switching mode.
+ * @summary ![switching mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-switching-sm.png)
+ */
+export function createReplacingServiceListener<
+  TRequest,
+  TNext = void,
+  TError = Error,
+  TState = object
+>(
+  actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
   reducerProducer: (
@@ -365,12 +504,11 @@ export function createSwitchingService<
       return state;
     }
 ): Service<TRequest, TNext, TError, TState> {
-  return createService(
+  return createSwitchingServiceListener(
     actionNamespace,
     bus,
     handler,
-    reducerProducer,
-    switchMap
+    reducerProducer
   );
 }
 
@@ -391,6 +529,41 @@ export function createReplacingService<
   TState = object
 >(
   actionNamespace: string,
+  handler: EventHandler<TRequest, TNext>,
+  reducerProducer: (
+    acs: ProcessLifecycleActions<TRequest, TNext, TError>
+  ) => (state: TState, action: Action<any>) => TState = () =>
+    (state: TState, _: any) => {
+      return state;
+    }
+): Service<TRequest, TNext, TError, TState> {
+  return createSwitchingServiceListener(
+    actionNamespace,
+    defaultBus,
+    handler,
+    reducerProducer
+  );
+}
+
+/**
+ * Creates a Service - a managed bus listener - for an effect and its state.
+ * The effect can be a Promise-or Observable returning function, and is cancelable if Observable.
+ * Its concurrency mode is to prevent a new handler from starting, if one is in progress.
+ *
+ * @param actionNamespace - Prefix of all actions eg fetch/request
+ * @param bus - The Bus event bus read and written to
+ * @param handler - Function returning Promise, Observable or generator from which events are generated
+ * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument.
+ * @returns A service in blocking mode.
+ * @summary ![blocking mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-blocking-sm.png)
+ */
+export function createBlockingServiceListener<
+  TRequest,
+  TNext = void,
+  TError = Error,
+  TState = object
+>(
+  actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
   reducerProducer: (
@@ -400,10 +573,17 @@ export function createReplacingService<
       return state;
     }
 ): Service<TRequest, TNext, TError, TState> {
-  return createSwitchingService(actionNamespace, bus, handler, reducerProducer);
+  return createServiceListener(
+    actionNamespace,
+    bus,
+    handler,
+    reducerProducer,
+    exhaustMap
+  );
 }
+
 /**
- * Creates a Service - a managed bus listener - for an effect and optionally state.
+ * Creates a Service - a listener on the default bus - for an effect and its state.
  * The effect can be a Promise-or Observable returning function, and is cancelable if Observable.
  * Its concurrency mode is to prevent a new handler from starting, if one is in progress.
  *
@@ -421,6 +601,42 @@ export function createBlockingService<
   TState = object
 >(
   actionNamespace: string,
+  handler: EventHandler<TRequest, TNext>,
+  reducerProducer: (
+    acs: ProcessLifecycleActions<TRequest, TNext, TError>
+  ) => (state: TState, action: Action<any>) => TState = () =>
+    (state: TState, _: any) => {
+      return state;
+    }
+): Service<TRequest, TNext, TError, TState> {
+  return createServiceListener(
+    actionNamespace,
+    defaultBus,
+    handler,
+    reducerProducer,
+    exhaustMap
+  );
+}
+
+/**
+ * Creates a Service - a managed bus listener - for an effect and its state.
+ * The effect can be a Promise-or Observable returning function, and is cancelable if Observable.
+ * Its concurrency mode is if a handler is running, terminates it, and does not begin a new handling.
+ *
+ * @param actionNamespace - Prefix of all actions eg fetch/request
+ * @param bus - The Bus event bus read and written to
+ * @param handler - Function returning Promise, Observable or generator from which events are generated
+ * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument.
+ * @returns A service in toggling mode.
+ * @summary ![toggling mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-toggling-sm.png)
+ */
+export function createTogglingServiceListener<
+  TRequest,
+  TNext = void,
+  TError = Error,
+  TState = object
+>(
+  actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
   reducerProducer: (
@@ -430,17 +646,18 @@ export function createBlockingService<
       return state;
     }
 ): Service<TRequest, TNext, TError, TState> {
-  return createService(
+  return createServiceListener(
     actionNamespace,
     bus,
     handler,
     reducerProducer,
-    exhaustMap
+    // @ts-ignore
+    toggleMap
   );
 }
 
 /**
- * Creates a Service - a managed bus listener - for an effect and optionally state.
+ * Creates a Service - a listener on the defaultBus - for an effect and its state.
  * The effect can be a Promise-or Observable returning function, and is cancelable if Observable.
  * Its concurrency mode is if a handler is running, terminates it, and does not begin a new handling.
  *
@@ -458,7 +675,6 @@ export function createTogglingService<
   TState = object
 >(
   actionNamespace: string,
-  bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
   reducerProducer: (
     acs: ProcessLifecycleActions<TRequest, TNext, TError>
@@ -467,9 +683,9 @@ export function createTogglingService<
       return state;
     }
 ): Service<TRequest, TNext, TError, TState> {
-  return createService(
+  return createServiceListener(
     actionNamespace,
-    bus,
+    defaultBus,
     handler,
     reducerProducer,
     // @ts-ignore

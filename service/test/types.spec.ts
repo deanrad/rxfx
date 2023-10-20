@@ -1,7 +1,7 @@
 import { after } from '@rxfx/after';
 import { defaultBus as bus } from '@rxfx/bus';
 import { concat } from 'rxjs';
-import { createService } from '../src/createService';
+import { createServiceListener } from '../src/createService';
 import { ServiceRequestType, ServiceStateType } from '../src/types';
 
 describe('Types', () => {
@@ -22,7 +22,7 @@ describe('Types', () => {
 
   describe('ServiceRequestType', () => {
     it('gets the type of .state.value', () => {
-      const mathService = createService<
+      const mathService = createServiceListener<
         string | void,
         number,
         Error,
@@ -39,7 +39,7 @@ describe('Types', () => {
 
   describe('ServiceRequestType', () => {
     it('gets the .request arg type', () => {
-      const mathService = createService<
+      const mathService = createServiceListener<
         string | void,
         number,
         Error,

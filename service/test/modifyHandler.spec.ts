@@ -1,7 +1,7 @@
 import { after } from '@rxfx/after';
 import { defaultBus as bus } from '@rxfx/bus';
 import { timeoutHandler, monitorHandler } from '../src/modifyHandler';
-import { createService } from '../src/createService';
+import { createServiceListener } from '../src/createService';
 
 describe(timeoutHandler, () => {
   afterEach(() => {
@@ -11,7 +11,11 @@ describe(timeoutHandler, () => {
   describe('timeout', () => {
     it('is a noop at or below the timeout', async () => {
       const timedOutProc = timeoutHandler({ duration: 20 }, () => after(10, 2));
-      const srv = createService<void, number, Error>('test', bus, timedOutProc);
+      const srv = createServiceListener<void, number, Error>(
+        'test',
+        bus,
+        timedOutProc
+      );
 
       const seen = [];
       srv.errors.subscribe((e) => {
@@ -27,7 +31,11 @@ describe(timeoutHandler, () => {
       const timedOutProc = timeoutHandler({ duration: 10 }, () =>
         after(100, 2)
       );
-      const srv = createService<void, number, Error>('test', bus, timedOutProc);
+      const srv = createServiceListener<void, number, Error>(
+        'test',
+        bus,
+        timedOutProc
+      );
 
       const seen = [];
       srv.errors.subscribe((e) => {
@@ -53,7 +61,7 @@ describe(timeoutHandler, () => {
         },
         handler
       );
-      const srv = createService<number, number, Error>(
+      const srv = createServiceListener<number, number, Error>(
         'test',
         bus,
         timedOutProc
@@ -90,7 +98,11 @@ describe(monitorHandler, () => {
       { duration: 20, progressCallback },
       () => after(100, 2)
     );
-    const srv = createService<void, number, Error>('test', bus, monitoredProc);
+    const srv = createServiceListener<void, number, Error>(
+      'test',
+      bus,
+      monitoredProc
+    );
 
     // Cancels with the handling
     srv.request();

@@ -1,10 +1,10 @@
 import { defaultBus } from '@rxfx/bus';
 import {
-  createService,
-  createQueueingService,
-  createSwitchingService,
-  createBlockingService,
-  createTogglingService,
+  createServiceListener,
+  createQueueingServiceListener,
+  createSwitchingServiceListener,
+  createBlockingServiceListener,
+  createTogglingServiceListener,
 } from './createService';
 import { mergeMap } from 'rxjs/operators';
 import { EMPTY, ObservableInput, concat } from 'rxjs';
@@ -25,7 +25,7 @@ export function createEffect<Req>(
   namespace = randomId(),
   bus = defaultBus
 ) {
-  return createService<Req, void>(namespace, bus, fn);
+  return createServiceListener<Req, void>(namespace, bus, fn);
 }
 
 export const noopReducerProducer = () => (s: any) => s;
@@ -36,7 +36,7 @@ export function createCustomEffect<Req>(
   namespace = randomId(),
   bus = defaultBus
 ) {
-  return createService<Req, void>(
+  return createServiceListener<Req, void>(
     namespace,
     bus,
     fn,
@@ -50,7 +50,7 @@ export function createQueueingEffect<Req>(
   namespace = randomId(),
   bus = defaultBus
 ) {
-  return createQueueingService<Req>(namespace, bus, fn);
+  return createQueueingServiceListener<Req>(namespace, bus, fn);
 }
 
 export function createSwitchingEffect<Req>(
@@ -58,7 +58,7 @@ export function createSwitchingEffect<Req>(
   namespace = randomId(),
   bus = defaultBus
 ) {
-  return createSwitchingService<Req>(namespace, bus, fn);
+  return createSwitchingServiceListener<Req>(namespace, bus, fn);
 }
 
 export function createBlockingEffect<Req>(
@@ -66,7 +66,7 @@ export function createBlockingEffect<Req>(
   namespace = randomId(),
   bus = defaultBus
 ) {
-  return createBlockingService<Req>(namespace, bus, fn);
+  return createBlockingServiceListener<Req>(namespace, bus, fn);
 }
 
 export function createThrottledEffect(msec: number) {
@@ -75,7 +75,7 @@ export function createThrottledEffect(msec: number) {
     namespace = randomId(),
     bus = defaultBus
   ) {
-    return createBlockingService<Req>(namespace, bus, (args: Req) => {
+    return createBlockingServiceListener<Req>(namespace, bus, (args: Req) => {
       return concat(
         // do the work up front
         fn(args),
@@ -92,7 +92,7 @@ export function createDebouncedEffect(msec: number) {
     namespace = randomId(),
     bus = defaultBus
   ) {
-    return createSwitchingService<Req, Res>(namespace, bus, (args: Req) => {
+    return createSwitchingServiceListener<Req, Res>(namespace, bus, (args: Req) => {
       return concat(
         // wait initially
         after(msec, EMPTY),
@@ -108,5 +108,5 @@ export function createTogglingEffect<Req>(
   namespace = randomId(),
   bus = defaultBus
 ) {
-  return createTogglingService<Req>(namespace, bus, fn);
+  return createTogglingServiceListener<Req>(namespace, bus, fn);
 }

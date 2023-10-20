@@ -5,22 +5,27 @@ import { Bus } from '@rxfx/bus';
 import { after } from '@rxfx/after';
 
 import {
-  createQueueingService,
-  createReplacingService,
-  createBlockingService,
+  createQueueingServiceListener,
+  createReplacingServiceListener,
+  createBlockingServiceListener,
+  createServiceListener,
+  createTogglingServiceListener,
   createService,
-  createTogglingService,
 } from '../src/createService';
 
 import type { ProcessLifecycleCallbacks, ReducerProducer } from '../src/types';
 
-describe('createService', () => {
+describe('createServiceListener', () => {
   const testNamespace = 'testService';
   const bus = new Bus<Action<any>>();
   const handler = jest.fn((_) => {
     // console.log(s);
   });
-  let testService = createService<any, any, Error>(testNamespace, bus, handler);
+  let testService = createServiceListener<any, any, Error>(
+    testNamespace,
+    bus,
+    handler
+  );
   beforeEach(() => {
     bus.reset(); // stops existing services, handlings
   });
@@ -41,11 +46,14 @@ describe('createService', () => {
     describe('bus', () => {
       it.todo('recieves requests');
       it.todo('recieves observed events');
+      it('can be omitted with createService style', () => {
+        createService<any, any, Error>(testNamespace, handler);
+      });
     });
 
     describe('handler', () => {
       it('can return an item an Observable will be made from', async () => {
-        const service = createService<void, number, Error>(
+        const service = createServiceListener<void, number, Error>(
           testNamespace,
           bus,
           () => Promise.resolve(3.14159) // for options see https://rxjs.dev/api/index/function/from
@@ -87,7 +95,7 @@ describe('createService', () => {
       rtkStyle.getInitialState = () => initialState;
 
       it('can return a Redux Style reducer', () => {
-        const counterService = createService<
+        const counterService = createServiceListener<
           void,
           number,
           Error,
@@ -99,7 +107,7 @@ describe('createService', () => {
       });
 
       it('can return a ReduxToolkit-Style reducer', () => {
-        const counterService = createService<
+        const counterService = createServiceListener<
           void,
           number,
           Error,
@@ -111,19 +119,19 @@ describe('createService', () => {
       });
 
       it('can use a typesafe reducerproducer', () => {
-        const counterService = createService<void, number, Error, number>(
-          'counter',
-          bus,
-          handler,
-          typeSafeStyle
-        );
+        const counterService = createServiceListener<
+          void,
+          number,
+          Error,
+          number
+        >('counter', bus, handler, typeSafeStyle);
         expect(counterService.state.value).toBe(0);
         counterService.request();
         expect(counterService.state.value).toBe(1);
       });
 
       it('wont error if it doesnt default the event', () => {
-        const counterService = createService<
+        const counterService = createServiceListener<
           void,
           void,
           Error,
@@ -161,7 +169,7 @@ describe('createService', () => {
       };
 
       it('reduces into .state', () => {
-        const stateService = createService<
+        const stateService = createServiceListener<
           string | void,
           number,
           Error,
@@ -182,7 +190,7 @@ describe('createService', () => {
           return of(count++);
         };
 
-        const stateService = createService<
+        const stateService = createServiceListener<
           string | void,
           number,
           Error,
@@ -207,7 +215,7 @@ describe('createService', () => {
           return throwError('oops');
         };
 
-        const stateService = createService<
+        const stateService = createServiceListener<
           string | void,
           number,
           Error,
@@ -243,7 +251,7 @@ describe('createService', () => {
             return state;
           };
 
-        const stateService = createService<void, void, Error, number>(
+        const stateService = createServiceListener<void, void, Error, number>(
           testNamespace,
           bus,
           () => after(0),
@@ -279,7 +287,7 @@ describe('createService', () => {
         asyncHandler = jest.fn(() => {
           return after(ASYNC_DELAY, '3.14');
         });
-        asyncService = createService<string, string, Error>(
+        asyncService = createServiceListener<string, string, Error>(
           testNamespace,
           bus,
           asyncHandler
@@ -315,7 +323,7 @@ describe('createService', () => {
       describe('Immediate', () => {
         it('toggles on and off across multiple handlings', async () => {
           const statuses: boolean[] = [];
-          const svc = createService<void, string, Error>(
+          const svc = createServiceListener<void, string, Error>(
             'isHandling-immediate',
             bus,
             () => after(ASYNC_DELAY, '3.14')
@@ -338,7 +346,7 @@ describe('createService', () => {
       describe('Queueing', () => {
         it('toggles on and off across multiple handlings', async () => {
           const statuses: boolean[] = [];
-          const svc = createQueueingService<void, string, Error>(
+          const svc = createQueueingServiceListener<void, string, Error>(
             'isHandling-queueing',
             bus,
             () => after(ASYNC_DELAY, '3.14')
@@ -362,7 +370,7 @@ describe('createService', () => {
       describe('Replacing', () => {
         it('toggles on and off across multiple handlings', async () => {
           const statuses: boolean[] = [];
-          const svc = createReplacingService<void, string, Error>(
+          const svc = createReplacingServiceListener<void, string, Error>(
             'isHandling-replacing',
             bus,
             () => after(ASYNC_DELAY, '3.14')
@@ -386,7 +394,7 @@ describe('createService', () => {
       describe('Toggling', () => {
         it('toggles on and off across multiple handlings', async () => {
           const statuses: boolean[] = [];
-          const svc = createTogglingService<void, string, Error>(
+          const svc = createTogglingServiceListener<void, string, Error>(
             'isHandling-toggling',
             bus,
             () => after(ASYNC_DELAY, '3.14')
@@ -456,7 +464,7 @@ describe('createService', () => {
       describe('Immediate', () => {
         it('stays true across multiple activities (F, T, F)', async () => {
           const statuses: boolean[] = [];
-          const svc = createService<void, string, Error>(
+          const svc = createServiceListener<void, string, Error>(
             'isActive-immediate',
             bus,
             () => after(ASYNC_DELAY, '3.14')
@@ -480,7 +488,7 @@ describe('createService', () => {
       describe('Queueing', () => {
         it('stays true across multiple activities (F, T, F)', async () => {
           const statuses: boolean[] = [];
-          const svc = createQueueingService<void, string, Error>(
+          const svc = createQueueingServiceListener<void, string, Error>(
             'isActive-immediate',
             bus,
             () => after(ASYNC_DELAY, '3.14')
@@ -504,7 +512,7 @@ describe('createService', () => {
       describe('Replacing', () => {
         it('stays true across multiple activities (F, T, F)', async () => {
           const statuses: boolean[] = [];
-          const svc = createReplacingService<void, string, Error>(
+          const svc = createReplacingServiceListener<void, string, Error>(
             'isActive-replacing',
             bus,
             () => after(ASYNC_DELAY, '3.14')
@@ -528,7 +536,7 @@ describe('createService', () => {
       describe('Blocking', () => {
         it('stays true across multiple activities (F, T, F)', async () => {
           const statuses: boolean[] = [];
-          const svc = createReplacingService<void, string, Error>(
+          const svc = createReplacingServiceListener<void, string, Error>(
             'isActive-blocking',
             bus,
             () => after(ASYNC_DELAY, '3.14')
@@ -551,7 +559,7 @@ describe('createService', () => {
       describe('Toggling', () => {
         it('stays true across multiple activities (F, T, F)', async () => {
           const statuses: boolean[] = [];
-          const svc = createTogglingService<void, string, Error>(
+          const svc = createTogglingServiceListener<void, string, Error>(
             'isActive-toggling',
             bus,
             () => after(ASYNC_DELAY, '3.14')
@@ -578,12 +586,16 @@ describe('createService', () => {
 
       it('gets set upon an error, cleared the next start', async () => {
         let i = 0;
-        const svc = createService<void, string, Error>('err', bus, () => {
-          if (i++ === 0) {
-            return Promise.reject(ex);
+        const svc = createServiceListener<void, string, Error>(
+          'err',
+          bus,
+          () => {
+            if (i++ === 0) {
+              return Promise.reject(ex);
+            }
+            return of('no error');
           }
-          return of('no error');
-        });
+        );
 
         expect(svc.currentError.value).toBeNull();
         svc.request();
@@ -598,14 +610,14 @@ describe('createService', () => {
 
     describe('#bus', () => {
       it('refers to the bus it was created with', () => {
-        const stateService = createService(testNamespace, bus, handler);
+        const stateService = createServiceListener(testNamespace, bus, handler);
         expect(stateService.bus === bus).toBeTruthy();
       });
     });
 
     describe('#namespace', () => {
       it('returns the namespace it was created with', () => {
-        const stateService = createService(testNamespace, bus, handler);
+        const stateService = createServiceListener(testNamespace, bus, handler);
         expect(stateService.namespace).toEqual(testNamespace);
       });
     });
@@ -613,7 +625,7 @@ describe('createService', () => {
     describe('#addTeardown', () => {
       it('adds a function to be called once when stop() is invoked', () => {
         let tornDownTimes = 0;
-        const stateService = createService(testNamespace, bus, handler);
+        const stateService = createServiceListener(testNamespace, bus, handler);
         stateService.addTeardown(() => {
           tornDownTimes += 1;
         });
@@ -644,7 +656,7 @@ describe('createService', () => {
       });
 
       describe('Cancelation', () => {
-        const testService = createService('test-async', bus, () =>
+        const testService = createServiceListener('test-async', bus, () =>
           after(10, Math.PI)
         );
 
@@ -661,7 +673,7 @@ describe('createService', () => {
           ]);
         });
         it('can cancel existing, and any queued with .cancelCurrentAndQueued()', async () => {
-          const qService = createQueueingService('number', bus, (n) =>
+          const qService = createQueueingServiceListener('number', bus, (n) =>
             after(10, n)
           );
           const seen = [];
@@ -716,7 +728,7 @@ describe('createService', () => {
 
     describe('#send', () => {
       it('gets a Promise for a response', async () => {
-        const counterService = createService<number, number, Error>(
+        const counterService = createServiceListener<number, number, Error>(
           'counter',
           bus,
           (i) => after(50, i + 1) // replies with increment soon
@@ -727,7 +739,7 @@ describe('createService', () => {
       });
 
       it('returns a rejected promise if an error occurs before a response', async () => {
-        const counterService = createService<number, number, Error>(
+        const counterService = createServiceListener<number, number, Error>(
           'counter',
           bus,
           () =>
@@ -770,7 +782,12 @@ describe('createService', () => {
 
       describe('Immediate mode', () => {
         it('Handles lifecycle events with callbacks', async () => {
-          const counterService = createService<void, string, Error, number>(
+          const counterService = createServiceListener<
+            void,
+            string,
+            Error,
+            number
+          >(
             'xxx',
             bus,
             () => after(1, maybeThrow),
@@ -830,7 +847,7 @@ describe('createService', () => {
       });
 
       describe('Queueing mode', () => {
-        const queuer = createQueueingService;
+        const queuer = createQueueingServiceListener;
         it('Handles lifecycle events with callbacks', async () => {
           // prettier-ignore
           const counterService = queuer<number, string, Error, number>(
@@ -891,8 +908,10 @@ describe('createService', () => {
 
   it('triggers events from observable handlers when no error', () => {
     const seen = eventsOf(bus);
-    testService = createService<string, string, Error>(testNamespace, bus, () =>
-      after(0, 'bar')
+    testService = createServiceListener<string, string, Error>(
+      testNamespace,
+      bus,
+      () => after(0, 'bar')
     );
     testService('foo');
     expect(seen).toEqual([
@@ -905,8 +924,10 @@ describe('createService', () => {
 
   it('triggers events from Promise handlers when no error', async () => {
     const seen = eventsOf(bus);
-    testService = createService<string, string, Error>(testNamespace, bus, () =>
-      Promise.resolve('bar')
+    testService = createServiceListener<string, string, Error>(
+      testNamespace,
+      bus,
+      () => Promise.resolve('bar')
     );
     testService('foo');
 
@@ -922,8 +943,10 @@ describe('createService', () => {
 
   it('triggers events from Promise-handlers when no error', async () => {
     const seen = eventsOf(bus);
-    testService = createService<string, string, Error>(testNamespace, bus, () =>
-      Promise.resolve('bar')
+    testService = createServiceListener<string, string, Error>(
+      testNamespace,
+      bus,
+      () => Promise.resolve('bar')
     );
     testService('foo');
 
@@ -939,8 +962,10 @@ describe('createService', () => {
 
   it('triggers events from observable handlers, even when they error', async () => {
     const seen = [];
-    testService = createService<string, string, Error>(testNamespace, bus, () =>
-      throwError(() => new Error('dang!'))
+    testService = createServiceListener<string, string, Error>(
+      testNamespace,
+      bus,
+      () => throwError(() => new Error('dang!'))
     );
     testService.events.subscribe((e) => seen.push(e));
     testService('foo');
@@ -967,8 +992,10 @@ describe('createService', () => {
   it('terminates effects on a bus.reset', async () => {
     const afterFinishedSpy = jest.fn();
 
-    testService = createService<string, string, Error>(testNamespace, bus, () =>
-      after(10, afterFinishedSpy)
+    testService = createServiceListener<string, string, Error>(
+      testNamespace,
+      bus,
+      () => after(10, afterFinishedSpy)
     );
     testService('foo');
     bus.reset();
@@ -1028,39 +1055,39 @@ describe('createService', () => {
     });
   });
 
-  describe('createQueueingService', () => {
-    it.todo('calls createService with concatMap');
+  describe('createQueueingServiceListener', () => {
+    it.todo('calls createServiceListener with concatMap');
     it('can be called', () => {
       expect.assertions(0);
-      testService = createQueueingService(testNamespace, bus, (s) =>
+      testService = createQueueingServiceListener(testNamespace, bus, (s) =>
         after(0, s)
       );
     });
   });
 
-  describe('createReplacingService', () => {
-    it.todo('calls createService with switchMap');
+  describe('createReplacingServiceListener', () => {
+    it.todo('calls createServiceListener with switchMap');
     it('can be called', () => {
-      testService = createReplacingService(testNamespace, bus, (s) =>
+      testService = createReplacingServiceListener(testNamespace, bus, (s) =>
         after(0, s)
       );
     });
   });
 
-  describe('createBlockingService', () => {
-    it.todo('calls createService with exhaustMap');
+  describe('createBlockingServiceListener', () => {
+    it.todo('calls createServiceListener with exhaustMap');
     it('can be called', () => {
       expect.assertions(0);
-      testService = createBlockingService(testNamespace, bus, (s) =>
+      testService = createBlockingServiceListener(testNamespace, bus, (s) =>
         after(0, s)
       );
     });
   });
 
-  describe('createTogglingService', () => {
-    it.todo('calls createService with toggleMap');
+  describe('createTogglingServiceListener', () => {
+    it.todo('calls createServiceListener with toggleMap');
     it('can be called', async () => {
-      const testService = createTogglingService<void, void, void>(
+      const testService = createTogglingServiceListener<void, void, void>(
         testNamespace,
         bus,
         (s) => after(100, s)
