@@ -3,7 +3,8 @@
 A Vanilla JS container for Effect Management and State Mangement, based on RxJS. Supports Simple Effect Cancelation and Concurrency Modes, and TypeScript.
 
 
-Part of the 𝗥𝘅𝑓𝑥 family of libraries.
+Part of the [𝗥𝘅𝑓𝑥](https://github.com/deanrad/rxfx) family of libraries.
+
 For help consuming services in React, check out [`@rxfx/react`](https://github.com/deanrad/rxfx/tree/main/react).
 
 # Example Usage
@@ -70,7 +71,6 @@ With concurrency, cancelation, other best-practices and UX tweaks.
 ![](https://s3.amazonaws.com/www.deanius.com/rxfx-data-fetcher-static.png)
 
 ## Example Application - Alarm Clock
-
 
 Here we build an Alarm Clock _(of a variety you may already know!)_ . [This statechart](https://s3.amazonaws.com/www.deanius.com/rxfx-alarm-clock-xstate.png) models its flow as a statechart, but I think the request-responses model of cause-and-effect is just as effective a model. Pushing a time/set button down is the request, and the responses are all the updates of hour or minute we get from the H or M keypresses.
 
