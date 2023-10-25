@@ -117,8 +117,15 @@ export interface Queryable<TRequest, TNext, TError, TState> {
 }
 
 export interface Requestable<TRequest, TResponse> {
-  /** Get a promise for the next response or error. Note: works best for a queueing service, otherwise may not be the response/error that was triggered by the request. */
-  send(arg: TRequest): Promise<TResponse>;
+  /** Get a promise for the next response or error. Note: works best for a queueing service, otherwise may not be the response/error that was triggered by the request.
+   * @argument matcher If an immediate mode (mergeMap) service, and you need a promise for a specific result,
+   * not just the first one, provide a function that takes a request and a response and returns true
+   * if the response belongs to that request.
+   */
+  send(
+    arg: TRequest,
+    matcher?: (req: TRequest, res: TResponse) => boolean
+  ): Promise<TResponse>;
   /** Invoke the service as a function directly (RTK style). */
   (req: TRequest): void;
   /** Explicitly pass a request object */
