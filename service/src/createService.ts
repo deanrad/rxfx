@@ -58,7 +58,7 @@ export function createServiceListener<
   const ACs: ProcessLifecycleActions<TRequest, TNext, TError> = {
     request: namespacedAction<TRequest>('request'),
     cancel: namespacedAction<void>('cancel'),
-    started: namespacedAction<void>('started'),
+    started: namespacedAction<TRequest>('started'),
     next: namespacedAction<TNext>('next'),
     error: namespacedAction<TError>('error'),
     complete: namespacedAction<void>('complete'),
@@ -132,7 +132,7 @@ export function createServiceListener<
     bus.trigger(action);
   };
 
-  const wrappedHandler = (e: Action<TRequest | TNext | TError>) => {
+  const wrappedHandler = (e: Action<TRequest>) => {
     const oneResult = handler(e.payload as TRequest);
     /* istanbul ignore next */
     const obsResult: Observable<TNext> =
@@ -154,6 +154,7 @@ export function createServiceListener<
       const sub = obsResult
         .pipe(
           tap({ 
+            subscribe: () => {bus.trigger(ACs.started(e.payload))},
             complete: () => {bus.trigger(ACs.complete()); observer.complete()}, 
             unsubscribe: () => {bus.trigger(ACs.canceled()); observer.complete()}
           }),
@@ -174,8 +175,6 @@ export function createServiceListener<
     ACs.request.match,
     wrappedHandler,
     bus.observeWith({
-      // @ts-ignore
-      subscribe: ACs.started,
       // @ts-ignore
       next: ACs.next,
       // @ts-ignore
@@ -237,7 +236,7 @@ export function createServiceListener<
     commands: bus.query(matchesAny(ACs.request, ACs.cancel)) as Observable<
       Action<TRequest | void>
     >,
-    starts: bus.query(ACs.started.match) as Observable<Action<void>>,
+    starts: bus.query(ACs.started.match) as Observable<Action<TRequest>>,
     cancelations: bus.query(ACs.canceled.match) as Observable<Action<void>>,
     acks: bus.query(matchesAny(ACs.started, ACs.canceled)) as Observable<
       Action<void>

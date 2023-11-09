@@ -916,7 +916,7 @@ describe('createServiceListener', () => {
     testService('foo');
     expect(seen).toEqual([
       testService.actions.request('foo'),
-      testService.actions.started(),
+      testService.actions.started('foo'),
       testService.actions.next('bar'),
       testService.actions.complete(),
     ]);
@@ -935,7 +935,7 @@ describe('createServiceListener', () => {
 
     expect(seen).toEqual([
       testService.actions.request('foo'),
-      testService.actions.started(),
+      testService.actions.started('foo'),
       testService.actions.next('bar'),
       testService.actions.complete(),
     ]);
@@ -954,7 +954,7 @@ describe('createServiceListener', () => {
 
     expect(seen).toEqual([
       testService.actions.request('foo'),
-      testService.actions.started(),
+      testService.actions.started('foo'),
       testService.actions.next('bar'),
       testService.actions.complete(),
     ]);
@@ -977,7 +977,7 @@ describe('createServiceListener', () => {
           "type": "testService/request",
         },
         {
-          "payload": undefined,
+          "payload": "foo",
           "type": "testService/started",
         },
         {

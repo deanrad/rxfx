@@ -70,7 +70,7 @@ export interface EventActionCreators<TRequest, TNext, TError> {
   /** Creates an event which cancels the current invocation.  */
   CANCEL: ActionCreator<void>;
   /** Creates an event which signals an invocation has begun. */
-  STARTED: ActionCreator<void>;
+  STARTED: ActionCreator<TRequest>;
   /** Creates an event which indicates an invocation has produced data. */
   NEXT: ActionCreator<TNext>;
   /** Creates an event which indicates an invocation has terminated with an error. */
@@ -85,13 +85,13 @@ export interface Queryable<TRequest, TNext, TError, TState> {
   /** An Observable of just `request`, `cancel` events. */
   commands: Observable<Action<TRequest | void>>;
   /** An Observable of just `started` events. */
-  starts: Observable<Action<void>>;
+  starts: Observable<Action<TRequest>>;
   /** An Observable of just `canceled` events of this service. */
   cancelations: Observable<Action<void>>;
   /** An Observable of just `start` and `canceled` events of this service. */
-  acks: Observable<Action<void>>;
+  acks: Observable<Action<TRequest | void>>;
   /** An Observable of just `started`, `next`, `complete`, `error `, and `canceled` events. */
-  updates: Observable<Action<TNext | TError | void>>;
+  updates: Observable<Action<TRequest | TNext | TError | void>>;
   /** An Observable of just the `next` events of this service. */
   responses: Observable<TNext>;
   /** An Observable of just the `error` events of this service. */

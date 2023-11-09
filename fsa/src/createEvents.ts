@@ -7,7 +7,7 @@ export interface ProcessLifecycleActions<TRequest, TNext, TError> {
   /** Cancels the current invocation.  */
   cancel: ActionCreator<void>;
   /** Notifies an invocation has begun. */
-  started: ActionCreator<void>;
+  started: ActionCreator<TRequest>;
   /** Notifies an invocation has produced data. */
   next: ActionCreator<TNext>;
   /** Notifies an invocation has terminated with an error. */
@@ -39,7 +39,7 @@ export function createProcessEvents<TRequest, TNext, TError>(
   return {
     request: createEvent<TRequest>(`${ns}/request`),
     cancel: createEvent<void>(`${ns}/cancel`),
-    started: createEvent<void>(`${ns}/started`),
+    started: createEvent<TRequest>(`${ns}/started`),
     next: createEvent<TNext>(`${ns}/next`),
     error: createEvent<TError>(`${ns}/error`),
     complete: createEvent<void>(`${ns}/complete`),
