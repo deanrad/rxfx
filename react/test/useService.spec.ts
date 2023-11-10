@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Action } from '@rxfx/fsa';
-import { createService } from '@rxfx/service';
+import { createServiceListener } from '@rxfx/service';
 import { Bus } from '@rxfx/bus';
 import { render } from '@testing-library/react';
 import { useService } from '../src/useService';
@@ -9,7 +9,7 @@ const defaultBus = new Bus<Action<any>>();
 const reducer = (c = 1.1, { type } = { type: '' }) => {
   return type === 'counter/request' ? c + 1 : c;
 };
-const testService = createService(
+const testService = createServiceListener(
   'counter',
   defaultBus,
   () => {},
