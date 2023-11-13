@@ -752,6 +752,47 @@ describe('createServiceListener', () => {
         const response = counterService.send(3);
         await expect(response).rejects.toBe('Oops');
       });
+
+      it('returns the most proximal response with no selector', async () => {
+        let delay = 30;
+        const counterService = createService<number, number, Error>(
+          'counter',
+          (i) => {
+            delay -= 10;
+            return after(delay, i + 1);
+          }
+        );
+        const r1Promise = counterService.send(1);
+        const r2Promise = counterService.send(2);
+
+        const r1 = await r1Promise;
+        const r2 = await r2Promise;
+
+        // Because the delays got shorter, each one got the soonest resolution
+        expect(r1).toBe(3);
+        expect(r2).toBe(3);
+      });
+      it('returns the matching response with a selector', async () => {
+        let delay = 30;
+        const counterService = createService<number, number, Error>(
+          'counter',
+          (i) => {
+            delay -= 10;
+            return after(delay, i + 1);
+          }
+        );
+
+        const isSuccessor = (req, res) => res === req + 1;
+        const r1Promise = counterService.send(1, isSuccessor);
+        const r2Promise = counterService.send(2, isSuccessor);
+
+        const r1 = await r1Promise;
+        const r2 = await r2Promise;
+
+        // Because the delays got shorter, each one got the soonest resolution
+        expect(r1).toBe(2);
+        expect(r2).toBe(3);
+      });
     });
 
     describe('#observe', () => {

@@ -1,7 +1,7 @@
 // prettier-ignore
 import { BehaviorSubject, EMPTY, firstValueFrom, from, merge, Observable, Observer, of, race, Subscription, throwError } from 'rxjs';
 // prettier-ignore
-import { concatMap, distinctUntilChanged, endWith, exhaustMap, map, mergeMap, scan, switchMap, takeUntil, tap } from 'rxjs/operators';
+import { concatMap, distinctUntilChanged, endWith, exhaustMap, filter, map, mergeMap, scan, switchMap, takeUntil, tap } from 'rxjs/operators';
 
 import { Action, ActionCreator, actionCreatorFactory } from '@rxfx/fsa';
 
@@ -277,9 +277,9 @@ export function createServiceListener<
     bus,
     namespace: actionNamespace,
     // Requestable
-    send(arg: TRequest) {
+    send(arg: TRequest, matcher = (_arg: TRequest, _resp: TNext) => true) {
       const resultOrError = race(
-        queries.responses,
+        queries.responses.pipe(filter((res) => matcher(arg, res))),
         queries.errors.pipe(mergeMap((e) => throwError(() => e)))
       );
 
