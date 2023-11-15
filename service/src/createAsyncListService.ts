@@ -1,4 +1,6 @@
+import { after } from '@rxfx/after';
 import { createQueueingService } from './createService';
+import { THRESHOLD } from '@rxfx/perception';
 
 export type ListRequest<T> =
   | {
@@ -17,9 +19,11 @@ export interface AsyncState<T> {
   leaving: T[];
 }
 
+let anonListCount = 1;
+
 export function createAsyncListService<T>(
-  namespace: string,
-  delay: (req: ListRequest<T>) => Promise<ListRequest<T>>,
+  namespace: string = `list/${anonListCount++}`,
+  delay: number = THRESHOLD.AnimationShort,
   finder: (obj1: T, obj2: T) => boolean = (obj1, obj2) => obj1 === obj2
 ) {
   const initialState: AsyncState<T> = {
@@ -28,12 +32,14 @@ export function createAsyncListService<T>(
     leaving: [],
   };
 
+  const delayFn = (req: ListRequest<T>) => after(delay, req);
+
   return createQueueingService<
     ListRequest<T>,
     ListRequest<T>,
     Error,
     AsyncState<T>
-  >(namespace, delay, (ACs) => (state = initialState, event) => {
+  >(namespace, delayFn, (ACs) => (state = initialState, event) => {
     // Request updates entering only
     if (ACs.started.match(event)) {
       const { item, method } = event.payload;

@@ -2,8 +2,9 @@ import { after } from '@rxfx/after';
 import {
   createAsyncListService,
   AsyncState,
-  ListRequest,
 } from '../src/createAsyncListService';
+import { defaultBus } from '@rxfx/bus';
+import { THRESHOLD } from '@rxfx/perception';
 
 function mostRecentOf<T>(ary: T[]) {
   return ary[ary.length - 1];
@@ -13,10 +14,7 @@ const DELAY = 100;
 
 describe('createAsyncListService', () => {
   it('has items, entering, leaving states', async () => {
-    const srv = createAsyncListService<number>(
-      'ids',
-      (req: ListRequest<number>) => after(DELAY, req)
-    );
+    const srv = createAsyncListService<number>('ids', DELAY);
 
     const seenStates: AsyncState<number>[] = [];
 
@@ -86,6 +84,26 @@ describe('createAsyncListService', () => {
     });
   });
 
+  describe('Defaulted arguments', () => {
+    it('assigns them', async () => {
+      const seen = [];
+      defaultBus.spy((e) => seen.push(e));
+
+      const srv = createAsyncListService<number>();
+      srv.request({ method: 'push', item: 2 });
+      expect(seen.map((e) => e.type)).toMatchObject([
+        'list/1/request',
+        'list/1/started',
+      ]);
+      await after(THRESHOLD.AnimationShort);
+      expect(seen.map((e) => e.type)).toMatchObject([
+        'list/1/request',
+        'list/1/started',
+        'list/1/next',
+        'list/1/complete',
+      ]);
+    });
+  });
   describe('Compound objects', () => {
     interface HasId {
       id: number;
@@ -94,11 +112,7 @@ describe('createAsyncListService', () => {
 
     // Note the test is flaky and double-adds to items, so we loosed the assertions to cheat
     it('has items, entering, leaving states', async () => {
-      const srv = createAsyncListService<HasId>(
-        'ids',
-        (req: ListRequest<HasId>) => after(DELAY, req),
-        matchesOnId
-      );
+      const srv = createAsyncListService<HasId>('ids', DELAY, matchesOnId);
 
       const seenStates: AsyncState<HasId>[] = [];
 
