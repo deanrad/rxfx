@@ -82,6 +82,14 @@ describe('createAsyncListService', () => {
       items: [2],
       leaving: [],
     });
+
+    srv.request({ method: 'reset', items: [2, 1, 3] });
+    // await after(DELAY); // no need to await for 'reset'
+    expect(mostRecentOf(seenStates)).toMatchObject({
+      items: [2, 1, 3],
+      entering: [],
+      leaving: [],
+    });
   });
 
   describe('Defaulted arguments', () => {

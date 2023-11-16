@@ -11,6 +11,11 @@ export type ListRequest<T> =
   | {
       method: 'remove';
       item: T;
+    }
+  | {
+      method: 'reset';
+      item: null;
+      items: T[];
     };
 
 export interface AsyncState<T> {
@@ -32,7 +37,10 @@ export function createAsyncListService<T>(
     leaving: [],
   };
 
-  const delayFn = (req: ListRequest<T>) => after(delay, req);
+  const delayFn = (req: ListRequest<T>) => {
+    const duration = req.method === 'reset' ? 0 : delay;
+    return after(duration, req);
+  };
 
   return createQueueingService<
     ListRequest<T>,
@@ -66,6 +74,13 @@ export function createAsyncListService<T>(
           items: state.items,
           entering: state.entering,
           leaving: [...state.leaving, leaver],
+        };
+      }
+      if (method === 'reset') {
+        return {
+          items: event.payload.items,
+          entering: [],
+          leaving: [],
         };
       }
     }
