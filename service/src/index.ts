@@ -15,4 +15,4 @@ export {
   Subscription,
   merge,
 } from 'rxjs';
-export { skip, takeUntil } from 'rxjs/operators';
+export { map, tap, filter, skip, takeUntil } from 'rxjs/operators';

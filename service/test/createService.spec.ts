@@ -3,6 +3,7 @@ import { Action } from '@rxfx/fsa';
 
 import { Bus } from '@rxfx/bus';
 import { after } from '@rxfx/after';
+import { createReducer } from '@reduxjs/toolkit';
 
 import {
   createQueueingServiceListener,
@@ -106,7 +107,7 @@ describe('createServiceListener', () => {
         expect(counterService.state.value).toHaveProperty('count', 1);
       });
 
-      it('can return a ReduxToolkit-Style reducer', () => {
+      it('can return a ReduxToolkit-Style reducer (getInitialState)', () => {
         const counterService = createServiceListener<
           void,
           number,
@@ -116,6 +117,25 @@ describe('createServiceListener', () => {
         expect(counterService.state.value).toHaveProperty('count', 0);
         counterService.request();
         expect(counterService.state.value).toHaveProperty('count', 1);
+      });
+
+      it('can return a ReduxToolkit-Style reducer (createReducer)', () => {
+        const sumService = createService<
+          number,
+          number,
+          Error,
+          typeof initialState
+        >('counter', handler, (ACs) =>
+          createReducer(initialState, (builder) => {
+            builder.addCase(ACs.request, (state, action) => {
+              state.count += action.payload;
+            });
+          })
+        );
+
+        expect(sumService.state.value).toHaveProperty('count', 0);
+        sumService.request(2);
+        expect(sumService.state.value).toHaveProperty('count', 2);
       });
 
       it('can use a typesafe reducerproducer', () => {
