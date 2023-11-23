@@ -4,6 +4,7 @@ import { Action } from '@rxfx/fsa';
 import { Bus } from '@rxfx/bus';
 import { after } from '@rxfx/after';
 import { createReducer } from '@reduxjs/toolkit';
+import { produce } from 'immer';
 
 import {
   createQueueingServiceListener,
@@ -126,10 +127,30 @@ describe('createServiceListener', () => {
           Error,
           typeof initialState
         >('counter', handler, (ACs) =>
-          createReducer(initialState, (builder) => {
-            builder.addCase(ACs.request, (state, action) => {
+          createReducer(initialState, (reducer) => {
+            reducer.addCase(ACs.request, (state, action) => {
               state.count += action.payload;
             });
+          })
+        );
+
+        expect(sumService.state.value).toHaveProperty('count', 0);
+        sumService.request(2);
+        expect(sumService.state.value).toHaveProperty('count', 2);
+      });
+
+      it('can return an immer reducer', () => {
+        const sumService = createService<
+          number,
+          number,
+          Error,
+          typeof initialState
+        >('counter', handler, (ACs) =>
+          produce((state = initialState, event) => {
+            if (ACs.request.match(event)) {
+              state.count += event.payload;
+            }
+            return state;
           })
         );
 
