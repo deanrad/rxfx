@@ -7,6 +7,7 @@ export * from './types';
 export * from '@rxfx/after';
 export * from '@rxfx/bus';
 export * from '@rxfx/fsa';
+export * from '@rxfx/perception';
 
 export {
   Observable,
