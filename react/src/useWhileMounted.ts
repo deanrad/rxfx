@@ -25,6 +25,26 @@ export function useWhileMounted(
 }
 
 /**
+ * Synonym for `useEffect(fn, [])`, but works with Subscriptions and Observbles.
+ * An alias for `useWhileMounted`.
+ */
+export function useWhenMounted(
+  sourceFactory: React.EffectCallback | (() => Subscription) | (() => Observable<any>)
+) {
+  useWhileMounted(sourceFactory);
+}
+
+/**
+ * Synonym for `useEffect(fn, [])`, but works with Subscriptions and Observbles.
+ * An alias for `useWhileMounted`.
+ */
+export function useAtMountTime(
+  sourceFactory: React.EffectCallback | (() => Subscription) | (() => Observable<any>)
+) {
+  useWhileMounted(sourceFactory);
+}
+
+/**
  * Ties multiple subscriptions to the lifetime of the component that calls useAllWhileMounted.
  * Given spread args of subscription-returning functions, gets the subscriptions from each
  * subscription factory at component mount time, and unsubscribes them all at unmount time.
@@ -41,7 +61,7 @@ export function useAllWhileMounted(...subFactories: Array<() => Subscription>) {
 
 /** Initiates a subscription (for listening) on the first render, and shuts it down on unmount.
  * Allows parents to hear events from their children's renders and mounts.
- * @description React renders parent-to-child, but mounts child-to-parent, 
+ * @description React renders parent-to-child, but mounts child-to-parent,
  * so for a parent to hear a child's mount event, the parent must start listening before
  * it renders the children - that's what useWhileRendered is for.
  * @example `useWhileRendered(() => bus.listen(CHILD_EVENT.match, log))`
