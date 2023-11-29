@@ -3,6 +3,7 @@ export * from './createEffect';
 export * from './createAsyncListService';
 export * from './modifyHandler';
 export * from './types';
+export * from './reducers';
 
 export * from '@rxfx/after';
 export * from '@rxfx/bus';

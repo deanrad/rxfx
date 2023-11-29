@@ -6,6 +6,8 @@ import { after } from '@rxfx/after';
 import { createReducer } from '@reduxjs/toolkit';
 import { produce } from 'immer';
 
+import { createResponseReducer } from '../src/reducers';
+
 import {
   createQueueingServiceListener,
   createReplacingServiceListener,
@@ -1195,6 +1197,27 @@ describe('createServiceListener', () => {
           "testService/complete",
         ]
       `);
+    });
+  });
+
+  describe('ready-made reducers', () => {
+    describe('rememberResponse', () => {
+      const DELAY = 100;
+
+      it('remembers each `next` payload', async () => {
+        const counter = createService<number, number, Error, number>(
+          'count',
+          (i) => after(DELAY, i * 2),
+          createResponseReducer(-1)
+        );
+
+        expect(counter.state.value).toBe(-1);
+
+        counter.request(3);
+        await after(DELAY);
+
+        expect(counter.state.value).toBe(6);
+      });
     });
   });
 });
