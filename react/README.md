@@ -52,4 +52,13 @@ export const Counter = () => {
 Equivalent to useMemo(producer, []). Makes the stability more readable.
 
 ### useStableCallback
- Equivalent to useCallback(producer, []). Makes the  stability more readable.
+Equivalent to useCallback(producer, []). Makes the  stability more readable.
+
+### useSubject
+Exposes each latest value of an RxJS `BehaviorSubject` to React, rerendering when it changes.
+
+### useObservable
+Exposes each latest value of an RxJS `Observable` to React, rerendering when it changes, subscribing on mount, and unsubscribing on unmount.
+
+### useMyMountEvent
+Returns a stable Promise for when a component has mounted, suitable for passing down to child components.
