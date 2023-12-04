@@ -6,7 +6,10 @@ import { after } from '@rxfx/after';
 import { createReducer } from '@reduxjs/toolkit';
 import { produce } from 'immer';
 
-import { createResponseReducer } from '../src/reducers';
+import {
+  createResponseReducer,
+  createResponseMergeReducer,
+} from '../src/reducers';
 
 import {
   createQueueingServiceListener,
@@ -1201,9 +1204,8 @@ describe('createServiceListener', () => {
   });
 
   describe('ready-made reducers', () => {
-    describe('rememberResponse', () => {
-      const DELAY = 100;
-
+    const DELAY = 100;
+    describe('createResponseReducer', () => {
       it('remembers each `next` payload', async () => {
         const counter = createService<number, number, Error, number>(
           'count',
@@ -1217,6 +1219,32 @@ describe('createServiceListener', () => {
         await after(DELAY);
 
         expect(counter.state.value).toBe(6);
+      });
+    });
+
+    describe('createResponseMergeReducer', () => {
+      it('merges each `next` payload', async () => {
+        const initialState = {};
+        const counter = createService<{}, {}, Error, {}>(
+          'merger',
+          (i) => after(DELAY, i),
+          createResponseMergeReducer(initialState)
+        );
+
+        expect(counter.state.value).toEqual({});
+
+        counter.request({ foo: 'bar' });
+        await after(DELAY);
+        expect(counter.state.value).toEqual({ foo: 'bar' });
+
+        counter.request({ moo: 'cow' });
+        await after(DELAY);
+        expect(counter.state.value).toEqual({ foo: 'bar', moo: 'cow' });
+
+        // approximating deletion
+        counter.request({ moo: undefined });
+        await after(DELAY);
+        expect(counter.state.value).toEqual({ foo: 'bar', moo: undefined });
       });
     });
   });
