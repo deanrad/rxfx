@@ -9,6 +9,7 @@ import { produce } from 'immer';
 import {
   createResponseReducer,
   createResponseMergeReducer,
+  createRequestMergeReducer,
 } from '../src/reducers';
 
 import {
@@ -1244,6 +1245,29 @@ describe('createServiceListener', () => {
         // approximating deletion
         counter.request({ moo: undefined });
         await after(DELAY);
+        expect(counter.state.value).toEqual({ foo: 'bar', moo: undefined });
+      });
+    });
+
+    describe('createRequestMergeReducer', () => {
+      it('merges each `request` payload', async () => {
+        const initialState = {};
+        const counter = createService<{}, void, Error, {}>(
+          'merger',
+          () => {},
+          createRequestMergeReducer(initialState)
+        );
+
+        expect(counter.state.value).toEqual({});
+
+        counter.request({ foo: 'bar' });
+        expect(counter.state.value).toEqual({ foo: 'bar' });
+
+        counter.request({ moo: 'cow' });
+        expect(counter.state.value).toEqual({ foo: 'bar', moo: 'cow' });
+
+        // approximating deletion
+        counter.request({ moo: undefined });
         expect(counter.state.value).toEqual({ foo: 'bar', moo: undefined });
       });
     });

@@ -23,8 +23,25 @@ export function createResponseMergeReducer<TNext>(initialState: TNext) {
       if (ACs.next.match(event)) {
         return {
           ...state,
-          ...event.payload
-        }
+          ...event.payload,
+        };
+      }
+      return state;
+    };
+}
+
+/**
+ * Creates a reducer that merges each `request` lifecycle event.
+ * into the existing state. Does a top-level merge.
+ */
+export function createRequestMergeReducer<TNext>(initialState: TNext) {
+  return (ACs: ProcessLifecycleActions<Partial<TNext>, any, any>) =>
+    (state = initialState, event: Action<any>) => {
+      if (ACs.request.match(event)) {
+        return {
+          ...state,
+          ...event.payload,
+        };
       }
       return state;
     };
