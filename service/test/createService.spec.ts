@@ -194,7 +194,17 @@ describe('createServiceListener', () => {
         expect(counterService.state.value).toHaveProperty('count', 1);
       });
 
-      it('can be created ', () => {});
+      it('defaults to remembering each next event ', () => {
+        const counterService = createServiceListener<number, number, Error>(
+          'defaultReducer',
+          bus,
+          (i) => after(0, i * 2)
+        );
+
+        expect(counterService.state.value).toBeNull();
+        counterService.request(1.5);
+        expect(counterService.state.value).toBe(3);
+      });
     });
   });
 

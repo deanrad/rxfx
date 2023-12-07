@@ -33,7 +33,7 @@ export function matchesAny(...acs: ActionCreator<any>[]) {
  * @param actionNamespace - Prefix of all actions: The 'search' in search/request
  * @param bus - The Bus event bus triggered to and listened on
  * @param handler - A function returning a Promise, Observable, or Promise thunk from whose life-cycle events are triggered.
- * @param reducerProducer - A function returning a reducer which populates `.state`. Recieves ProcessLifecycleActions as its argument.
+ * @param reducerProducer - A function returning a reducer which populates `.state`. Recieves ProcessLifecycleActions as its argument. Defaults to producing state which is always the most recently returned response from the handler.
  * @param concurrencyOperator - RxJS Operator to control what to do when an existing handler is in progress. Defaults to `mergeMap` (Immediate)
  * @returns A service in immediate mode, or the mode implemented by its `concurrencyOperator` argument
  * @summary ![immediate mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-immediate-sm.png)
@@ -42,13 +42,19 @@ export function createServiceListener<
   TRequest,
   TNext = void,
   TError = Error,
-  TState = object
+  TState = TNext | null
 >(
   actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
-  reducerProducer: ReducerProducer<TRequest, TNext, TError, TState> = () =>
-    (state: TState, _: any) => {
+  reducerProducer: ReducerProducer<TRequest, TNext, TError, TState> = (
+      EVENTS
+    ) =>
+    // @ts-ignore
+    (state = null, lifeCycleEvent: any) => {
+      if (EVENTS.next.match(lifeCycleEvent)) {
+        return lifeCycleEvent.payload;
+      }
       return state;
     },
   concurrencyOperator = mergeMap
@@ -306,7 +312,7 @@ export function createServiceListener<
  *
  * @param actionNamespace - Prefix of all actions eg fetch/request
  * @param handler - Function returning Promise, Observable or generator from which events are generated
- * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument.
+ * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument. Defaults to producing state which is always the most recently returned response from the handler.
  * @returns A service in immediate mode.
  * @summary ![queueing mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-queueing-sm.png)
  */
@@ -314,16 +320,13 @@ export function createService<
   TRequest,
   TNext = void,
   TError = Error,
-  TState = object
+  TState = TNext | null
 >(
   actionNamespace: string,
   handler: EventHandler<TRequest, TNext>,
-  reducerProducer: (
+  reducerProducer?: (
     acs: ProcessLifecycleActions<TRequest, TNext, TError>
-  ) => (state: TState, action: Action<any>) => TState = () =>
-    (state: TState, _: any) => {
-      return state;
-    }
+  ) => (state: TState, action: Action<any>) => TState
 ): Service<TRequest, TNext, TError, TState> {
   return createServiceListener(
     actionNamespace,
@@ -340,7 +343,7 @@ export function createService<
  * @param actionNamespace - Prefix of all actions eg fetch/request
  * @param bus - The Bus event bus read and written to
  * @param handler - Function returning Promise, Observable or generator from which events are generated
- * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument.
+ * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument. Defaults to producing state which is always the most recently returned response from the handler.
  * @returns A service in queueing mode.
  * @summary ![queueing mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-queueing-sm.png)
  */
@@ -348,17 +351,14 @@ export function createQueueingServiceListener<
   TRequest,
   TNext = void,
   TError = Error,
-  TState = object
+  TState = TNext | null
 >(
   actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
-  reducerProducer: (
+  reducerProducer?: (
     acs: ProcessLifecycleActions<TRequest, TNext, TError>
-  ) => (state: TState, action: Action<any>) => TState = () =>
-    (state: TState, _: any) => {
-      return state;
-    }
+  ) => (state: TState, action: Action<any>) => TState
 ): Service<TRequest, TNext, TError, TState> {
   return createServiceListener(
     actionNamespace,
@@ -377,7 +377,7 @@ export function createQueueingServiceListener<
  * @param actionNamespace - Prefix of all actions eg fetch/request
  * @param bus - The Bus event bus read and written to
  * @param handler - Function returning Promise, Observable or generator from which events are generated
- * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument.
+ * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument. Defaults to producing state which is always the most recently returned response from the handler.
  * @returns A service in queueing mode.
  * @summary ![queueing mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-queueing-sm.png)
  */
@@ -385,16 +385,13 @@ export function createQueueingService<
   TRequest,
   TNext = void,
   TError = Error,
-  TState = object
+  TState = TNext | null
 >(
   actionNamespace: string,
   handler: EventHandler<TRequest, TNext>,
-  reducerProducer: (
+  reducerProducer?: (
     acs: ProcessLifecycleActions<TRequest, TNext, TError>
-  ) => (state: TState, action: Action<any>) => TState = () =>
-    (state: TState, _: any) => {
-      return state;
-    }
+  ) => (state: TState, action: Action<any>) => TState
 ): Service<TRequest, TNext, TError, TState> {
   return createServiceListener(
     actionNamespace,
@@ -412,7 +409,7 @@ export function createQueueingService<
  * @param actionNamespace - Prefix of all actions eg fetch/request
  * @param bus - The Bus event bus read and written to
  * @param handler - Function returning Promise, Observable or generator from which events are generated
- * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument.
+ * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument. Defaults to producing state which is always the most recently returned response from the handler.
  * @returns A service in switching mode.
  * @summary ![switching mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-switching-sm.png)
  */
@@ -420,17 +417,14 @@ export function createSwitchingServiceListener<
   TRequest,
   TNext = void,
   TError = Error,
-  TState = object
+  TState = TNext | null
 >(
   actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
-  reducerProducer: (
+  reducerProducer?: (
     acs: ProcessLifecycleActions<TRequest, TNext, TError>
-  ) => (state: TState, action: Action<any>) => TState = () =>
-    (state: TState, _: any) => {
-      return state;
-    }
+  ) => (state: TState, action: Action<any>) => TState
 ): Service<TRequest, TNext, TError, TState> {
   return createServiceListener(
     actionNamespace,
@@ -449,7 +443,7 @@ export function createSwitchingServiceListener<
  * @param actionNamespace - Prefix of all actions eg fetch/request
  * @param bus - The Bus event bus read and written to
  * @param handler - Function returning Promise, Observable or generator from which events are generated
- * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument.
+ * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument. Defaults to producing state which is always the most recently returned response from the handler.
  * @returns A service in switching mode.
  * @summary ![switching mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-switching-sm.png)
  */
@@ -457,16 +451,13 @@ export function createSwitchingService<
   TRequest,
   TNext = void,
   TError = Error,
-  TState = object
+  TState = TNext | null
 >(
   actionNamespace: string,
   handler: EventHandler<TRequest, TNext>,
-  reducerProducer: (
+  reducerProducer?: (
     acs: ProcessLifecycleActions<TRequest, TNext, TError>
-  ) => (state: TState, action: Action<any>) => TState = () =>
-    (state: TState, _: any) => {
-      return state;
-    }
+  ) => (state: TState, action: Action<any>) => TState
 ): Service<TRequest, TNext, TError, TState> {
   return createServiceListener(
     actionNamespace,
@@ -483,7 +474,7 @@ export function createSwitchingService<
  * @param actionNamespace - Prefix of all actions eg fetch/request
  * @param bus - The Bus event bus read and written to
  * @param handler - Function returning Promise, Observable or generator from which events are generated
- * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument.
+ * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument. Defaults to producing state which is always the most recently returned response from the handler.
  * @returns A service in switching mode.
  * @summary ![switching mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-switching-sm.png)
  */
@@ -491,17 +482,14 @@ export function createReplacingServiceListener<
   TRequest,
   TNext = void,
   TError = Error,
-  TState = object
+  TState = TNext | null
 >(
   actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
-  reducerProducer: (
+  reducerProducer?: (
     acs: ProcessLifecycleActions<TRequest, TNext, TError>
-  ) => (state: TState, action: Action<any>) => TState = () =>
-    (state: TState, _: any) => {
-      return state;
-    }
+  ) => (state: TState, action: Action<any>) => TState
 ): Service<TRequest, TNext, TError, TState> {
   return createSwitchingServiceListener(
     actionNamespace,
@@ -517,7 +505,7 @@ export function createReplacingServiceListener<
  * @param actionNamespace - Prefix of all actions eg fetch/request
  * @param bus - The Bus event bus read and written to
  * @param handler - Function returning Promise, Observable or generator from which events are generated
- * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument.
+ * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument. Defaults to producing state which is always the most recently returned response from the handler.
  * @returns A service in switching mode.
  * @summary ![switching mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-switching-sm.png)
  */
@@ -525,16 +513,13 @@ export function createReplacingService<
   TRequest,
   TNext = void,
   TError = Error,
-  TState = object
+  TState = TNext | null
 >(
   actionNamespace: string,
   handler: EventHandler<TRequest, TNext>,
-  reducerProducer: (
+  reducerProducer?: (
     acs: ProcessLifecycleActions<TRequest, TNext, TError>
-  ) => (state: TState, action: Action<any>) => TState = () =>
-    (state: TState, _: any) => {
-      return state;
-    }
+  ) => (state: TState, action: Action<any>) => TState
 ): Service<TRequest, TNext, TError, TState> {
   return createSwitchingServiceListener(
     actionNamespace,
@@ -552,7 +537,7 @@ export function createReplacingService<
  * @param actionNamespace - Prefix of all actions eg fetch/request
  * @param bus - The Bus event bus read and written to
  * @param handler - Function returning Promise, Observable or generator from which events are generated
- * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument.
+ * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument. Defaults to producing state which is always the most recently returned response from the handler.
  * @returns A service in blocking mode.
  * @summary ![blocking mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-blocking-sm.png)
  */
@@ -560,17 +545,14 @@ export function createBlockingServiceListener<
   TRequest,
   TNext = void,
   TError = Error,
-  TState = object
+  TState = TNext | null
 >(
   actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
-  reducerProducer: (
+  reducerProducer?: (
     acs: ProcessLifecycleActions<TRequest, TNext, TError>
-  ) => (state: TState, action: Action<any>) => TState = () =>
-    (state: TState, _: any) => {
-      return state;
-    }
+  ) => (state: TState, action: Action<any>) => TState
 ): Service<TRequest, TNext, TError, TState> {
   return createServiceListener(
     actionNamespace,
@@ -589,7 +571,7 @@ export function createBlockingServiceListener<
  * @param actionNamespace - Prefix of all actions eg fetch/request
  * @param bus - The Bus event bus read and written to
  * @param handler - Function returning Promise, Observable or generator from which events are generated
- * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument.
+ * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument. Defaults to producing state which is always the most recently returned response from the handler.
  * @returns A service in blocking mode.
  * @summary ![blocking mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-blocking-sm.png)
  */
@@ -597,16 +579,13 @@ export function createBlockingService<
   TRequest,
   TNext = void,
   TError = Error,
-  TState = object
+  TState = TNext | null
 >(
   actionNamespace: string,
   handler: EventHandler<TRequest, TNext>,
-  reducerProducer: (
+  reducerProducer?: (
     acs: ProcessLifecycleActions<TRequest, TNext, TError>
-  ) => (state: TState, action: Action<any>) => TState = () =>
-    (state: TState, _: any) => {
-      return state;
-    }
+  ) => (state: TState, action: Action<any>) => TState
 ): Service<TRequest, TNext, TError, TState> {
   return createServiceListener(
     actionNamespace,
@@ -625,7 +604,7 @@ export function createBlockingService<
  * @param actionNamespace - Prefix of all actions eg fetch/request
  * @param bus - The Bus event bus read and written to
  * @param handler - Function returning Promise, Observable or generator from which events are generated
- * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument.
+ * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument. Defaults to producing state which is always the most recently returned response from the handler.
  * @returns A service in toggling mode.
  * @summary ![toggling mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-toggling-sm.png)
  */
@@ -633,17 +612,14 @@ export function createTogglingServiceListener<
   TRequest,
   TNext = void,
   TError = Error,
-  TState = object
+  TState = TNext | null
 >(
   actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
-  reducerProducer: (
+  reducerProducer?: (
     acs: ProcessLifecycleActions<TRequest, TNext, TError>
-  ) => (state: TState, action: Action<any>) => TState = () =>
-    (state: TState, _: any) => {
-      return state;
-    }
+  ) => (state: TState, action: Action<any>) => TState
 ): Service<TRequest, TNext, TError, TState> {
   return createServiceListener(
     actionNamespace,
@@ -663,7 +639,7 @@ export function createTogglingServiceListener<
  * @param actionNamespace - Prefix of all actions eg fetch/request
  * @param bus - The Bus event bus read and written to
  * @param handler - Function returning Promise, Observable or generator from which events are generated
- * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument.
+ * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument. Defaults to producing state which is always the most recently returned response from the handler.
  * @returns A service in toggling mode.
  * @summary ![toggling mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-toggling-sm.png)
  */
@@ -671,16 +647,13 @@ export function createTogglingService<
   TRequest,
   TNext = void,
   TError = Error,
-  TState = object
+  TState = TNext | null
 >(
   actionNamespace: string,
   handler: EventHandler<TRequest, TNext>,
-  reducerProducer: (
+  reducerProducer?: (
     acs: ProcessLifecycleActions<TRequest, TNext, TError>
-  ) => (state: TState, action: Action<any>) => TState = () =>
-    (state: TState, _: any) => {
-      return state;
-    }
+  ) => (state: TState, action: Action<any>) => TState
 ): Service<TRequest, TNext, TError, TState> {
   return createServiceListener(
     actionNamespace,
