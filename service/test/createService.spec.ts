@@ -771,6 +771,52 @@ describe('createServiceListener', () => {
           expect(seen.map((e) => e.type)).toEqual(['test-async/request']);
         });
       });
+
+      describe('Completion', () => {
+        const bus = new Bus<Action<unknown>>();
+        const testService = createServiceListener('test-complete', bus, () =>
+          after(10, Math.PI)
+        );
+
+        it('can complete with .completeCurrent()', async () => {
+          const seen = eventsOf(bus);
+          testService(1);
+          testService.completeCurrent();
+          await after(500);
+          expect(seen.map((e) => e.type)).toEqual([
+            'test-complete/request',
+            'test-complete/started',
+            'test-complete/complete',
+          ]);
+        });
+
+        it('can complete with a final item via .completeCurrent(6.28)', async () => {
+          const seen = eventsOf(bus);
+          testService(1);
+          testService.completeCurrent(6.28);
+          await after(500);
+          expect(seen.map((e) => [e.type, e.payload])).toMatchInlineSnapshot(`
+            [
+              [
+                "test-complete/request",
+                1,
+              ],
+              [
+                "test-complete/started",
+                1,
+              ],
+              [
+                "test-complete/next",
+                6.28,
+              ],
+              [
+                "test-complete/complete",
+                undefined,
+              ],
+            ]
+          `);
+        });
+      });
     });
 
     describe('ActionCreator direct properties', () => {

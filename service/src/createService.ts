@@ -1,5 +1,5 @@
 // prettier-ignore
-import { BehaviorSubject, EMPTY, firstValueFrom, from, merge, Observable, Observer, of, race, Subscription, throwError } from 'rxjs';
+import { BehaviorSubject, EMPTY, firstValueFrom, from, merge, Observable, Observer, of, race, Subject, Subscription, throwError } from 'rxjs';
 // prettier-ignore
 import { concatMap, distinctUntilChanged, endWith, exhaustMap, filter, map, mergeMap, scan, switchMap, takeUntil, tap } from 'rxjs/operators';
 
@@ -130,6 +130,7 @@ export function createServiceListener<
   );
 
   let cancelCounter = new BehaviorSubject<number>(0);
+  const completions = new Subject<TNext | void>();
 
   // The base return value
   const requestor = (req: TRequest) => {
@@ -159,6 +160,11 @@ export function createServiceListener<
       // prettier-ignore
       const sub = obsResult
         .pipe(
+          takeUntil(completions.pipe(tap(final => {
+            if(typeof final !=="undefined") {
+              bus.trigger(ACs.next(final))
+            }
+          }))),
           tap({ 
             subscribe: () => {bus.trigger(ACs.started(e.payload))},
             complete: () => {bus.trigger(ACs.complete()); observer.complete()}, 
@@ -190,7 +196,7 @@ export function createServiceListener<
   );
 
   // Enhance and return
-  const controls: Stoppable = {
+  const controls: Stoppable<TNext> = {
     stop() {
       mainListener.unsubscribe();
       allSubscriptions.unsubscribe();
@@ -207,6 +213,9 @@ export function createServiceListener<
     cancelCurrentAndQueued() {
       cancelCounter.next(cancelCounter.value + 1);
       bus.trigger(ACs.cancel());
+    },
+    completeCurrent(final?: TNext) {
+      completions.next(final);
     },
   };
 

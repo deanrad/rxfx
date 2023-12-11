@@ -23,7 +23,7 @@ export interface HasSubtype<T = string> {
   subtype: T;
 }
 
-export interface Stoppable {
+export interface Stoppable<TNext> {
   /** Terminates the listener, any of its Observable handlings.
    * @returns The closed subscription.
    */
@@ -37,6 +37,12 @@ export interface Stoppable {
    * In addition, any operations enqueued will not be begun. (Safe to call even if not a queueing service.)
    */
   cancelCurrentAndQueued(): void;
+  /** Completes the current handling, triggering actions.complete. If a value for `final` is provided,
+   * that is emitted via actions.next first. Useful to end the handling but signal a successful completion
+   * to any observers/listeners.
+   */
+  completeCurrent(final?: TNext): void;
+
   /**
    * Adds a function to be called only once when stop() is invoked
    */
@@ -149,7 +155,7 @@ export interface Requestable<TRequest, TResponse> {
 export interface Service<TRequest, TNext, TError, TState>
   extends Requestable<TRequest, TNext>,
     Queryable<TRequest, TNext, TError, TState>,
-    Stoppable,
+    Stoppable<TNext>,
     EventActionCreators<TRequest, TNext, TError> {
   /** The ActionCreator factories this service listens for, and responds with. */
   actions: ProcessLifecycleActions<TRequest, TNext, TError>;
