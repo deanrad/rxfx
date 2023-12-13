@@ -1,12 +1,9 @@
 /**
- * See in a REPL at https://replit.com/@deanius/Recursive-Fibonacci#index.ts
+ * See in a REPL at https://replit.com/@deanius/Recursive-Fibonacci-rxfxservice
  */
-import { after } from "@rxfx/after";
-import { defaultBus, Bus } from "@rxfx/bus";
+import { after, createEffect } from "@rxfx/service";
 
-const bus = defaultBus as Bus<number[]>;
-// Logging
-bus.spy(([n, _]) => console.log(n));
+const DELAY = 500; // or zero, 
 
 /**
  * Responds to each fibonacci pair a moment later with the next fibonacci-pair
@@ -15,22 +12,30 @@ bus.spy(([n, _]) => console.log(n));
  *   --[1,1]--------[1,2]--------[2,3]------------->
  *          \------/     \------/
  */
-const fibonacci = bus.listen(
-  // for every event
-  () => true,
+const recurFibonacci = createEffect(
   //  map to an Observable of the next triggered event
   ([fibN, fibN1]) => {
-    return after(500, () => [fibN1, fibN + fibN1]);
-  },
-  // turn handler-returned values into new triggerings
-  bus.observeAll()
+    return after(DELAY, () => {
+      const result = [fibN1, fibN + fibN1];
+      recurFibonacci.request(result);
+   });
+  }
 );
 
-// Terminate us if we get too big
-bus.guard(
-  ([fibN, _]) => fibN > 100,
-  () => fibonacci.unsubscribe()
-);
+// An exit condition
+recurFibonacci.observe({
+  request([fibN]) {
+    console.log(fibN);
+    if (fibN > 100) { 
+      recurFibonacci.stop() // triggers the teardown
+    }
+  }
+})
 
 // Get us started
-bus.trigger([1, 1]);
+recurFibonacci.request([1, 1])
+
+// Say when we're done
+recurFibonacci.addTeardown(() => {
+  console.log('done')
+})
