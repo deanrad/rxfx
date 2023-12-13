@@ -207,7 +207,7 @@ describe('createServiceListener', () => {
       });
 
       it('can use matchers isResponse, isRequest, isCompletion...', () => {
-        const counterService = createService<void, number, Error, number>(
+        const counterService = createService<number, number, Error, number>(
           'counter-matcher',
           handler,
           ({
@@ -230,12 +230,13 @@ describe('createServiceListener', () => {
                 isCompletion(e),
                 isCancelation(e),
               ];
-              return isRequest(e) ? count + 1 : count;
+
+              return isRequest(e) ? count + e.payload : count;
             }
         );
         expect(counterService.state.value).toBe(0);
-        counterService.request();
-        expect(counterService.state.value).toBe(1);
+        counterService.request(2);
+        expect(counterService.state.value).toBe(2);
       });
     });
   });

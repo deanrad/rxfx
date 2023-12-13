@@ -108,14 +108,14 @@ export function createServiceListener<
   );
 
   // Define convenience functions for testing in reducers
-  const matchers: LifecycleEventMatchers = {
-    isRequest: (e: any) => ACs.request.match(e),
-    isCancel: (e: any) => ACs.cancel.match(e),
-    isStart: (e: any) => ACs.started.match(e),
-    isResponse: (e: any) => ACs.next.match(e),
-    isError: (e: any) => ACs.error.match(e),
-    isCompletion: (e: any) => ACs.complete.match(e),
-    isCancelation: (e: any) => ACs.canceled.match(e),
+  const matchers: LifecycleEventMatchers<TRequest, TNext, TError> = {
+    isRequest: (e: any): e is Action<TRequest> => ACs.request.match(e),
+    isCancel: (e: any): e is Action<void> => ACs.cancel.match(e),
+    isStart: (e: any): e is Action<TRequest> => ACs.started.match(e),
+    isResponse: (e: any): e is Action<TNext> => ACs.next.match(e),
+    isError: (e: any): e is Action<TError> => ACs.error.match(e),
+    isCompletion: (e: any): e is Action<void> => ACs.complete.match(e),
+    isCancelation: (e: any): e is Action<void> => ACs.canceled.match(e),
   };
 
   // ACs should only enumerate ACs
@@ -128,8 +128,9 @@ export function createServiceListener<
 
   const reducer = reducerProducer(
     ACs as ProcessLifecycleActions<TRequest, TNext, TError> &
-      LifecycleEventMatchers
+      LifecycleEventMatchers<TRequest, TNext, TError>
   );
+
   const state = new BehaviorSubject<TState>(
     reducer.getInitialState
       ? reducer.getInitialState()
