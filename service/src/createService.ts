@@ -16,6 +16,7 @@ import {
   Service,
   Stoppable,
   EventActionCreators,
+  LifecycleEventMatchers,
 } from './types';
 
 /** @example bus.listen(matchesAny(Actions.complete, Actions.error), handler) */
@@ -106,7 +107,29 @@ export function createServiceListener<
       .subscribe(currentError)
   );
 
-  const reducer = reducerProducer(ACs);
+  // Define convenience functions for testing in reducers
+  const matchers: LifecycleEventMatchers = {
+    isRequest: (e: any) => ACs.request.match(e),
+    isCancel: (e: any) => ACs.cancel.match(e),
+    isStart: (e: any) => ACs.started.match(e),
+    isResponse: (e: any) => ACs.next.match(e),
+    isError: (e: any) => ACs.error.match(e),
+    isCompletion: (e: any) => ACs.complete.match(e),
+    isCancelation: (e: any) => ACs.canceled.match(e),
+  };
+
+  // ACs should only enumerate ACs
+  Object.entries(matchers).forEach(([name, fn]) => {
+    Object.defineProperty(ACs, name, {
+      enumerable: false,
+      value: fn,
+    });
+  });
+
+  const reducer = reducerProducer(
+    ACs as ProcessLifecycleActions<TRequest, TNext, TError> &
+      LifecycleEventMatchers
+  );
   const state = new BehaviorSubject<TState>(
     reducer.getInitialState
       ? reducer.getInitialState()
@@ -333,9 +356,7 @@ export function createService<
 >(
   actionNamespace: string,
   handler: EventHandler<TRequest, TNext>,
-  reducerProducer?: (
-    acs: ProcessLifecycleActions<TRequest, TNext, TError>
-  ) => (state: TState, action: Action<any>) => TState
+  reducerProducer?: ReducerProducer<TRequest, TNext, TError, TState>
 ): Service<TRequest, TNext, TError, TState> {
   return createServiceListener(
     actionNamespace,
@@ -365,9 +386,7 @@ export function createQueueingServiceListener<
   actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
-  reducerProducer?: (
-    acs: ProcessLifecycleActions<TRequest, TNext, TError>
-  ) => (state: TState, action: Action<any>) => TState
+  reducerProducer?: ReducerProducer<TRequest, TNext, TError, TState>
 ): Service<TRequest, TNext, TError, TState> {
   return createServiceListener(
     actionNamespace,
@@ -398,9 +417,7 @@ export function createQueueingService<
 >(
   actionNamespace: string,
   handler: EventHandler<TRequest, TNext>,
-  reducerProducer?: (
-    acs: ProcessLifecycleActions<TRequest, TNext, TError>
-  ) => (state: TState, action: Action<any>) => TState
+  reducerProducer?: ReducerProducer<TRequest, TNext, TError, TState>
 ): Service<TRequest, TNext, TError, TState> {
   return createServiceListener(
     actionNamespace,
@@ -431,9 +448,7 @@ export function createSwitchingServiceListener<
   actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
-  reducerProducer?: (
-    acs: ProcessLifecycleActions<TRequest, TNext, TError>
-  ) => (state: TState, action: Action<any>) => TState
+  reducerProducer?: ReducerProducer<TRequest, TNext, TError, TState>
 ): Service<TRequest, TNext, TError, TState> {
   return createServiceListener(
     actionNamespace,
@@ -464,9 +479,7 @@ export function createSwitchingService<
 >(
   actionNamespace: string,
   handler: EventHandler<TRequest, TNext>,
-  reducerProducer?: (
-    acs: ProcessLifecycleActions<TRequest, TNext, TError>
-  ) => (state: TState, action: Action<any>) => TState
+  reducerProducer?: ReducerProducer<TRequest, TNext, TError, TState>
 ): Service<TRequest, TNext, TError, TState> {
   return createServiceListener(
     actionNamespace,
@@ -496,9 +509,7 @@ export function createReplacingServiceListener<
   actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
-  reducerProducer?: (
-    acs: ProcessLifecycleActions<TRequest, TNext, TError>
-  ) => (state: TState, action: Action<any>) => TState
+  reducerProducer?: ReducerProducer<TRequest, TNext, TError, TState>
 ): Service<TRequest, TNext, TError, TState> {
   return createSwitchingServiceListener(
     actionNamespace,
@@ -526,9 +537,7 @@ export function createReplacingService<
 >(
   actionNamespace: string,
   handler: EventHandler<TRequest, TNext>,
-  reducerProducer?: (
-    acs: ProcessLifecycleActions<TRequest, TNext, TError>
-  ) => (state: TState, action: Action<any>) => TState
+  reducerProducer?: ReducerProducer<TRequest, TNext, TError, TState>
 ): Service<TRequest, TNext, TError, TState> {
   return createSwitchingServiceListener(
     actionNamespace,
@@ -559,9 +568,7 @@ export function createBlockingServiceListener<
   actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
-  reducerProducer?: (
-    acs: ProcessLifecycleActions<TRequest, TNext, TError>
-  ) => (state: TState, action: Action<any>) => TState
+  reducerProducer?: ReducerProducer<TRequest, TNext, TError, TState>
 ): Service<TRequest, TNext, TError, TState> {
   return createServiceListener(
     actionNamespace,
@@ -592,9 +599,7 @@ export function createBlockingService<
 >(
   actionNamespace: string,
   handler: EventHandler<TRequest, TNext>,
-  reducerProducer?: (
-    acs: ProcessLifecycleActions<TRequest, TNext, TError>
-  ) => (state: TState, action: Action<any>) => TState
+  reducerProducer?: ReducerProducer<TRequest, TNext, TError, TState>
 ): Service<TRequest, TNext, TError, TState> {
   return createServiceListener(
     actionNamespace,
@@ -626,9 +631,7 @@ export function createTogglingServiceListener<
   actionNamespace: string,
   bus: Bus<Action<TRequest | TNext | TError | void>>,
   handler: EventHandler<TRequest, TNext>,
-  reducerProducer?: (
-    acs: ProcessLifecycleActions<TRequest, TNext, TError>
-  ) => (state: TState, action: Action<any>) => TState
+  reducerProducer?: ReducerProducer<TRequest, TNext, TError, TState>
 ): Service<TRequest, TNext, TError, TState> {
   return createServiceListener(
     actionNamespace,
@@ -660,9 +663,7 @@ export function createTogglingService<
 >(
   actionNamespace: string,
   handler: EventHandler<TRequest, TNext>,
-  reducerProducer?: (
-    acs: ProcessLifecycleActions<TRequest, TNext, TError>
-  ) => (state: TState, action: Action<any>) => TState
+  reducerProducer?: ReducerProducer<TRequest, TNext, TError, TState>
 ): Service<TRequest, TNext, TError, TState> {
   return createServiceListener(
     actionNamespace,

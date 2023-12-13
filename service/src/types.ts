@@ -15,7 +15,7 @@ export type ReducerProducer<
   TError = Error,
   TState = {}
 > = (
-  acs: ProcessLifecycleActions<TRequest, TNext, TError>
+  acs: ProcessLifecycleActions<TRequest, TNext, TError> & LifecycleEventMatchers
 ) => ServiceReducer<TRequest, TNext, TError, TState>;
 
 /** Helpful, optional interface to differentiate service actions. */
@@ -67,6 +67,17 @@ export interface ProcessLifecycleCallbacks<TRequest, TNext, TError> {
   canceled: () => void;
   /** an invocation concluded, in any fashion */
   finalized: () => void;
+}
+
+/** A dictionary of matchers for use in reducers */
+export interface LifecycleEventMatchers {
+  isRequest: (e: Action<any>) => boolean;
+  isCancel: (e: Action<any>) => boolean;
+  isStart: (e: Action<any>) => boolean;
+  isResponse: (e: Action<any>) => boolean;
+  isError: (e: Action<any>) => boolean;
+  isCompletion: (e: Action<any>) => boolean;
+  isCancelation: (e: Action<any>) => boolean;
 }
 
 /** A dictionary of action creators assigned to the service */
