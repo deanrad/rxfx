@@ -347,7 +347,7 @@ export function createServiceListener<
  * @param handler - Function returning Promise, Observable or generator from which events are generated
  * @param reducerProducer - Function returning a reducer for #state - recieves ProcessLifecycleActions as its argument. Defaults to producing state which is always the most recently returned response from the handler.
  * @returns A service in immediate mode.
- * @summary ![queueing mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-queueing-sm.png)
+ * @summary ![immediate mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-immediate-sm.png)
  */
 export function createService<
   TRequest,
