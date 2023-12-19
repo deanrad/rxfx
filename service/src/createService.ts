@@ -17,6 +17,7 @@ import {
   Stoppable,
   EventActionCreators,
   LifecycleEventMatchers,
+  ConcurrencyMode,
 } from './types';
 
 /** @example bus.listen(matchesAny(Actions.complete, Actions.error), handler) */
@@ -24,6 +25,23 @@ export function matchesAny(...acs: ActionCreator<any>[]) {
   return (e: any) => {
     return !!acs.find((ac) => ac.match(e));
   };
+}
+
+/** Returns the RxJS operator corresponding to the plain English concurrency mode.
+ * Useful for creating a service whose (fixed) concurrency is known just at runtime.
+ */
+export function operatorForMode(mode?: ConcurrencyMode) {
+  return mode === 'immediate'
+    ? mergeMap
+    : mode === 'queueing'
+    ? concatMap
+    : mode === 'switching'
+    ? switchMap
+    : mode === 'blocking'
+    ? exhaustMap
+    : mode === 'toggling'
+    ? toggleMap
+    : mergeMap;
 }
 
 /**

@@ -195,3 +195,19 @@ export type ServiceRequestType<
  */
 export type ServiceStateType<ServiceType extends Service<any, any, any, any>> =
   ServiceType['state'] extends Subject<infer StateType> ? StateType : never;
+
+/** The 5 possible strategies for a listener which is handling when a new request comes in.
+ * The existing one can live or be canceled, the new one can begin or not, and if both
+ * are run, they can queue or run immediately.
+ * ![immediate mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-immediate-sm.png)
+ * ![queueing mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-queueing-sm.png)
+ * ![switching mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-switching-sm.png)
+ * ![blocking mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-blocking-sm.png)
+ * ![toggling mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-toggling-sm.png)
+ */
+export type ConcurrencyMode =
+  | 'immediate'
+  | 'queueing'
+  | 'switching'
+  | 'blocking'
+  | 'toggling';

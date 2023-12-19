@@ -1,6 +1,7 @@
 import { concat, Observable, of, throwError } from 'rxjs';
+import { concatMap, mergeMap, exhaustMap, switchMap } from 'rxjs/operators';
 import { Action } from '@rxfx/fsa';
-
+import { toggleMap } from '@rxfx/operators';
 import { Bus } from '@rxfx/bus';
 import { after } from '@rxfx/after';
 import { createReducer } from '@reduxjs/toolkit';
@@ -19,6 +20,7 @@ import {
   createServiceListener,
   createTogglingServiceListener,
   createService,
+  operatorForMode,
 } from '../src/createService';
 
 import type { ProcessLifecycleCallbacks, ReducerProducer } from '../src/types';
@@ -1360,6 +1362,17 @@ describe('createServiceListener', () => {
         expect(counter.state.value).toEqual({ foo: 'bar', moo: undefined });
       });
     });
+  });
+});
+
+describe('operatorForMode', () => {
+  it('returns the operator for a mode', () => {
+    expect(operatorForMode('immediate')).toStrictEqual(mergeMap);
+    expect(operatorForMode('queueing')).toStrictEqual(concatMap);
+    expect(operatorForMode('switching')).toStrictEqual(switchMap);
+    expect(operatorForMode('blocking')).toStrictEqual(exhaustMap);
+    expect(operatorForMode('toggling')).toStrictEqual(toggleMap);
+    expect(operatorForMode()).toStrictEqual(mergeMap);
   });
 });
 
