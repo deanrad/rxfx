@@ -215,6 +215,7 @@ describe('after', () => {
       it('is called back on unsubscribe()', () => {
         let unsubbed = false;
         const mini = after(50, 1, {
+          // can pass a subset of TapObserver
           unsubscribe: () => {
             unsubbed = true;
           },

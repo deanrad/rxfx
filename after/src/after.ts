@@ -21,7 +21,10 @@ export interface SubscribeObserver<T> extends Observer<T> {
 
 export type TapObserver<T> = PartialObserver<T> | SubscribeObserver<T>;
 
-function makeAwaitable<T>(obs: Observable<T>, observer?: TapObserver<T>) {
+function makeAwaitable<T>(
+  obs: Observable<T>,
+  observer?: Partial<TapObserver<T>>
+) {
   const obsTapped = observer ? obs.pipe(tap(observer)) : obs;
   const thenHandler = (
     resolve: (v: T) => any,
@@ -66,7 +69,7 @@ function makeAwaitable<T>(obs: Observable<T>, observer?: TapObserver<T>) {
 export function after<T>(
   delayArg: number | Promise<any> | typeof setTimeout,
   valueProvider?: T | ((v?: T) => T) | Observable<T>,
-  observer?: TapObserver<T>
+  observer?: Partial<TapObserver<T>>
 ) {
   const resultFn = (
     typeof valueProvider === 'function' ? valueProvider : () => valueProvider

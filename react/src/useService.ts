@@ -4,7 +4,7 @@ import type { Service } from '@rxfx/service';
 import { useWhileMounted } from './useWhileMounted';
 
 /** Provides updates to state, isActive, and currentError populated from the service.
- * Allows requesting of the service via `request`.
+ * Allows requesting of the service via `request`. Does not call cancelCurrent
  */
 export function useService<TRequest, TNext, TError, TState>(
   service: Service<TRequest, TNext, TError, TState>
