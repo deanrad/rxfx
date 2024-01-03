@@ -27,10 +27,7 @@ An 𝗥𝘅𝑓𝑥 service (or a bus) is a view-framework-agnostic, pure JS con
 - You are tired of async errors breaking the view layer, or the app as a whole, as more effects get added to your app.
 - You find tests take too long to run when they have to be called through the view layer, and you want something that is testable independent of the view.
 
-## When is it time to introduce 𝗥𝘅𝑓𝑥?
 In short - if you believe there is a more concise, more airtight, race-condition-proof way to do async, you may have found it right here in an  𝗥𝘅𝑓𝑥 service or bus listener.
-
-_Note: For help consuming services in React, see [`@rxfx/react`](https://github.com/deanrad/rxfx/tree/main/react). For Angular, Svelte, and other frameworks, the vanilla JS code below will probably suffice._
 
 # Example Usage
 
@@ -53,7 +50,7 @@ const asyncCounter = createQueueingService<void, void, Error, number>(
 );
 ```
 
-Although there are [hooks and APIs for framework integration](#framework-integration), in pure JS the service is used like this:
+Although there are APIs for framework integration (see [`@rxfx/react`](https://github.com/deanrad/rxfx/tree/main/react)), in pure JS the service is used like this:
 
 ```ts
 // Request a counter increment (will complete after 1000 msec)
@@ -137,6 +134,45 @@ The counter is one example of the 7 GUIs benchmark for building UI applications.
 - [Circles](https://codesandbox.io/p/sandbox/7guis-6-circles-rxfx-bus-d8jppt) Canvas drawing, modal interaction
 - [Spreadsheet](https://codesandbox.io/p/sandbox/7guis-cells-rxfx-bus-m98c5p) Change propogation, a mini-language the user can input.
 
+# Concurrency Modes
+
+Race conditions are terrible losses of productivity which are easily prevented when code is set to run in the correct Concurrency Mode for its use case. With 𝗥𝘅𝑓𝑥, its easily named and tested modes (which use RxJS operators underneath) allow you to keep your code readable, and you can eliminate race conditions in a 1-line code diff.
+
+The modes, pictorially represented here with use cases and descriptions, are utilized just by calling `createService`, `createQueueingService`, `createSwitchingService`, or `createBlockingService` accordingly. Your effect stays the same, only the concurrency is different.
+
+Choose your mode by answering this question:
+
+_If the effect is running, and a new request arrives, should the service:_
+
+- Begin the new effect at once, allowing both to finish in any order. (`createService`)
+- Begin the new effect only after any currently running effects, preserving order. (`createQueueingService`)
+- Prevent/throttle the new effect from beginning. (`createBlockingService`)
+- Cancel the currently running effect and begin the new effect at once. (`createSwitchingService`)
+
+And one final mode, seldom used, but included for completion:
+
+- Cancel the currently running effect, and don't begin a new effect. (`createTogglingService`)
+
+Here are representations of each mode:
+
+![immediate mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-immediate-sm.png)
+![queueing mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-queueing-sm.png)
+![switching mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-switching-sm.png)
+![blocking mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-blocking-sm.png)
+
+
+# Resources
+
+For more information about what went into 𝗥𝘅𝑓𝑥, the following are great reads.
+
+- [CQRS](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation) - The architectural separation that makes 𝗥𝘅𝑓𝑥 possible
+- [RxJS](https://rxjs.dev) - the awesomely-capable async library that 𝗥𝘅𝑓𝑥 is built from, and neatly abstracts away for most use cases.
+- [Ember Concurrency](https://ember-concurrency.com/docs/task-concurrency) - The most elegant API to concurrency the EmberJS universe ever produced, and which inspired 𝗥𝘅𝑓𝑥.
+
+---
+
+# More Examples
+
 ## Example Application - API Data Fetcher
 With concurrency, cancelation, animation, user feedback, and other best UX practices.
 [CodeSandbox](https://codesandbox.io/s/rxfx-service-cat-fetcher-nweq0h)
@@ -155,11 +191,3 @@ Because 𝗥𝘅𝑓𝑥 ensures your services don't depend upon your view, you 
 - Angular [Code Sandbox](https://codesandbox.io/s/rxfx-service-alarm-clock-angular-sdenc1)
 - Svelte [Code Sandbox](https://codesandbox.io/s/rxfx-service-alarm-clock-svelte-d0bejx)
 - Vue [Code Sandbox](https://codesandbox.io/s/rxfx-service-alarm-clock-vue-hk916l)
-
-# Resources
-
-For more information about what went into 𝗥𝘅𝑓𝑥, the following are great reads.
-
-- [CQRS](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation) - The architectural separation that makes 𝗥𝘅𝑓𝑥 possible
-- [RxJS](https://rxjs.dev) - the awesomely-capable async library that 𝗥𝘅𝑓𝑥 is built from, and neatly abstracts away for most use cases.
-- [Ember Concurrency](https://ember-concurrency.com/docs/task-concurrency) - The most elegant API to concurrency the EmberJS universe ever produced, and which inspired 𝗥𝘅𝑓𝑥.

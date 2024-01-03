@@ -1,7 +1,7 @@
 import { after } from '@rxfx/after';
 import {
   from,
-  interval,
+  interval as rxjsInterval,
   Observable,
   ObservableInput,
   race,
@@ -16,6 +16,7 @@ interface TimeoutOptions<TRequest, TError> {
 }
 
 interface MonitorOptions {
+  interval: number;
   duration: number;
   progressCallback: (elapsed: number) => unknown;
 }
@@ -58,9 +59,9 @@ export function monitorHandler<TRequest, TNext>(
   opts: MonitorOptions,
   handler: (req: TRequest) => ObservableInput<TNext>
 ): (req: TRequest) => Observable<TNext> {
-  const { duration, progressCallback } = opts;
+  const { duration, interval, progressCallback } = opts;
   return (req: TRequest) => {
-    const monitorElapsed = interval(duration).pipe(
+    const monitorElapsed = rxjsInterval(interval).pipe(
       map((i) => (i + 1) * duration),
       startWith(0)
     );
