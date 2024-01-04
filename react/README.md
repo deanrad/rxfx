@@ -2,11 +2,21 @@
 
 An insanely good utility for readable React. Part of the [𝗥𝘅𝑓𝑥](https://github.com/deanrad/rxfx) family of libraries.
 
-TL;DR `useService` is analgous to Apollo Client's `useQuery` hook, but for any async effect, not just GraphQL calls. It provides state, activity indication, and error reporting in one hook call, compared to making and syncing several state variables. While State machines or `useReducer` can help synchronize bundles of state variables, they don't also help with effect execution.
+TL;DR `useService` is analgous to Apollo Client's `useQuery` hook, but for any async effect, not just GraphQL calls. You don't need to write explicit loading state variables, and the service allows for cancelation and error tracking.
+
+```ts
+// Apollo style — fetches automatically, deduping fetches
+const { data, loading, error } = useQuery(GET_DATA);
+
+// RxFx style — fetches when you call dataService.request())
+const { state, isActive, currentError } = useService(dataService)
+```
+
+_Note: See [`@rxfx/service`](https://github.com/deanrad/rxfx/tree/main/service) for more on what a service is, which you will probably use with this library._
 
 # For What?
 
-Let's face it - effect execution in React sucks. Between the React core team advising against using `useEffect`, strict mode executing your effects twice, and the inherent complexity of managing loading states, errors and cancelation, it's enough to make you want to throw up your hands. Until now.
+Let's face it - effect execution in React sucks. Between the React core team advising against using `useEffect` ([link](https://react.dev/learn/synchronizing-with-effects#you-might-not-need-an-effect)), strict mode executing your effects twice, and the inherent complexity of managing loading states, errors and cancelation, it's enough to make you want to throw up your hands. Until now.
 
 The `useService` hook from `@rxfx/react` lets you define a Service (from `@rxfx/service`) that wraps any async function, and brings all of the features you tend to need with an async function, without having to code them yourself:
 
@@ -19,44 +29,35 @@ The `useService` hook from `@rxfx/react` lets you define a Service (from `@rxfx/
  
  Compare any React invocation of a Promise-returning function with `useEffect` with a `useService` call and you'll see usually _half of the code_, with fewer edge cases, and an easy growth path to adding new features like cancelation, or progress reporting as the needs arise.
 
+In short, an 𝗥𝘅𝑓𝑥 service provides a separation that keeps your components simple, and your async effects testable. And `useService` is the way to bring the service into your component.
+
  # What's inside?
 
 
 ### useService
 `useService(service: Service)` - helps consume a `@rxfx/service` by syncing its `state` and `isActive` Observables with React component state. 
 
-Example: [CodeSandbox](https://codesandbox.io/s/rxfx-react-counter-example-lfgxfm)
+Example: [CodeSandbox](https://codesandbox.io/p/sandbox/7guis-1-counter-async-rxfx-service-4w82wc)
 
 ```js
-// A framework-free, pure-JS reducer
-const reducer = (count = 0, e = {} as Action<any>) => {
-  if (e.type === "count/next") {
-    return count + 1;
-  }
-  return count;
-};
-
-// A service to tie the reducer to an async effect
+// A service to count asynchronously
 const asyncCounter = createService(
   "count",
   bus,
   () => after(1000),
-  () => reducer
+  ({ isResponse }) => (count=0, event) => {
+    return isResponse(event) ? count + 1 : count
+  }
 );
 
 // A component using the service for state, activity tracking
 export const Counter = () => {
-  // useWhileMounted(fn) equals useEffect(fn, []);
-  useWhileMounted(() => {
-    asyncCounter.request();
-  });
-
   const { state: count, isActive } = useService(asyncCounter);
   const buttonLabel = isActive ? "⏳" : "Increment";
 
   return (
     <div>
-      <h1> ⚛️ Count is {count} </h1>
+      <h1> Count is {count} </h1>
       <button onClick={() => asyncCounter.request()}>
         {buttonLabel}
       </button>
@@ -66,16 +67,66 @@ export const Counter = () => {
 ```
 
 ### useWhileMounted
-`useWhileMounted(fn => EffectCallback|Observable|Subscription)` - a readable version of `useEffect(fn, [])` that works with RxJS Observables and Subscriptions too.
+A readable version of `useEffect(fn, [])` that works with RxJS Subscriptions and Observables as well as React style.
 
-### useStableValue
-Equivalent to useMemo(producer, []). Makes the stability more readable.
+```ts
+// Canceling any service calls on unmount
+useWhileMounted(() => {
+  return () => countService.cancelCurrent()
+})
 
-### useStableCallback
-Equivalent to useCallback(producer, []). Makes the  stability more readable.
+// React style, for compatibility
+useWhileMounted(() => {
+  console.log('mount')
+  return () => console.log('unmounted')
+})
+
+// With an RxJS Observable
+useWhileMounted(() => {
+  return new Observable(() => {
+    console.log('mount')
+    return () => console.log('unmounted')
+  })
+})
+
+// With an RxJS Subscription 
+useWhileMounted(() => {
+  console.log('mount')
+  return new Subscription(() => console.log('unmounted'))
+})
+
+
+```
 
 ### useSubject
 Exposes each latest value of an RxJS `BehaviorSubject` to React, rerendering when it changes.
+
+```tsx
+let i=0;
+const countSubject = new BehaviorSubject(0);
+
+function CounterButton() {
+  const count = useSubject(countSubject)
+  return <Button onClick={() => countSubject.next(i++)}>
+    { count }
+  <Button>
+}
+```
+
+### useStableValue
+Equivalent to `useMemo(producer, [])``. Makes the stability more readable.
+
+```ts
+const wordList = useStableValue(() => createWordList())
+```
+
+### useStableCallback
+Equivalent to `useCallback(producer, [])`. Makes the stability more readable.
+
+```ts
+const sendAnalytics = useStableCallback(() => sendPing());
+```
+
 
 ### useObservable
 Exposes each latest value of an RxJS `Observable` to React, rerendering when it changes, subscribing on mount, and unsubscribing on unmount.
