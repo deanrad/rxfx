@@ -113,11 +113,30 @@ function CounterButton() {
 }
 ```
 
+See this [CodeSandbox](https://codesandbox.io/p/sandbox/rxfx-react-use-subject-w6sxf9) for how `useSubject` can reduce component coupling, much like Signals.
+
 ### useStableValue
 Equivalent to `useMemo(producer, [])``. Makes the stability more readable.
 
 ```ts
-const wordList = useStableValue(() => createWordList())
+function Wordle() {
+  const wordList = useStableValue(() => createWordList())
+  // ... render ...
+}
+```
+
+`useStableValue` should only be used in cases when you need to close over something in React.
+Otherwise, prefer to use a static import:
+
+```ts
+// wordList.ts
+export const wordList = createWordList();
+
+// component
+import { wordList } from './wordList'
+function Wordle() {
+   // ... render ...
+}
 ```
 
 ### useStableCallback
