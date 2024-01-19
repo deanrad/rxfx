@@ -95,7 +95,7 @@ describe(monitorHandler, () => {
     };
 
     const monitoredProc = monitorHandler(
-      { duration: 20, progressCallback },
+      { interval: 20, progressCallback },
       () => after(100, 2)
     );
     const srv = createServiceListener<void, number, Error>(

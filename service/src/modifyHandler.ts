@@ -17,7 +17,7 @@ interface TimeoutOptions<TRequest, TError> {
 
 interface MonitorOptions {
   interval: number;
-  duration: number;
+  duration?: number;
   progressCallback: (elapsed: number) => unknown;
 }
 
@@ -51,18 +51,18 @@ export function timeoutHandler<TRequest, TNext, TError = Error>(
 }
 
 /** Decorates a handler such that when it is running, the given `progressCallback` is invoked
- * at the specified interval, passing the duration of the interval as an argument.
+ * at the specified interval, passing the interval time in msec as an option.
  * Does not change the return type of the decorated handler - it is still `TNext`.
- * Useful for Observables that don't notify of progress intrinsically.
+ * Useful for getting progress events from effects that don't notify of progress intrinsically.
  */
 export function monitorHandler<TRequest, TNext>(
   opts: MonitorOptions,
   handler: (req: TRequest) => ObservableInput<TNext>
 ): (req: TRequest) => Observable<TNext> {
-  const { duration, interval, progressCallback } = opts;
+  const { interval, progressCallback } = opts;
   return (req: TRequest) => {
     const monitorElapsed = rxjsInterval(interval).pipe(
-      map((i) => (i + 1) * duration),
+      map((i) => (i + 1) * interval),
       startWith(0)
     );
 

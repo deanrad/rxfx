@@ -1,5 +1,4 @@
 import { createQueueingService } from '../src/createService';
-import { defaultBus as bus } from '@rxfx/bus';
 import { after } from '@rxfx/after';
 import { produce } from 'immer';
 import { Service } from '../src/types';
