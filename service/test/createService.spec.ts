@@ -548,6 +548,44 @@ describe('createServiceListener', () => {
         await after(ASYNC_DELAY);
         expect(statuses).toEqual([false, true, false]);
       });
+
+      it('resets state upon reset()', async () => {
+        const counterService = createServiceListener<
+          number,
+          number,
+          Error,
+          number
+        >(
+          'counter-reset',
+          bus,
+          (i) => after(50, i), // replies with increment,
+          ({ isResponse }) =>
+            (state = 0, event) => {
+              if (isResponse(event)) {
+                return state + event.payload;
+              }
+              return state;
+            }
+        );
+
+        expect(counterService.state.value).toBe(0);
+        counterService.request(1);
+        await after(50);
+        expect(counterService.state.value).toBe(1);
+
+        // start an inflight update before reset
+        counterService.request(1);
+
+        // reset it
+        counterService.reset();
+
+        // state has synchronously reverted
+        expect(counterService.state.value).toBe(0);
+
+        // inflight updates were stopped - won't update
+        await after(50);
+        expect(counterService.state.value).toBe(0);
+      });
     });
 
     describe('#isActive', () => {

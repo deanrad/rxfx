@@ -3,7 +3,12 @@ import { Action, ActionCreator, ProcessLifecycleActions } from '@rxfx/fsa';
 import { Subscription, Observable, BehaviorSubject, Subject } from 'rxjs';
 
 /** The interface for a reducer with an optional getInitialState synchronous property. */
-interface ServiceReducer<TRequest, TNext = void, TError = Error, TState = {}> {
+export interface ServiceReducer<
+  TRequest,
+  TNext = void,
+  TError = Error,
+  TState = {}
+> {
   (state: TState, action: Action<TRequest | TNext | TError | void>): TState;
   getInitialState?: () => TState;
 }
@@ -48,6 +53,11 @@ export interface Stoppable<TNext> {
    * Adds a function to be called only once when stop() is invoked
    */
   addTeardown(teardownFn: Subscription['add']): void;
+
+  /**
+   * Cancels current and queued effects, and returns the state to its initial value
+   */
+  reset(): void;
 }
 
 /** A dictionary of callbacks corresponding to lifecycle events of a process. */

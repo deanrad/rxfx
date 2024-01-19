@@ -18,6 +18,7 @@ import {
   EventActionCreators,
   LifecycleEventMatchers,
   ConcurrencyMode,
+  ServiceReducer,
 } from './types';
 
 /** @example bus.listen(matchesAny(Actions.complete, Actions.error), handler) */
@@ -149,12 +150,16 @@ export function createServiceListener<
       LifecycleEventMatchers<TRequest, TNext, TError>
   );
 
-  const state = new BehaviorSubject<TState>(
-    reducer.getInitialState
+  function getInitialState(
+    reducer: ServiceReducer<TRequest, TNext, TError, TState>
+  ) {
+    return reducer.getInitialState
       ? reducer.getInitialState()
       : // @ts-ignore
-        reducer(undefined as TState, NULL_ACTION)
-  );
+        reducer(undefined as TState, NULL_ACTION);
+  }
+
+  const state = new BehaviorSubject<TState>(getInitialState(reducer));
   const safeReducer = (previous: TState, e: Action<any>) => {
     try {
       return reducer(previous, e);
@@ -258,6 +263,10 @@ export function createServiceListener<
     },
     completeCurrent(final?: TNext) {
       completions.next(final);
+    },
+    reset() {
+      this.cancelCurrentAndQueued();
+      state.next(getInitialState(reducer));
     },
   };
 
