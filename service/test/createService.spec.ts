@@ -585,6 +585,10 @@ describe('createServiceListener', () => {
         // inflight updates were stopped - won't update
         await after(50);
         expect(counterService.state.value).toBe(0);
+
+        counterService.request(1);
+        await after(50);
+        expect(counterService.state.value).toBe(1);
       });
     });
 

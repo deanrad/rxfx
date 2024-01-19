@@ -168,11 +168,22 @@ export function createServiceListener<
       return previous;
     }
   };
+  const RESET = {}; // a 'symbol' so we know its from our Subject
+  const stateResets = new Subject<[TState, typeof RESET]>();
 
+  // Populate .state
   allSubscriptions.add(
-    bus
-      .query(matchesAny(...Object.values(ACs)))
-      .pipe(scan(safeReducer, state.value), distinctUntilChanged())
+    merge(bus.query(matchesAny(...Object.values(ACs))), stateResets)
+      .pipe(
+        scan((stateOrReset, event) => {
+          if (Array.isArray(event) && event[1] === RESET) {
+            const resetState = event[0];
+            return resetState;
+          }
+          return safeReducer(stateOrReset, event as unknown as Action<any>);
+        }, state.value),
+        distinctUntilChanged()
+      )
       .subscribe(state)
   );
 
@@ -266,7 +277,7 @@ export function createServiceListener<
     },
     reset() {
       this.cancelCurrentAndQueued();
-      state.next(getInitialState(reducer));
+      stateResets.next([getInitialState(reducer), RESET]);
     },
   };
 
