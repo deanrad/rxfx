@@ -20,6 +20,9 @@ export const randomId = (length: number = 7) => {
     .padStart(length, '0');
 };
 
+/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
+ * The effect is cancelable if it returns an Observable. `createEffect` runs in concurrency mode: "immediate" aka `mergeMap`.
+ *  @summary ![immediate mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-immediate-sm.png) */
 export function createEffect<Req>(
   fn: (args: Req) => void,
   namespace = randomId(),
@@ -30,6 +33,9 @@ export function createEffect<Req>(
 
 export const noopReducerProducer = () => (s: any) => s;
 
+/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
+ * The effect is cancelable if it returns an Observable. `createCustomEffect` runs in the concurrency mode of the
+ * RxJS operator it is passed as its 2nd argument */
 export function createCustomEffect<Req>(
   fn: (args: Req) => void,
   concurrencyOperator = mergeMap,
@@ -45,6 +51,9 @@ export function createCustomEffect<Req>(
   );
 }
 
+/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
+ * The effect is cancelable if it returns an Observable. `createQueueingEffect` runs in concurrency mode: "queueing" aka `concatMap`.
+ * @summary ![queueing mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-queueing-sm.png) */
 export function createQueueingEffect<Req>(
   fn: (args: Req) => void,
   namespace = randomId(),
@@ -53,6 +62,9 @@ export function createQueueingEffect<Req>(
   return createQueueingServiceListener<Req>(namespace, bus, fn);
 }
 
+/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
+ * The effect is cancelable if it returns an Observable. `createSwitchingEffect` runs in concurrency mode: "switching" aka `switchMap`.
+ * @summary ![switching mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-switching-sm.png) */
 export function createSwitchingEffect<Req>(
   fn: (args: Req) => void,
   namespace = randomId(),
@@ -61,6 +73,10 @@ export function createSwitchingEffect<Req>(
   return createSwitchingServiceListener<Req>(namespace, bus, fn);
 }
 
+/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
+ * The effect is cancelable if it returns an Observable. `createBlockingEffect` runs in concurrency mode: "blocking" aka `exhaustMap`.
+ * @summary ![blocking mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-blocking-sm.png)
+ */
 export function createBlockingEffect<Req>(
   fn: (args: Req) => void,
   namespace = randomId(),
@@ -69,6 +85,11 @@ export function createBlockingEffect<Req>(
   return createBlockingServiceListener<Req>(namespace, bus, fn);
 }
 
+/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
+ * The effect is throttled to within `msec`, meaning an existing execution or delay blocks new ones.
+ * The effect is cancelable if it returns an Observable. `createThrottledEffect` runs in concurrency mode: "toggling".
+ * @summary ![blocking mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-blocking-sm.png)
+ */
 export function createThrottledEffect(msec: number) {
   return function <Req>(
     fn: (args: Req) => ObservableInput<void>,
@@ -86,6 +107,11 @@ export function createThrottledEffect(msec: number) {
   };
 }
 
+/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
+ * The effect is debounced for `msec`, meaning a new invocation waits to being, and interrupts any existing delay or execution.
+ * The effect is cancelable if it returns an Observable. `createDebouncedEffect` runs in concurrency mode: "toggling".
+ * @summary ![switching mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-switching-sm.png)
+ */
 export function createDebouncedEffect(msec: number) {
   return function <Req, Res = void>(
     fn: (args: Req) => ObservableInput<Res>,
@@ -107,6 +133,10 @@ export function createDebouncedEffect(msec: number) {
   };
 }
 
+/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
+ * The effect is cancelable if it returns an Observable. `createTogglingEffect` runs in concurrency mode: "blocking" aka `exhaustMap`.
+ * @summary ![toggling mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-toggling-sm.png)
+ */
 export function createTogglingEffect<Req>(
   fn: (args: Req) => void,
   namespace = randomId(),
