@@ -1,6 +1,6 @@
 {
   "name": "@rxfx/service",
-  "version": "1.4.8",
+  "version": "1.4.9",
   "license": "MIT",
   "author": "Dean Radcliffe",
   "repository": "https://github.com/deanrad/rxfx",
@@ -24,7 +24,7 @@
     "test:coverage": "jest --coverage",
     "test:quiet": "jest --silent --reporters=jest-silent-reporter",
     "test:full": "yarn test:fast && yarn test:quiet && echo 'Retest successful' && yarn lint && yarn build",
-    "doc": "typedoc",
+    "doc": "typedoc --out dist/docs/service",
     "doctoc": "doctoc .",
     "build": "rimraf dist && tsc && timeout --foreground --preserve-status 10 rollup --bundleConfigAsCjs -c rollup.config.js"
   },
