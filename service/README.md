@@ -104,6 +104,42 @@ Service logic can be independently tested, because it is never dependent on the 
 
 -->
 
+# Usage in Angular
+
+Because RxFx is RxJS, it is easy to integrate into Angular. You'll be happy to no longer have to track `loading` variables in state, and have a simpler API to both cancelation and concurrency.
+
+A component need only import (or inject) a service, bus, or effect, and it can expose properties and methods to a template trivially:
+
+```ts
+import { counterService } from '../services/counter.service';
+@Component({
+  selector: 'app-my-counter',
+  templateUrl: './my-counter.component.html',
+})
+export class MyCounterComponent {
+  count$: Observable<number>;
+  isActive$: Observable<boolean>;
+
+  constructor() {
+    this.count$ = counterService.state;
+    this.isActive$ = counterService.isActive;
+  }
+
+  increment() {
+    counterService.request(1);
+  }
+  decrement() {
+    counterService.request(-1);
+  }
+  reset() {
+    counterService.reset();
+  }
+}
+
+```
+
+Play with the [CodeSandbox.](https://codesandbox.io/p/devbox/rxfx-angular-counter-ncsj56)
+
 # Examples
 The following examples and tutorials will give you a feel for what UX you can build, and the ease of DX you'll find.
 
@@ -136,7 +172,7 @@ The counter is one example of the 7 GUIs benchmark for building UI applications.
 
 # Concurrency Modes
 
-Race conditions are terrible losses of productivity which are easily prevented when code is set to run in the correct Concurrency Mode for its use case. With 𝗥𝘅𝑓𝑥, its easily named and tested modes (which use RxJS operators underneath) allow you to keep your code readable, and you can eliminate race conditions in a 1-line code diff.
+Race conditions are easily prevented when code is set to run in the correct Concurrency Mode for its use case. With 𝗥𝘅𝑓𝑥, its easily named and tested modes (which use RxJS operators underneath) allow you to keep your code readable, and you can eliminate race conditions in a 1-line code diff.
 
 The modes, pictorially represented here with use cases and descriptions, are utilized just by calling `createService`, `createQueueingService`, `createSwitchingService`, or `createBlockingService` accordingly. Your effect stays the same, only the concurrency is different.
 
@@ -155,10 +191,8 @@ And one final mode, seldom used, but included for completion:
 
 Here are representations of each mode:
 
-![immediate mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-immediate-sm.png)
-![queueing mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-queueing-sm.png)
-![switching mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-switching-sm.png)
-![blocking mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-blocking-sm.png)
+![immediate, queueing, switching, blocking](https://d2jksv3bi9fv68.cloudfront.net/rxfx/cards-all-2024.png)
+Download [SVG](https://d2jksv3bi9fv68.cloudfront.net/rxfx/cards-all-2024.svg)
 
 
 # Resources

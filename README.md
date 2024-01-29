@@ -25,3 +25,26 @@ Read the fine docs at: [https://rxfx.gitbook.io/docs/](https://rxfx.gitbook.io/d
 - [`@rxfx/ajax`](https://github.com/deanrad/rxfx/tree/main/ajax) `fetchMany` - gives you a Streaming Observable of a plural endpoint (e.g. `users/`) instead of the all-at-the-end delivery of Promises. (Is Cancelable too).
 
 - [`@rxfx/peer`](https://github.com/deanrad/rxfx/tree/main/peer) - Can help a mesh of peers coordinate a single LEAD, even as peers come and go.
+
+# Concurrency Modes
+
+Race conditions are easily prevented when code is set to run in the correct Concurrency Mode for its use case. With 𝗥𝘅𝑓𝑥, its easily named and tested modes (which use RxJS operators underneath) allow you to keep your code readable, and you can eliminate race conditions in a 1-line code diff.
+
+
+Choose your mode by answering this question:
+
+_If the effect is running, and a new request arrives, should we:_
+
+- Begin the new effect at once, allowing both to finish in any order. (Immediate mode, ala `createService`)
+- Begin the new effect only after any currently running effects, preserving order. (Queueing mode, ala `createQueueingService`)
+- Prevent/throttle the new effect from beginning. (Blocking mode)
+- Cancel the currently running effect and begin the new effect at once. (Switching mode)
+
+And one final mode, seldom used, but included for completion:
+
+- Cancel the currently running effect, and don't begin a new effect. (Toggling mode)
+
+Here are representations of each mode:
+
+![immediate, queueing, switching, blocking, toggling](https://d2jksv3bi9fv68.cloudfront.net/rxfx/cards-all-2024.png)
+Download [SVG](https://d2jksv3bi9fv68.cloudfront.net/rxfx/cards-all-2024.svg)

@@ -50,6 +50,8 @@ queuedRing.errors.subscribe
 // See @rxfx/service for more
 ```
 
+- Play with the [React CodeSandbox.](https://codesandbox.io/p/sandbox/rxfx-bell-effect-7zfmpc)
+
 # Usage in React
 
 The `useService` hook from `@rxfx/react` brings the current `isActive` status and `currentError` into React.
@@ -120,6 +122,31 @@ queuedRing.errors.subscribe(console.error)
 Since Promises are not generally cancelable, the primary way to create a cancelable effect is to make it from a function that returns an Observable.
 
 Otherwise, if your effect's Promise can abort on an `AbortSignal`, use `makeAbortableHandler` in `@rxfx/ajax`. [Specs](https://github.com/deanrad/rxfx/blob/main/ajax/test/makeAbortableHandler.spec.ts)
+
+# Concurrency Modes
+
+Race conditions are easily prevented when code is set to run in the correct Concurrency Mode for its use case. With 𝗥𝘅𝑓𝑥, its easily named and tested modes (which use RxJS operators underneath) allow you to keep your code readable, and you can eliminate race conditions in a 1-line code diff.
+
+The modes, pictorially represented here with use cases and descriptions, are utilized just by calling `createEffect`, `createQueueingEffect`, `createSwitchingEffect`, or `createBlockingEffect` accordingly. Your effect stays the same, only the concurrency is different.
+
+Choose your mode by answering this question:
+
+_If the effect is running, and a new request arrives, should we:_
+
+- Begin the new effect at once, allowing both to finish in any order. (`createEffect`)
+- Begin the new effect only after any currently running effects, preserving order. (`createQueueingEffect`)
+- Prevent/throttle the new effect from beginning. (`createBlockingEffect`)
+- Cancel the currently running effect and begin the new effect at once. (`createSwitchingEffect`)
+
+And one final mode, seldom used, but included for completion:
+
+- Cancel the currently running effect, and don't begin a new effect. (`createTogglingEffect`)
+
+Here are representations of each mode:
+
+![immediate, queueing, switching, blocking](https://d2jksv3bi9fv68.cloudfront.net/rxfx/cards-all-2024.png)
+Download [SVG](https://d2jksv3bi9fv68.cloudfront.net/rxfx/cards-all-2024.svg)
+
 
 # Comparison: RxFx vs RxJS
 

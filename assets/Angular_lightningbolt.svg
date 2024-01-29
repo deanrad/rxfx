@@ -1,0 +1,11 @@
+<?xml version="1.0" standalone="no"?>
+<svg width="348" height="600" viewBox="11 -0.1 29 50" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs><filter id="Blurx"><feGaussianBlur in="SourceGraphic" stdDeviation="0.4"/></filter>
+<path id="Bolt" d="M15,28 L24,28 20,45 35,22 26,22 30,5"/></defs>
+<use xlink:href="#Bolt" style="fill:#bbb;filter:url(#Blurx)" x="3" y="4"/>
+<path style="fill:#ec0" d="M13,29 L23,29 18,48 37,21 27,21 32,1"/>
+<use xlink:href="#Bolt" style="fill:#ec0"/>
+<path style="fill:#ffe" d="M30,5 L15,28 20,25"/>
+<path style="fill:#ffc" d="M29,25 L35,22 26,22 20,25 29,25 20,45 24,28"/>
+<path style="fill:#ba0" d="M20,25 L26,22 30,5 20,25 29,25 20,45 35,22 29,25"/>
+</svg>

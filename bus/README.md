@@ -2,10 +2,7 @@
 
 A typesafe, concurrency-controlled event bus. Part of the [𝗥𝘅𝑓𝑥](https://github.com/deanrad/rxfx) family of libraries.
 
-- `Bus, defaultBus`
-
-If you're from React/Redux, or want to use a reducer across events, have a look at [`@rxfx/service`](https://github.com/deanrad/rxfx/tree/main/service). A service can replace Redux Saga, or `createAsyncThunk`— no Redux or middleware required!
-
+If you're from React/Redux, NgRx, or generally want to use a reducer to keep track of state across events, have a look at [`@rxfx/service`](https://github.com/deanrad/rxfx/tree/main/service).
 
 # Minimal Bus Example
 
@@ -53,14 +50,19 @@ The second is the speciality of an 𝗥𝘅𝑓𝑥 `bus` - which can invoke lis
 
 Each of these RxJS-based concurrency modes can be achieved more easily by 𝗥𝘅𝑓𝑥, with fewer imports and easier switching.
 
-![](https://res.cloudinary.com/practicaldev/image/fetch/s--FB6hMuo8--/c_limit%2Cf_auto%2Cfl_progressive%2Cq_auto%2Cw_880/https://s3.amazonaws.com/www.deanius.com/cards-4-all.png)
+![](https://d2jksv3bi9fv68.cloudfront.net/rxfx/cards-all-2024.png)
 
 Explore [a live visualization](https://bdmytq.csb.app/) of these and several custom modes, if you like.
 
 To invoke them, just call `bus.listenQueueing`, for example. The default mode, Immediate, is invoked by `bus.listen`. For a custom mode, pass an operator that implements it as the final argument to `bus.listen`.
 
+## Examples
+The following apps are built on bus events and listeners:
 
-## Tutorials
+- [Basic REPL](https://replit.com/@deanius/HelloTypedBus#index.ts) - A basic tour of the type-safe bus methods.
 
-- [Swipe-To-Refresh](https://github.com/deanrad/rxfx-example-swipe-to-refresh-blitz/blob/main/README.md)
-- TODO more examples to come
+- [7GUIs Circles](https://codesandbox.io/p/sandbox/7guis-6-circles-rxfx-bus-d8jppt) - A drawing tool, challenge 6 in the [7GUIs](https://eugenkiss.github.io/7guis/tasks) suite.
+
+- [7GUIs Cells](https://github.com/deanrad/rxfx/tree/main/examples/7guis-cells) - A reactive spreadsheet, challenge 7 in the [7GUIs](https://eugenkiss.github.io/7guis/tasks) suite.
+
+For richer, stateful examples, see [`@rxfx/service`](https://github.com/deanrad/rxfx/tree/main/service).
