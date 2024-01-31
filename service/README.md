@@ -2,7 +2,7 @@
 
 Part of the [𝗥𝘅𝑓𝑥](https://github.com/deanrad/rxfx) family of libraries.
 
-30 years after `setTimeout` introduced the world to the asynchronous nature of JavaScript, effect execution is still clumsy at best, and broken in many cases. And none of the popular front-end solutions (Angular, React, RxJS) present a complete solution that deals with all the concerns of async effects in a framework-agnostic way. Still lacking are:
+30 years after `setTimeout` introduced the world to the asynchronous nature of JavaScript, effect execution is still clumsy at best, and broken in many cases. And none of the popular front-end solutions (Angular, React, RxJS) present a complete solution that deals with all the concerns of async effects in a framework-independent way. 
 
 - Error handling that is predictable, and does not compromise the integrity of the app the more effects you add.
 - Automatic `loading`/`active` state tracking.
@@ -12,7 +12,7 @@ Part of the [𝗥𝘅𝑓𝑥](https://github.com/deanrad/rxfx) family of librar
 - Easily reduced or adjustable concurrency (immediate, queueing, throttling, etc) without introducing complication or additional variables.
 
 ## How is 𝗥𝘅𝑓𝑥 a solution?
-An 𝗥𝘅𝑓𝑥 service (or a bus) is a view-framework-agnostic, pure JS container for Effect Management and State Mangement, based on RxJS. An 𝗥𝘅𝑓𝑥 Service supports all the above pain points in an easy API.
+An 𝗥𝘅𝑓𝑥 service (or a bus) is a view-framework-independent, pure JS container for Effect Management and State Mangement, based on RxJS. An 𝗥𝘅𝑓𝑥 Service supports all the above pain points in an easy API.
 
 
 ## When is it time to introduce 𝗥𝘅𝑓𝑥?

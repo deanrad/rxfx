@@ -59,7 +59,7 @@ Problems:
 
 # Coding Objectives
 
-- Use `@rxfx/*` packages for easy, configurable effects. (PureJS, framework-agnostic)
+- Use `@rxfx/*` packages for easy, configurable effects. (PureJS, framework-independent)
 - Use Observables (RxJS) to create and sequence cancelable behaviors-over-time.
 - Use published constants to represent user-centered time durations.
 - Implement cancelation 'transparently'.
