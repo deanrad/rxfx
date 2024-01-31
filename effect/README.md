@@ -186,12 +186,49 @@ ringer.next() // immediate 1st ring
 ringer.next() // queued 2nd ring
 ```
 
-So it works, but the happy path is very obscured, and it would take quite a lot of mastery of RxJS to read or write that code. (Also this version doesn't even handle `cancelCurrentAndQueued`).
+And to be able to cancel the whole queue: 
 
+```ts
+const ringer = new Subject<void>();
+const cancels = new Subject<void>();
+const restartEntireQueue = new Subject<void>();
+
+restartEntireQueue
+  .pipe(
+    switchMap(() =>
+      ringer.pipe(
+        concatMap(() =>
+          defer(playBellWebAudio).pipe(
+            // Allow single-cancelation
+            takeUntil(cancels)
+          )
+        )
+      )
+    )
+  )
+  .subscribe();
+
+ringer.next(); // Add ring to the queue
+cancels.next(); // Cancel the current ring playing
+restartEntireQueue.next(); // Cancels the current, and queued
+
+```
+
+So it works, but the happy path is very obscured, and it would take quite a lot of mastery of RxJS to read or write that code. 
 In short — while you _could_ use raw RxJS, all the awkwardness of it goes away when you use an 𝗥𝘅𝑓𝑥 service or an effect.
 
 - No calls to `subscribe`
 - Fewer imports
 - No awkward `pipe`s.
+
+For comparison, the RxFx is just:
+
+```ts
+import { createEffect } from '@rxfx/effect'
+const bellRinger = createQueueingEffect(playBellWebAudio);
+
+bellRinger.cancelCurrent(); // cancels one
+bellRinger.cancelCurrentAndQueued(); // also empties the queue
+```
 
 So stop fighting the tools, and climb up a level of abstraction - it's nice up here!
