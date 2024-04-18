@@ -2,18 +2,31 @@ import ts from "typescript";
 import { SlayItem } from "../types";
 
 export function getJestAST(spec: SlayItem) {
-  const block =
-    ["It", "Test"].includes(spec.tag) || spec.content.length === 0
-      ? "it.todo"
-      : "describe";
+  const block = spec.tag.match(/^before/i)
+    ? "beforeEach"
+    : spec.tag.match(/^after/i)
+    ? "afterEach"
+    : ["It", "Test"].includes(spec.tag) || spec.content.length === 0
+    ? "it.todo"
+    : "describe";
+
+  const text = spec.text;
   const shouldNest = block === "describe";
 
-  // Only some tags are self-describing
-  const text = ["Context", "It", "Describe", "Test", "it.todo"].includes(
-    spec.tag
-  )
-    ? spec.text
-    : `${spec.tag} ${spec.text}`;
+  if (["beforeEach", "afterEach"].includes(block)) {
+    return ts.createExpressionStatement(
+      ts.createCall(ts.createIdentifier(block), undefined, [
+        ts.createArrowFunction(
+          undefined,
+          undefined,
+          [],
+          undefined,
+          ts.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+          ts.createBlock([ts.createStringLiteral("TODO " + spec.text)], true)
+        ),
+      ])
+    );
+  }
 
   if (!shouldNest) {
     return ts.createExpressionStatement(
