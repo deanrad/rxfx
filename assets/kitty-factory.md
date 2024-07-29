@@ -76,7 +76,7 @@ Problems:
 
 # `@rxfx/service` Architecture
 
-![inline fit](https://d2jksv3bi9fv68.cloudfront.net/KittyFetcherGraph.png)
+![inline fit](https://d2jksv3bi9fv68.cloudfront.net/RxFxServiceArchitecture.png)
 
 ---
 
@@ -112,20 +112,19 @@ export function App() {
 
 ```ts
 import { createService, createQueueingService } from "@rxfx/service";
-import { defaultBus as bus } from "@rxfx/bus";
+import { defaultBus } from "@rxfx/bus";
 import { gifReducer } from "./gifReducer";
 
 // A service will handle errors, activity, loading, cancelation
 // Provides gifService.request(), .isActive and .state Observables
 export const gifService = createService(
   "gif", // namespace for actions requested,started,next,complete,error,etc
-  bus, // bus to subscribe and publish to
   fetchRandomGIFPromised, // the Promise-or-Observable-returning effect function
   (ACTIONS) => gifReducer(ACTIONS) // the reducer for accumulating state across events
 );
 
 // Bonus:
-bus.spy(console.log);
+defaultBus.spy(console.log);
 ```
 
 ---
@@ -251,10 +250,9 @@ function preloadImagePromised(url) {
 # Change to Queueing
 
 ```diff
-- export const gifService = createService("gif", bus,
-+ export const gifService = createQueueingService("gif", bus,
+- export const gifService = createService("gif",
++ export const gifService = createQueueingService(
   "gif", // namespace for actions requested,started,next,complete,error,etc
-  bus, // bus to read consequences and requests from
   fetchRandomGIFPromised, // the Promise-or-Observable-returning effect function
   (ACTIONS) => gifReducer(ACTIONS) // the reducer for non-transient state
 );
@@ -438,7 +436,6 @@ useWhileMounted(() => {
 ```diff
 export const gifService = createService(
   "gif", // namespace for actions requested,started,next,complete,error,etc
-  bus, // bus to read consequences and requests from
 -  fetchRandomGIF,
 +  timeoutHandler({ duration: THRESHOLD.DeepBreath * 2 }, fetchRandomGIF),
   (ACTIONS) => gifReducer(ACTIONS) // the reducer to aggregate non-transient state

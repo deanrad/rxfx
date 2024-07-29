@@ -7,8 +7,15 @@ import {
   createSwitchingServiceListener,
   createTogglingServiceListener,
 } from '@rxfx/service';
-import { EMPTY, ObservableInput, concat } from 'rxjs';
-import { mergeMap } from 'rxjs/operators';
+import {
+  EMPTY,
+  Observable,
+  ObservableInput,
+  Subject,
+  concat,
+  from,
+} from 'rxjs';
+import { concatMap, mergeMap, takeUntil, tap } from 'rxjs/operators';
 
 /**
  * Returns a random hex string, like a Git SHA. Not guaranteed to
@@ -20,15 +27,73 @@ export const randomId = (length: number = 7) => {
     .padStart(length, '0');
 };
 
+interface EffectFn extends Function {
+  stop: () => void;
+  cancelCurrent: () => void;
+}
+
 /** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
  * The effect is cancelable if it returns an Observable. `createEffect` runs in concurrency mode: "immediate" aka `mergeMap`.
  *  @summary ![immediate mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-immediate-sm.png) */
-export function createEffect<Req>(
-  fn: (args: Req) => void,
+export function createEffect<Request, Response>(
+  handler: (args: Request) => ObservableInput<Response>,
   namespace = randomId(),
   bus = defaultBus
-) {
-  return createServiceListener<Req, void>(namespace, bus, fn);
+): EffectFn {
+  const handlings = new Subject<Observable<void>>();
+  const requests = new Subject<Request>();
+  const cancels = new Subject<void>();
+
+  // TODO Concurrency Mode
+  const combiner = mergeMap;
+
+  const wrappedHandler = (request: Request) => {
+    const oneResult = handler(request);
+
+    // prettier-ignore
+    const obsResult = from(oneResult ?? EMPTY).pipe(
+      takeUntil(cancels)
+    );
+
+    return obsResult;
+  };
+
+  // prettier-ignore
+  // Executes and serializes handlings processes
+  const mainSub = handlings.pipe(
+    concatMap(h => h)
+  ).subscribe();
+
+  // Executes handler impls under the combiner concurrency mode
+  // prettier-ignore
+  const handlerSub = requests
+    .pipe(
+      combiner(wrappedHandler),
+      takeUntil(bus.resets)
+    )
+    .subscribe();
+
+  mainSub.add(handlerSub);
+
+  const handlerFunction = function Effect(req: Request) {
+    handlings.next(
+      new Observable((notify) => {
+        requests.next(req);
+        notify.complete();
+      })
+    );
+  };
+
+  const effectFn: EffectFn = Object.assign(handlerFunction, {
+    stop() {
+      mainSub.unsubscribe();
+    },
+    cancelCurrent() {
+      cancels.next();
+    },
+  });
+
+  return effectFn;
 }
 
 export const noopReducerProducer = () => (s: any) => s;

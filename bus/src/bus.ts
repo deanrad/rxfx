@@ -189,6 +189,7 @@ export class Bus<EventType> {
    * @see { @link Bus.errors } { @link Bus.filter } { @link Bus.guard } { @link Bus.spy } { @link Bus.listen }
    */
   public trigger(item: EventType) {
+    // Allow guard functions to throw, abandoning the
     this.guards.forEach(([predicate, guard]) => {
       predicate(item) && guard(item);
     });
@@ -196,7 +197,9 @@ export class Bus<EventType> {
     let filteredItem = item;
     let canceled = false;
 
+    // 1. Create the Observable of the event being handled
     const handling = new Observable<void>((notify) => {
+      // Phase 1: Run filters on the event, maybe replacing/modifying it
       this.filters.forEach(([predicate, filter]) => {
         if (!predicate(item)) return;
 
@@ -208,19 +211,26 @@ export class Bus<EventType> {
           canceled = true;
         }
       });
+
+      // Phase 2: If any filter canceled us, we're done..
       if (canceled) {
         notify.complete();
         return;
       }
 
+      // Phase 3: Run spies on surviving events
       this.spies.forEach(([predicate, handler]) => {
         predicate(filteredItem) && handler(filteredItem);
       });
+
+      // Phase 4: Add the event to the queue to be handled
       this.events.next(filteredItem);
 
+      // Phase 5: Done triggering!
       notify.complete();
     });
 
+    // 2. And push it into the queue of handlings to be run.
     this.handlings.next(handling);
   }
 
