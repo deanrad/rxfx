@@ -918,60 +918,83 @@ describe('createServiceListener', () => {
         expect(response).toBe(4);
       });
 
-      it('returns a rejected promise if an error occurs before a response', async () => {
-        const counterService = createServiceListener<number, number, Error>(
-          'counter',
-          bus,
-          () =>
-            after(
-              50,
-              throwError(() => 'Oops')
-            )
-        );
+      describe('Returned Promise', () => {
+        it('rejects if an error occurs before a response', async () => {
+          const counterService = createServiceListener<number, number, Error>(
+            'counter',
+            bus,
+            () =>
+              after(
+                50,
+                throwError(() => 'Oops')
+              )
+          );
 
-        const response = counterService.send(3);
-        await expect(response).rejects.toBe('Oops');
+          const response = counterService.send(3);
+          await expect(response).rejects.toBe('Oops');
+        });
+
+        it('rejects if a cancel occurs before a response', async () => {
+          const counterService = createServiceListener<number, number, Error>(
+            'counter',
+            bus,
+            (i) => after(50, i + 1) // replies with increment soon
+          );
+
+          const response = counterService.send(3);
+          counterService.cancelCurrent();
+
+          await expect(response).rejects.toHaveProperty(
+            'message',
+            expect.stringContaining('Error: canceled')
+          );
+        });
       });
 
-      it('returns the most proximal response with no selector', async () => {
-        let delay = 30;
-        const counterService = createService<number, number, Error>(
-          'counter',
-          (i) => {
-            delay -= 10;
-            return after(delay, i + 1);
-          }
-        );
-        const r1Promise = counterService.send(1);
-        const r2Promise = counterService.send(2);
+      describe('With no selector', () => {
+        it('returns the most proximal response', async () => {
+          let delay = 30;
+          const counterService = createService<number, number, Error>(
+            'counter',
+            (i) => {
+              delay -= 10;
+              return after(delay, i + 1);
+            }
+          );
+          const r1Promise = counterService.send(1);
+          const r2Promise = counterService.send(2);
 
-        const r1 = await r1Promise;
-        const r2 = await r2Promise;
+          const r1 = await r1Promise;
+          const r2 = await r2Promise;
 
-        // Because the delays got shorter, each one got the soonest resolution
-        expect(r1).toBe(3);
-        expect(r2).toBe(3);
+          // Because the delays got shorter, each one got the soonest resolution
+          expect(r1).toBe(3);
+          expect(r2).toBe(3);
+        });
       });
-      it('returns the matching response with a selector', async () => {
-        let delay = 30;
-        const counterService = createService<number, number, Error>(
-          'counter',
-          (i) => {
-            delay -= 10;
-            return after(delay, i + 1);
-          }
-        );
 
-        const isSuccessor = (req, res) => res === req + 1;
-        const r1Promise = counterService.send(1, isSuccessor);
-        const r2Promise = counterService.send(2, isSuccessor);
+      describe('With a selector', () => {
+        it('returns the response matching the selector', async () => {
+          let delay = 30;
+          const counterService = createService<number, number, Error>(
+            'counter',
+            (i) => {
+              delay -= 10;
+              return after(delay, i + 1);
+            }
+          );
 
-        const r1 = await r1Promise;
-        const r2 = await r2Promise;
+          const isSuccessor = (req, res) => res === req + 1;
+          const r1Promise = counterService.send(1, isSuccessor);
+          const r2Promise = counterService.send(2, isSuccessor);
 
-        // Because the delays got shorter, each one got the soonest resolution
-        expect(r1).toBe(2);
-        expect(r2).toBe(3);
+          const r1 = await r1Promise;
+          const r2 = await r2Promise;
+
+          // Because the delays got shorter, each one got the soonest resolution
+          expect(r1).toBe(2);
+          expect(r2).toBe(3);
+        });
       });
     });
 

@@ -349,6 +349,7 @@ export function createServiceListener<
     CANCELED: ACs.canceled,
   };
 
+  // prettier-ignore
   const returnValue = Object.assign(requestor, { actions: ACs }, controls, {
     // Native
     bus,
@@ -357,7 +358,10 @@ export function createServiceListener<
     send(arg: TRequest, matcher = (_arg: TRequest, _resp: TNext) => true) {
       const resultOrError = race(
         queries.responses.pipe(filter((res) => matcher(arg, res))),
-        queries.errors.pipe(mergeMap((e) => throwError(() => e)))
+        merge(
+          queries.errors.pipe(mergeMap((e) => throwError(() => e)))),
+          queries.cancelations.pipe(map(() => { throw new Error(`Error: canceled (${this.namespace}) can never resolve`);})
+        )
       );
 
       bus.trigger(ACs.request(arg));
