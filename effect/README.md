@@ -43,11 +43,9 @@ queuedRing.cancelCurrentAndQueued(); // cancels this ring, empties the queue
 queuedRing.isActive.value
 queuedRing.isActive.subscribe
 
-// The current error (cleared when a new execution begins), or all errors
+// The current error, or all errors
 queuedRing.currentError.value
 queuedRing.errors.subscribe
-
-// See @rxfx/service for more
 ```
 
 - Play with the [React CodeSandbox.](https://codesandbox.io/p/sandbox/rxfx-bell-effect-7zfmpc)
@@ -87,31 +85,9 @@ export class BellComponent {
 
 ```
 
-
-# Relation to `@rxfx/bus` and `@rxfx/service`
-Every effect returned by `createEffect` or its variants is an instance of an `@rxfx/service`. You might use `@rxfx/effect` when you only care about the effect in a concurrency-controlled and cancelable fashion, and are not tracking its state.
-
-
-Compared to creating a service, when you create an effect, you omit the parameters `name`, `bus`, and `reducer`, so RxFx fills them in as shown:
-
-- Name: A randomly assigned ID
-- Bus: The `defaultBus` as exposed by `@rxfx/service`
-- Reducer: A default reducer whose state is always the most recent response (though if you are interested in state, you probably are using `createService` not `createEffect`)
-
-All the effect's lifecycle events (`request`, `started`, `next`, `complete`, `error`, `cancel`, `canceled`) go on its bus, and can be logged to the console with `bus.spy`, though the names of the events will have the random name assigned:
-
-```
-// bus.spy(({type}) => console.log(type));
-aed123/request
-aed123/next
-aed123/complete
-```
-
-If `bus.reset()` is called, all existing effects will stop responding to requests, and if their executions are cancelable, those will be canceled too.
-
 # Errors
 
-If the effect function returns a rejected Promise, throws an exception, or returns an Observable which emits an error, there is no risk to your app as a whole. The error goes onto the bus as a regular event, and you can respond to them or log them via the `.errors` Observable.
+If the effect function returns a rejected Promise, throws an exception, or returns an Observable which emits an error, there is no risk to your app as a whole. The error goes onto `.errors`, and you can respond to them or log them via the `.errors` Observable.
 
 ```ts
 // See errors in the console
