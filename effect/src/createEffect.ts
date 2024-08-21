@@ -17,7 +17,6 @@ import {
   catchError,
   concatMap,
   distinctUntilChanged,
-  endWith,
   exhaustMap,
   filter,
   map,
@@ -27,58 +26,7 @@ import {
   takeUntil,
   tap,
 } from 'rxjs/operators';
-
-/** An EffectSource is an async function, or a function with a Promise, Observable, or Iterable return value,
- * whose lifecycle events will be exposed to the EffectRunner.
- */
-export type EffectSource<Request, Response> = (
-  args: Request
-) => ObservableInput<Response>;
-
-export type EffectTriggerer<Request> = (req: Request) => void;
-
-/** The Cancelable interface contains ways to cancel a running effect (if it returns an Observable or AsyncIterable).
- * @see shutdownAll
- */
-export interface Cancelable {
-  cancelCurrent: () => void;
-  cancelCurrentAndQueued: () => void;
-  shutdown: () => void;
-}
-
-/**
- * Reserved
- */
-export interface Stateful<Response, TError> {
-  lastResponse: BehaviorSubject<Response | null>;
-  currentError: BehaviorSubject<TError | null>;
-  state: BehaviorSubject<null>;
-}
-export interface Events<Request, Response, TError> {
-  errors: Observable<TError>;
-  responses: Observable<Response>;
-  starts: Observable<Request>;
-  completions: Observable<Request>;
-  cancelations: Observable<Request>;
-  isHandling: BehaviorSubject<boolean>;
-  isActive: BehaviorSubject<boolean>;
-}
-
-/**
- * An EffectRunner is a function, enhanced with Observable properties
- */
-export interface EffectRunner<Request, Response, TError = Error>
-  extends EffectTriggerer<Request>,
-    Cancelable,
-    Stateful<Response, TError>,
-    Events<Request, Response, TError> {
-  request: (req: Request) => void;
-
-  send: (
-    req: Request,
-    matcher?: (req: Request, res: Response) => boolean
-  ) => Promise<Response>;
-}
+import { EffectRunner, EffectSource } from './types';
 
 const allShutdowns = new Subject<void>();
 
@@ -155,8 +103,9 @@ export function createEffect<Request, Response = void, TError = Error>(
   // prettier-ignore
   const handlerSub = batch.pipe(
     switchMap(() => requests.pipe(
-      concurrencyOperator(singleRequestHandler)
-    ))
+      concurrencyOperator(singleRequestHandler),
+    )),
+    takeUntil(allShutdowns)
   ).subscribe();
   mainSub.add(handlerSub);
 
@@ -174,7 +123,6 @@ export function createEffect<Request, Response = void, TError = Error>(
   ).pipe(
     scan((all, one) => all + one, 0),
     map(Boolean),
-    endWith(false),
     distinctUntilChanged()
   ).subscribe(isHandling);
   mainSub.add(handlingSub);
@@ -185,7 +133,6 @@ export function createEffect<Request, Response = void, TError = Error>(
     .pipe(
       // The switchMap/Promise magic ensures isActive stays true even when moving between queued handlings.
       switchMap((status) => (status ? of(status) : Promise.resolve(status))),
-      endWith(false),
       distinctUntilChanged()
     )
     .subscribe(isActive);
@@ -193,9 +140,21 @@ export function createEffect<Request, Response = void, TError = Error>(
 
   // Allows global shutdown
   const shutdownSub = allShutdowns.subscribe(() => {
+    shutdownSelf();
+  });
+
+  function shutdownSelf() {
+    currentCancel.next(); // terminate us
+    batch.next(); // terminate current batch
+    // terminates all our subs in one fell swoop!
     mainSub.unsubscribe();
     shutdownSub.unsubscribe();
-  });
+
+    isActive.next(false);
+    isActive.complete();
+    isHandling.complete();
+    state.complete();
+  }
 
   // Exposes the function to trigger the effect
   const executor = function Effect(req: Request) {
@@ -224,21 +183,22 @@ export function createEffect<Request, Response = void, TError = Error>(
     cancelCurrentAndQueued() {
       batch.next();
     },
-    shutdown() {
-      // terminates all our subs in one fell swoop!
-      mainSub.unsubscribe();
+    unsubscribe() {
+      batch.next();
     },
+    shutdown: shutdownSelf,
     // Events
     errors: errors.asObservable(),
     responses: responses.asObservable(),
     starts: starts.asObservable(),
     completions: completions.asObservable(),
     cancelations: cancelations.asObservable(),
-    isHandling,
-    isActive,
+
+    // Stateful
     lastResponse,
     currentError,
-    // Stateful
+    isHandling,
+    isActive,
     state,
   };
 
@@ -251,39 +211,39 @@ export function createEffect<Request, Response = void, TError = Error>(
 /** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
  * The effect is cancelable if it returns an Observable. `createQueueingEffect` runs in concurrency mode: "queueing" aka `concatMap`.
  * @summary ![queueing mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-queueing-sm.png) */
-export function createQueueingEffect<Req, Res>(
-  fn: (args: Req) => ObservableInput<Res>
+export function createQueueingEffect<Request, Response>(
+  handler: EffectSource<Request, Response>
 ) {
-  return createEffect(fn, concatMap);
+  return createEffect(handler, concatMap);
 }
 
 /** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
  * The effect is cancelable if it returns an Observable. `createSwitchingEffect` runs in concurrency mode: "switching" aka `switchMap`.
  * @summary ![switching mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-switching-sm.png) */
-export function createSwitchingEffect<Req, Res>(
-  fn: (args: Req) => ObservableInput<Res>
+export function createSwitchingEffect<Request, Response>(
+  handler: EffectSource<Request, Response>
 ) {
-  return createEffect(fn, switchMap);
+  return createEffect(handler, switchMap);
 }
 
 /** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
  * The effect is cancelable if it returns an Observable. `createBlockingEffect` runs in concurrency mode: "blocking" aka `exhaustMap`.
  * @summary ![blocking mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-blocking-sm.png)
  */
-export function createBlockingEffect<Req, Res>(
-  fn: (args: Req) => ObservableInput<Res>
+export function createBlockingEffect<Request, Response>(
+  handler: EffectSource<Request, Response>
 ) {
-  return createEffect(fn, exhaustMap);
+  return createEffect(handler, exhaustMap);
 }
 
 /** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
  * The effect is cancelable if it returns an Observable. `createTogglingEffect` runs in concurrency mode: "blocking" aka `exhaustMap`.
  * @summary ![toggling mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-toggling-sm.png)
  */
-export function createTogglingEffect<Req, Res>(
-  fn: (args: Req) => ObservableInput<Res>
+export function createTogglingEffect<Request, Response>(
+  handler: EffectSource<Request, Response>
 ) {
-  return createEffect(fn, toggleMap as typeof mergeMap);
+  return createEffect(handler, toggleMap as typeof mergeMap);
 }
 
 /** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
@@ -292,11 +252,13 @@ export function createTogglingEffect<Req, Res>(
  * @summary ![blocking mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-blocking-sm.png)
  */
 export function createThrottledEffect(msec: number) {
-  return function <Req>(fn: (args: Req) => ObservableInput<void>) {
-    return createEffect((args: Req) => {
+  return function <Request, Response = void>(
+    handler: EffectSource<Request, Response>
+  ) {
+    return createEffect((args: Request) => {
       return concat(
         // do the work up front
-        fn(args),
+        handler(args),
         // include the throttling interval
         after(msec, EMPTY)
       );
@@ -310,13 +272,15 @@ export function createThrottledEffect(msec: number) {
  * @summary ![switching mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-switching-sm.png)
  */
 export function createDebouncedEffect(msec: number) {
-  return function <Req, Res = void>(fn: (args: Req) => ObservableInput<Res>) {
-    return createEffect((args: Req) => {
+  return function <Request, Response = void>(
+    handler: EffectSource<Request, Response>
+  ) {
+    return createEffect((args: Request) => {
       return concat(
         // wait initially
         after(msec, EMPTY),
         // then do the work - if not yet canceled
-        fn(args)
+        handler(args)
       );
     }, switchMap);
   };
@@ -324,9 +288,9 @@ export function createDebouncedEffect(msec: number) {
 /** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
  * The effect is cancelable if it returns an Observable. `createCustomEffect` runs in the concurrency mode of the
  * RxJS operator it is passed as its 2nd argument */
-export function createCustomEffect<Req, Res>(
-  fn: (args: Req) => ObservableInput<Res>,
+export function createCustomEffect<Request, Response>(
+  handler: EffectSource<Request, Response>,
   concurrencyOperator = mergeMap
 ) {
-  return createEffect(fn, concurrencyOperator);
+  return createEffect(handler, concurrencyOperator);
 }
