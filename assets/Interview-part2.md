@@ -1,22 +1,21 @@
 ---
-title: Excellent Effect Management in React with 𝗥𝘅𝑓𝑥 and RxJS 
+title: Excellent Effect Management in React with 𝗥𝘅𝑓𝑥 and RxJS
 published: false
-description: 
+description:
 tags: rxjs, rxfx, javascript, react
 cover_image: https://images.unsplash.com/photo-1574720187210-421b34c9cf01?ixlib=rb-1.2.1&raw_url=true&q=80&fm=jpg&crop=entropy&cs=tinysrgb&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1064
-
 # Use a ratio of 100:42 for best results.
 # published_at: 2023-02-22 16:27 +0000
 ---
 
-In [Part 1](https://dev.to/deanius/how-an-interview-convinced-me-to-use-an-event-bus-for-rxjs-in-react-396l), I'd shared an interview that opened my mind to how, and why, to use 𝗥𝘅𝑓𝑥 in React. 
+In [Part 1](https://dev.to/deanius/how-an-interview-convinced-me-to-use-an-event-bus-for-rxjs-in-react-396l), I'd shared an interview that opened my mind to how, and why, to use 𝗥𝘅𝑓𝑥 in React.
 
 In this final installment part we take the UX of the Cat Fetcher to the extreme by adding these features:
 
 - Preload images as a chained part of the `gifService`.
 - Cancel an image preload when canceled.
 - Send out Analytics events, without coupling to existing code.
-- Apply a timeout to the Ajax load and overall load. 
+- Apply a timeout to the Ajax load and overall load.
 - Pad the loading spinner to a minimum duration.
 
 We'll even build a cancelable image preloader along the way. So let's dive right in!
@@ -25,14 +24,13 @@ We'll even build a cancelable image preloader along the way. So let's dive right
 
 ## Chained Loading Of the Image Bytes
 
-There was an issue with our service. `isActive` would become `false` at the time where we knew the URL of the cat image-  but didn't yet have its bytes:
+There was an issue with our service. `isActive` would become `false` at the time where we knew the URL of the cat image- but didn't yet have its bytes:
 
-![loading indicator analysis](https://s3.amazonaws.com/www.deanius.com/cat-loading-analysis.jpg)
+![loading indicator analysis](https://d2jksv3bi9fv68.cloudfront.net/cat-loading-analysis.jpg)
 
 This led to the loading indicator turning off, and the UI looks like it's doing nothing - until the image bytes arrive. And that image could take a while to load, if over a slow pipe!
 
-![template with loading state, with delay](https://s3.amazonaws.com/www.deanius.com/cat-loading-delay.gif)
-
+![template with loading state, with delay](https://d2jksv3bi9fv68.cloudfront.net/cat-loading-delay.gif)
 
 ## Image Preloading
 
@@ -80,7 +78,7 @@ So we change our Promise-returning function into an Observable-returning one - s
 
 ## Cancelation
 
-This chaining, or 'composition', is convenient, but not yet optimal. If a cancelation occurs while the image bytes are loading  - the loading of the image itself is not canceled. 
+This chaining, or 'composition', is convenient, but not yet optimal. If a cancelation occurs while the image bytes are loading - the loading of the image itself is not canceled.
 
 ![not canceled](https://camo.githubusercontent.com/848f567ba25b79138ef70b1d7c7139645544ee3fc617d7adc13ffc4ddd0db617/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f7777772e6465616e6975732e636f6d2f6361742d726571756573742d32782d756e6d6f756e742d776974682d6c65616b732e676966)
 
@@ -111,15 +109,16 @@ Now, even when cancelation occurs during image bytes downloading, the Observable
 
 Now, a request arrives that we log clicks to the Analytics Service whenever the Fetch Cat button is pressed.
 
-You might be wondering now whether the UI `onClick` handler, or the `gifService` Observable ought to change. 𝗥𝘅𝑓𝑥 says - change neither, they're done already! 
+You might be wondering now whether the UI `onClick` handler, or the `gifService` Observable ought to change. 𝗥𝘅𝑓𝑥 says - change neither, they're done already!
 
 Handle it by observing the service's requests, and firing off there:
 
-
 ```js
 const analyticsSender = gifService.observe({
-  request(){ logAnalytics('fetch cat clicked') }
-})
+  request() {
+    logAnalytics("fetch cat clicked");
+  },
+});
 // to turn off
 // analyticsSender.unsubscribe();
 ```
@@ -140,7 +139,7 @@ function fetchRandomGIF() {
   }).pipe(
 ```
 
-The `gifService` will trigger a `gif/error` to the bus if it fails to get the url within that timeout. 
+The `gifService` will trigger a `gif/error` to the bus if it fails to get the url within that timeout.
 
 But we must ask if overall our `gif/request` handler might exceed the user's patience. For that, we can wrap the handler in a `withTimeout` modifier from `@rxfx/service`.
 
@@ -175,7 +174,7 @@ function fetchRandomGIF() {
 
 While we may decide this amount of padding isn't necessary in every app, for these cute kitties it's probably worth it 😀 🐈 The lesson, of course, is that any RxJS or 𝗥𝘅𝑓𝑥 operator can be used to modify timing with usually no change to surrounding code - whether it's for timeout or time padding. This lets our UX be more intentional in its experience, and less vulnerable to random network conditions.
 
-----
+---
 
 ## Conclusion
 

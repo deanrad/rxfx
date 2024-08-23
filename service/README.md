@@ -2,7 +2,7 @@
 
 Part of the [𝗥𝘅𝑓𝑥](https://github.com/deanrad/rxfx) family of libraries.
 
-30 years after `setTimeout` introduced the world to the asynchronous nature of JavaScript, effect execution is still clumsy at best, and broken in many cases. And none of the popular front-end solutions (Angular, React, RxJS) present a complete solution that deals with all the concerns of async effects in a framework-independent way. 
+30 years after `setTimeout` introduced the world to the asynchronous nature of JavaScript, effect execution is still clumsy at best, and broken in many cases. And none of the popular front-end solutions (Angular, React, RxJS) present a complete solution that deals with all the concerns of async effects in a framework-independent way.
 
 - Error handling that is predictable, and does not compromise the integrity of the app the more effects you add.
 - Automatic `loading`/`active` state tracking.
@@ -12,8 +12,8 @@ Part of the [𝗥𝘅𝑓𝑥](https://github.com/deanrad/rxfx) family of librar
 - Easily reduced or adjustable concurrency (immediate, queueing, throttling, etc) without introducing complication or additional variables.
 
 ## How is 𝗥𝘅𝑓𝑥 a solution?
-An 𝗥𝘅𝑓𝑥 service (or a bus) is a view-framework-independent, pure JS container for Effect Management and State Mangement, based on RxJS. An 𝗥𝘅𝑓𝑥 Service supports all the above pain points in an easy API.
 
+An 𝗥𝘅𝑓𝑥 service (or a bus) is a view-framework-independent, pure JS container for Effect Management and State Mangement, based on RxJS. An 𝗥𝘅𝑓𝑥 Service supports all the above pain points in an easy API.
 
 ## When is it time to introduce 𝗥𝘅𝑓𝑥?
 
@@ -27,7 +27,7 @@ An 𝗥𝘅𝑓𝑥 service (or a bus) is a view-framework-independent, pure JS 
 - You are tired of async errors breaking the view layer, or the app as a whole, as more effects get added to your app.
 - You find tests take too long to run when they have to be called through the view layer, and you want something that is testable independent of the view.
 
-In short - if you believe there is a more concise, more airtight, race-condition-proof way to do async, you may have found it right here in an  𝗥𝘅𝑓𝑥 service or bus listener.
+In short - if you believe there is a more concise, more airtight, race-condition-proof way to do async, you may have found it right here in an 𝗥𝘅𝑓𝑥 service or bus listener.
 
 # Example Usage
 
@@ -39,7 +39,7 @@ import { createQueueingService } from '@rxfx/service'
 const initialState = 0
 
 const asyncCounter = createQueueingService<void, void, Error, number>(
-  'count', 
+  'count',
   () => after(1000),
   ({ isResponse }) => (state = initialState, event) => {
     if (isResponse(event)) {
@@ -59,7 +59,7 @@ asyncCounter.request();
 // Request a counter increment, with a Promise for when done
 asyncCounter.send().then(() => /* ... */)
 
-// Cancel any current executions of the effect, and/or queued 
+// Cancel any current executions of the effect, and/or queued
 asyncCounter.cancelCurrent()
 asyncCounter.cancelCurrentAndQueued()
 
@@ -76,14 +76,13 @@ asyncCounter.currentError.subscribe(e => /*  ... */)
 asyncCounter.responses.subscribe(resp => /*  ... */)
 ```
 
-
 <!-- Building upon a normal bus listener, a **Service**:
 
 - Knows whether an effect is active without any need to set up and populate `loading` state variables.
 - Turn errors into events, emitting them as events `count/error` and preventing runtime errors.
 - Emits events (e.g. `count/started`, `count/complete`) on all lifecycle events of the effect.
 - Allows a reducer to populate an Observable of state by responding to lifecycle events.
-- Allows for cancelation of in-flight, or queued requests. 
+- Allows for cancelation of in-flight, or queued requests.
 
 In comparison to `createAsyncThunk` from Redux Toolkit, except concurrency-controlled and cancelable.
 
@@ -98,7 +97,7 @@ You'll notice an `@rxfx/service` touches the UI framework in only two places:
 1. UI event handlers will make requests of the service, or cancel the work of the service.
 1. UI state fields subscribe to each new state of the service.
 
-In both cases: _It is the UI which speaks to the service, not the other way around!_  Each component is generally a source of requests, or a consumer of values. 
+In both cases: _It is the UI which speaks to the service, not the other way around!_  Each component is generally a source of requests, or a consumer of values.
 
 Service logic can be independently tested, because it is never dependent on the UI. The result is being able to port the same core code to any Web or Native platform without re-tooling. This also enables continued operation in the face of major-version updates to UI frameworks.
 
@@ -135,12 +134,12 @@ export class MyCounterComponent {
     counterService.reset();
   }
 }
-
 ```
 
 Play with the [CodeSandbox.](https://codesandbox.io/p/devbox/rxfx-angular-counter-ncsj56)
 
 # Examples
+
 The following examples and tutorials will give you a feel for what UX you can build, and the ease of DX you'll find.
 
 ## Example: Asynchronous Counter
@@ -151,7 +150,7 @@ It doesn't take more than a simple time-delayed async counter to show all the su
 
 - [Asynchronous Counter with loading and cancelability, default concurrency](https://codesandbox.io/p/sandbox/7guis-1-counter-async-rxfx-service-4w82wc). This service shows a loading state, and allows cancelation. It allows multiple increments concurrently, and the reducer increments on the _response_ side of the delay.
 
-- [Asynchronous Counter, queued, with cancel-on-unmount](https://codesandbox.io/p/sandbox/7guis-counter-async-unmount-safe-rxfx-service-j456mr) By simply modifying `createService`  to `createQueueingService`, this service guarantees no more than one increment is in progress at a time. On unmount, all current and queued increments are canceled.
+- [Asynchronous Counter, queued, with cancel-on-unmount](https://codesandbox.io/p/sandbox/7guis-counter-async-unmount-safe-rxfx-service-j456mr) By simply modifying `createService` to `createQueueingService`, this service guarantees no more than one increment is in progress at a time. On unmount, all current and queued increments are canceled.
 
 - [Asynchronous Counter, with progress indicator](https://codesandbox.io/p/sandbox/7guis-counter-async-progress-rxfx-service-wr4hhq). By wrapping the handler in `monitorHandler`, we can update the UI with the percent completed, without affecting what's been written previously. Note: this is a compatibility-approach for when an effect doesn't provide its own progress updates - for example any Promise returning function
 
@@ -159,7 +158,7 @@ It doesn't take more than a simple time-delayed async counter to show all the su
 
 ## Examples: 7 GUIs
 
-The counter is one example of the 7 GUIs benchmark for building UI applications. In the 7 GUIs, different frameworks can be compared against how elegantly they solve the building of 7 GUIs of increasing complexity. 
+The counter is one example of the 7 GUIs benchmark for building UI applications. In the 7 GUIs, different frameworks can be compared against how elegantly they solve the building of 7 GUIs of increasing complexity.
 
 𝗥𝘅𝑓𝑥 has been used to build all 7 GUIs, the counter being the first one. The remaining, with links to live versions are:
 
@@ -194,7 +193,6 @@ Here are representations of each mode:
 ![immediate, queueing, switching, blocking](https://d2jksv3bi9fv68.cloudfront.net/rxfx/cards-all-2024.png)
 Download [SVG](https://d2jksv3bi9fv68.cloudfront.net/rxfx/cards-all-2024.svg)
 
-
 # Resources
 
 For more information about what went into 𝗥𝘅𝑓𝑥, the following are great reads.
@@ -208,10 +206,11 @@ For more information about what went into 𝗥𝘅𝑓𝑥, the following are gr
 # More Examples
 
 ## Example Application - API Data Fetcher
+
 With concurrency, cancelation, animation, user feedback, and other best UX practices.
 [CodeSandbox](https://codesandbox.io/s/rxfx-service-cat-fetcher-nweq0h)
 
-![](https://s3.amazonaws.com/www.deanius.com/rxfx-data-fetcher-static.png)
+![](https://d2jksv3bi9fv68.cloudfront.net/rxfx-data-fetcher-static.png)
 
 ## Example Application - Alarm Clock
 
@@ -221,7 +220,7 @@ Here we build an Alarm Clock _(of a variety you may already know!)_ . Pushing a 
 
 Because 𝗥𝘅𝑓𝑥 ensures your services don't depend upon your view, you can port the same service to any UI framework, Web or Native, trivially. These ports of the Alarm Clock to major UI frameworks took under half an hour each to do:
 
- - React [Code Sandbox](https://codesandbox.io/s/rxfx-bus-alarm-clock-react-sesc51)
+- React [Code Sandbox](https://codesandbox.io/s/rxfx-bus-alarm-clock-react-sesc51)
 - Angular [Code Sandbox](https://codesandbox.io/s/rxfx-service-alarm-clock-angular-sdenc1)
 - Svelte [Code Sandbox](https://codesandbox.io/s/rxfx-service-alarm-clock-svelte-d0bejx)
 - Vue [Code Sandbox](https://codesandbox.io/s/rxfx-service-alarm-clock-vue-hk916l)

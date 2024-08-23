@@ -8,9 +8,9 @@ cover_image: https://images.unsplash.com/photo-1502144696405-e84600828d73?ixlib=
 
 TL;DR The Radcliffe Concurrency Model is a way of understanding how a computer resource, or person responds to an interruption, which will help us understand multitasking in programming, and in life.
 
-![The Radcliffe Model of Concurrency](https://s3.amazonaws.com/www.deanius.com/RadcliffeConcurrencyModel.png)
+![The Radcliffe Model of Concurrency](https://d2jksv3bi9fv68.cloudfront.net/RadcliffeConcurrencyModel.png)
 
-Interruptions are a fact of life. Nobody has the luxury of being able to single-task on each thing they start until its sweet completion. No— life is more like this: 
+Interruptions are a fact of life. Nobody has the luxury of being able to single-task on each thing they start until its sweet completion. No— life is more like this:
 
 - Kid: "Dad, I want a grilled cheese, please."
 - Dad: _starts making a grilled cheese sandwich..._
@@ -51,7 +51,6 @@ The other two modes sound funny when applied to humans, but are still relevant s
 
 So, it was out of necessity, that the Radcliffe Model was born!
 
-
 ## The Radcliffe Model of Concurrency
 
 The modes in the Radcliffe Model, in English are:
@@ -62,15 +61,15 @@ The modes in the Radcliffe Model, in English are:
 - **Blocking**
 - **Toggling**
 
-![The Radcliffe Model of Concurrency](https://s3.amazonaws.com/www.deanius.com/RadcliffeConcurrencyModel.png)
+![The Radcliffe Model of Concurrency](https://d2jksv3bi9fv68.cloudfront.net/RadcliffeConcurrencyModel.png)
 
-I recognize these might not be the names you'd call these - you may have used `serial` and `parallel`, for either of the top 2 modes. Fine! But the value is not in what they are called, but the fact _that they are known as an entire set._ 
+I recognize these might not be the names you'd call these - you may have used `serial` and `parallel`, for either of the top 2 modes. Fine! But the value is not in what they are called, but the fact _that they are known as an entire set._
 
 Sometimes, trying to fulfill every request of you, as **Immediate** and **Queueing** modes do - stretches resources too thin. The **Blocking** mode may smartly reduce concurrency by favoring a prior request, just as an elevator that is already requested does nothing on subsequent calls to the same floor. The **Replacing** mode is seen in how one video playing replaces another when we browse a social site, or how your session timeout keeps starting over after activity. And **Toggling** is what a one-button power switch does - more on **Toggling** later.
 
 The reason to learn this model is that getting a computer program, UX, or human behavior to be correct is often done simply by _choosing the best mode from the list!_
 
-I'll save an elaboration and derivation of each mode for another article. The graphic arranges them spatially to show how they relate, and at the end of the article are some trading-card-style images you can even print as a reference! (And play Oblique Strategies with them if you like) 
+I'll save an elaboration and derivation of each mode for another article. The graphic arranges them spatially to show how they relate, and at the end of the article are some trading-card-style images you can even print as a reference! (And play Oblique Strategies with them if you like)
 
 ## Yes, Toggling is a Real Thing!
 
@@ -94,4 +93,4 @@ Dean Radcliffe ([@DeanDevDad](https://twitter.com/DeanDevDad))
 
 ---
 
-![RxFx Strategy Cards](https://s3.amazonaws.com/www.deanius.com/cards-4-icons.png)
+![RxFx Strategy Cards](https://d2jksv3bi9fv68.cloudfront.net/cards-4-icons.png)
