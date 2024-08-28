@@ -246,12 +246,17 @@ export function createTogglingEffect<Request, Response>(
   return createEffect(handler, toggleMap as typeof mergeMap);
 }
 
+/** @see rxfx/perception for why this duration */
+export const DEFAULT_DEBOUNCE_INTERVAL = 330;
+
 /** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
  * The effect is throttled to within `msec`, meaning an existing execution or delay blocks new ones.
  * The effect is cancelable if it returns an Observable. `createThrottledEffect` runs in concurrency mode: "toggling".
  * @summary ![blocking mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-blocking-sm.png)
  */
-export function createThrottledEffect(msec: number) {
+export function createThrottledEffect(
+  msec: number = DEFAULT_DEBOUNCE_INTERVAL
+) {
   return function <Request, Response = void>(
     handler: EffectSource<Request, Response>
   ) {
@@ -271,7 +276,9 @@ export function createThrottledEffect(msec: number) {
  * The effect is cancelable if it returns an Observable. `createDebouncedEffect` runs in concurrency mode: "toggling".
  * @summary ![switching mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-switching-sm.png)
  */
-export function createDebouncedEffect(msec: number) {
+export function createDebouncedEffect(
+  msec: number = DEFAULT_DEBOUNCE_INTERVAL
+) {
   return function <Request, Response = void>(
     handler: EffectSource<Request, Response>
   ) {
