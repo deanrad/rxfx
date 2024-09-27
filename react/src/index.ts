@@ -1,3 +1,5 @@
+export * from '@rxfx/service';
+
 export * from './useWhileMounted';
 export * from './useService';
 export * from './Unmounter';
