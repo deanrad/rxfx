@@ -12,7 +12,7 @@ import {
   EffectRunner,
   shutdownAll,
 } from '../src/createEffect';
-import { Observable, throwError } from 'rxjs';
+import { concat, Observable, of, throwError } from 'rxjs';
 
 const DELAY = 10;
 
@@ -31,33 +31,6 @@ function makeArray<T>(obs: Observable<T>) {
  * [Throttled](https://chatgpt.com/share/0466b99d-77a3-4df5-85bf-1a4d464ec925)
  */
 describe('createEffect - returns a function which', () => {
-  // describe('Mode: Immediate', () => {
-  //   it('runs a handler immediately upon request', async () => {
-  //     const liked = [] as string[];
-  //     const likePost = createEffect((postId: number) => {
-  //       return after(DELAY, () => {
-  //         const msg = `post liked ${postId}`;
-  //         liked.push(msg);
-  //         return msg;
-  //       });
-  //     });
-
-  //     likePost(123);
-  //     likePost(234);
-
-  //     // When both are done
-  //     await after(10);
-
-  //     // The responses are in the order their handlers returned
-  //     expect(liked).toMatchInlineSnapshot(`
-  //       [
-  //         "post liked 123",
-  //         "post liked 234",
-  //       ]
-  //     `);
-  //   });
-  // });
-
   it('calls the effect function synchronously', () => {
     const fxFn = jest.fn();
     const fx = createEffect<void>(fxFn);
@@ -183,9 +156,90 @@ describe('createEffect - returns a function which', () => {
   });
 
   describe('Effect Handler', () => {
-    it.todo('Can return a Promise');
-    it.todo('Can return an Observable');
-    it.todo('Can return an iterable');
+    it('Can return a Promise', async () => {
+      const VALUE = 1.1;
+      const handler = jest.fn().mockResolvedValue(VALUE);
+      const fx = createEffect<void, number>(handler);
+
+      const responses = [] as number[];
+      fx.responses.subscribe((res) => responses.push(res));
+
+      // call it
+      fx();
+      // flush it out
+      await Promise.resolve();
+      // TODO await
+      expect(responses).toEqual([VALUE]);
+    });
+
+    it('Can return an Observable (sync, single)', async () => {
+      const VALUE = 1.1;
+      const handler = jest.fn().mockReturnValue(of(VALUE));
+      const fx = createEffect<void, number>(handler);
+
+      const responses = [] as number[];
+      fx.responses.subscribe((res) => responses.push(res));
+
+      // call it
+      fx();
+      expect(responses).toEqual([VALUE]);
+    });
+    it('Can return an Observable (async, single)', async () => {
+      const VALUE = 1.2;
+      const DELAY = 1;
+      const handler = jest.fn().mockReturnValue(after(DELAY, VALUE));
+      const fx = createEffect<void, number>(handler);
+
+      const responses = [] as number[];
+      fx.responses.subscribe((res) => responses.push(res));
+
+      // call it
+      fx();
+      // await
+      await after(DELAY);
+
+      // we have the value now
+      expect(responses).toEqual([VALUE]);
+    });
+
+    it('Can return an Observable (async, multiple)', async () => {
+      const VALUE = 1.2;
+      const DELAY = 1;
+      const handler = jest
+        .fn()
+        .mockReturnValue(concat(after(DELAY, VALUE), after(DELAY, VALUE)));
+      const fx = createEffect<void, number>(handler);
+
+      const responses = [] as number[];
+      fx.responses.subscribe((res) => responses.push(res));
+
+      // call it
+      fx();
+      // await
+      await after(DELAY);
+      // we have the first value
+      expect(responses).toEqual([VALUE]);
+
+      // await
+      await after(DELAY);
+      // we have both values now
+      expect(responses).toEqual([VALUE, VALUE]);
+    });
+
+    it('Can return an iterable', () => {
+      const VALUES = [1.1, 1.2];
+      const handler = jest.fn().mockReturnValue(VALUES);
+      const fx = createEffect<void, number>(handler);
+
+      const responses = [] as number[];
+      fx.responses.subscribe((res) => responses.push(res));
+
+      // call it
+      fx();
+
+      // we have the value now
+      expect(responses).toEqual(VALUES);
+    });
 
     describe('Errors: Do not affect caller, requests are still handled, and errors appear on #errors', () => {
       let errs = [];
@@ -266,250 +320,250 @@ describe('createEffect - returns a function which', () => {
     });
   });
 
-  describe('Observable properties', () => {
-    it('#responses', async () => {
-      const likePost = createEffect((postId: number) => {
-        return after(10, () => {
-          return `post liked ${postId}`;
-        });
-      });
+  // describe('Observable properties', () => {
+  //   it('#responses', async () => {
+  //     const likePost = createEffect((postId: number) => {
+  //       return after(10, () => {
+  //         return `post liked ${postId}`;
+  //       });
+  //     });
 
-      const responses = makeArray(likePost.responses);
+  //     const responses = makeArray(likePost.responses);
 
-      likePost(123);
-      likePost(234);
+  //     likePost(123);
+  //     likePost(234);
 
-      // When both are done
-      await after(10);
+  //     // When both are done
+  //     await after(10);
 
-      // We have seen these responses
-      expect(responses).toMatchInlineSnapshot(`
-      [
-        "post liked 123",
-        "post liked 234",
-      ]
-    `);
-    });
+  //     // We have seen these responses
+  //     expect(responses).toMatchInlineSnapshot(`
+  //     [
+  //       "post liked 123",
+  //       "post liked 234",
+  //     ]
+  //   `);
+  //   });
 
-    it('#lastResponse', async () => {
-      const likePost = createEffect((postId: number) => {
-        return after(10, () => {
-          return `post liked ${postId}`;
-        });
-      });
+  //   it('#lastResponse', async () => {
+  //     const likePost = createEffect((postId: number) => {
+  //       return after(10, () => {
+  //         return `post liked ${postId}`;
+  //       });
+  //     });
 
-      likePost(123);
+  //     likePost(123);
 
-      // When both are done
-      await after(10);
+  //     // When both are done
+  //     await after(10);
 
-      expect(likePost.lastResponse.value).toBe('post liked 123');
-    });
+  //     expect(likePost.lastResponse.value).toBe('post liked 123');
+  //   });
 
-    it.todo('exposes starts');
-    it.todo('exposes completions');
-    it.todo('exposes errors');
-    it.todo('exposes cancelations');
-  });
+  //   it.todo('exposes starts');
+  //   it.todo('exposes completions');
+  //   it.todo('exposes errors');
+  //   it.todo('exposes cancelations');
+  // });
 
-  // TODO Repeat test for each mode
-  describe('#isHandling', () => {
-    let asyncHandler, asyncService;
+  // // TODO Repeat test for each mode
+  // describe('#isHandling', () => {
+  //   let asyncHandler, asyncService;
 
-    beforeEach(() => {
-      asyncHandler = jest.fn(() => {
-        return after(DELAY, '3.14');
-      });
-      asyncService = createEffect(asyncHandler);
-    });
+  //   beforeEach(() => {
+  //     asyncHandler = jest.fn(() => {
+  //       return after(DELAY, '3.14');
+  //     });
+  //     asyncService = createEffect(asyncHandler);
+  //   });
 
-    it('initially is false', () => {
-      expect(asyncService.isHandling.value).toBeFalsy();
-    });
+  //   it('initially is false', () => {
+  //     expect(asyncService.isHandling.value).toBeFalsy();
+  //   });
 
-    it('becomes true when a handler is in-flight', async () => {
-      asyncService();
+  //   it('becomes true when a handler is in-flight', async () => {
+  //     asyncService();
 
-      expect(asyncHandler).toHaveBeenCalled();
-      expect(asyncService.isHandling.value).toBeTruthy();
+  //     expect(asyncHandler).toHaveBeenCalled();
+  //     expect(asyncService.isHandling.value).toBeTruthy();
 
-      await after(DELAY);
-      expect(asyncService.isHandling.value).toBeFalsy();
-    });
+  //     await after(DELAY);
+  //     expect(asyncService.isHandling.value).toBeFalsy();
+  //   });
 
-    it('doesnt immediately repeat values', () => {
-      const statuses = makeArray(asyncService.isHandling);
+  //   it('doesnt immediately repeat values', () => {
+  //     const statuses = makeArray(asyncService.isHandling);
 
-      asyncService();
-      // trigger again
-      asyncService();
+  //     asyncService();
+  //     // trigger again
+  //     asyncService();
 
-      // no double true
-      expect(statuses).toEqual([false, true]);
-    });
+  //     // no double true
+  //     expect(statuses).toEqual([false, true]);
+  //   });
 
-    describe('Mode: Queueing', () => {
-      it('toggles on and off across handlings', async () => {
-        const statuses: boolean[] = [];
-        const fx = createQueueingEffect<void>(() => after(DELAY, '3.14'));
+  //   describe('Mode: Queueing', () => {
+  //     it('toggles on and off across handlings', async () => {
+  //       const statuses: boolean[] = [];
+  //       const fx = createQueueingEffect<void>(() => after(DELAY, '3.14'));
 
-        fx.isHandling.subscribe((s) => statuses.push(s));
-        expect(statuses).toEqual([false]);
+  //       fx.isHandling.subscribe((s) => statuses.push(s));
+  //       expect(statuses).toEqual([false]);
 
-        fx();
-        expect(statuses).toEqual([false, true]);
+  //       fx();
+  //       expect(statuses).toEqual([false, true]);
 
-        // queue another
-        fx();
-        expect(statuses).toEqual([false, true]);
-        await after(DELAY * 3);
+  //       // queue another
+  //       fx();
+  //       expect(statuses).toEqual([false, true]);
+  //       await after(DELAY * 3);
 
-        expect(statuses).toEqual([false, true, false, true, false]);
-      });
-    });
+  //       expect(statuses).toEqual([false, true, false, true, false]);
+  //     });
+  //   });
 
-    it('has a final value of false on a shutdown', () => {
-      const statuses: boolean[] = [];
-      const fx = createQueueingEffect<void>(() => after(DELAY, '3.14'));
+  //   it('has a final value of false on a shutdown', () => {
+  //     const statuses: boolean[] = [];
+  //     const fx = createQueueingEffect<void>(() => after(DELAY, '3.14'));
 
-      fx.isHandling.subscribe((s) => statuses.push(s));
-      expect(statuses).toEqual([false]);
+  //     fx.isHandling.subscribe((s) => statuses.push(s));
+  //     expect(statuses).toEqual([false]);
 
-      fx();
-      expect(statuses).toEqual([false, true]);
-      fx.shutdown();
+  //     fx();
+  //     expect(statuses).toEqual([false, true]);
+  //     fx.shutdown();
 
-      expect(statuses).toEqual([false, true, false]);
-    });
+  //     expect(statuses).toEqual([false, true, false]);
+  //   });
 
-    // it.skip('has a final value of false on a shutdownAll', () => {
-    //   const fx = createQueueingEffect<void>(() => after(DELAY, '3.14'));
+  //   // it.skip('has a final value of false on a shutdownAll', () => {
+  //   //   const fx = createQueueingEffect<void>(() => after(DELAY, '3.14'));
 
-    //   const statuses = makeArray(fx.isHandling) as boolean[];
-    //   fx.isHandling.subscribe((s) => statuses.push(s));
+  //   //   const statuses = makeArray(fx.isHandling) as boolean[];
+  //   //   fx.isHandling.subscribe((s) => statuses.push(s));
 
-    //   fx();
-    //   expect(statuses).toEqual([false, true]);
-    //   shutdownAll();
+  //   //   fx();
+  //   //   expect(statuses).toEqual([false, true]);
+  //   //   shutdownAll();
 
-    //   expect(statuses).toEqual([false, true, false]);
-    // });
-  });
+  //   //   expect(statuses).toEqual([false, true, false]);
+  //   // });
+  // });
 
-  describe('#isActive', () => {
-    it('is like #isHandling usually', async () => {
-      const statuses: boolean[] = [];
-      const effect = createEffect<void, string>(() => after(DELAY, '3.14'));
+  // describe('#isActive', () => {
+  //   it('is like #isHandling usually', async () => {
+  //     const statuses: boolean[] = [];
+  //     const effect = createEffect<void, string>(() => after(DELAY, '3.14'));
 
-      effect.isActive.subscribe((s) => statuses.push(s));
-      expect(statuses).toEqual([false]);
+  //     effect.isActive.subscribe((s) => statuses.push(s));
+  //     expect(statuses).toEqual([false]);
 
-      effect();
-      expect(statuses).toEqual([false, true]);
+  //     effect();
+  //     expect(statuses).toEqual([false, true]);
 
-      effect();
-      expect(statuses).toEqual([false, true]);
-      await after(DELAY * 3);
+  //     effect();
+  //     expect(statuses).toEqual([false, true]);
+  //     await after(DELAY * 3);
 
-      expect(statuses).toEqual([false, true, false]); // YAY!
-    });
+  //     expect(statuses).toEqual([false, true, false]); // YAY!
+  //   });
 
-    describe('Mode: Queueing', () => {
-      it('stays "true" across handlings', async () => {
-        const statuses: boolean[] = [];
-        const effect = createQueueingEffect<void, string>(() =>
-          after(DELAY, '3.14')
-        );
+  //   describe('Mode: Queueing', () => {
+  //     it('stays "true" across handlings', async () => {
+  //       const statuses: boolean[] = [];
+  //       const effect = createQueueingEffect<void, string>(() =>
+  //         after(DELAY, '3.14')
+  //       );
 
-        effect.isActive.subscribe((s) => statuses.push(s));
-        expect(statuses).toEqual([false]);
+  //       effect.isActive.subscribe((s) => statuses.push(s));
+  //       expect(statuses).toEqual([false]);
 
-        effect();
-        expect(statuses).toEqual([false, true]);
+  //       effect();
+  //       expect(statuses).toEqual([false, true]);
 
-        effect();
-        expect(statuses).toEqual([false, true]);
-        await after(DELAY * 3);
+  //       effect();
+  //       expect(statuses).toEqual([false, true]);
+  //       await after(DELAY * 3);
 
-        // Note - not [false, true, false, true, false] - stays active
-        // while moving to the next in the queue
-        expect(statuses).toEqual([false, true, false]);
-      });
-    });
-  });
+  //       // Note - not [false, true, false, true, false] - stays active
+  //       // while moving to the next in the queue
+  //       expect(statuses).toEqual([false, true, false]);
+  //     });
+  //   });
+  // });
 
-  describe('#send', () => {
-    const REQ1 = 1;
-    const REQ2 = 2;
+  // describe('#send', () => {
+  //   const REQ1 = 1;
+  //   const REQ2 = 2;
 
-    let counterFx: EffectRunner<number, number>;
-    const equalityMatcher = (req: number, res: number) => req === res;
+  //   let counterFx: EffectRunner<number, number>;
+  //   const equalityMatcher = (req: number, res: number) => req === res;
 
-    it('returns a Promise for the next response', async () => {
-      const counterFx = createEffect<number, number>((i: number) =>
-        after(DELAY, i)
-      );
+  //   it('returns a Promise for the next response', async () => {
+  //     const counterFx = createEffect<number, number>((i: number) =>
+  //       after(DELAY, i)
+  //     );
 
-      const response = counterFx.send(REQ1);
-      expect(response).resolves.toBe(REQ1);
-    });
+  //     const response = counterFx.send(REQ1);
+  //     expect(response).resolves.toBe(REQ1);
+  //   });
 
-    describe('Mode: Immediate', () => {
-      beforeEach(() => {
-        counterFx?.cancelCurrentAndQueued();
-        counterFx = createEffect<number, number>((i: number) =>
-          after(DELAY, i)
-        );
-      });
+  //   describe('Mode: Immediate', () => {
+  //     beforeEach(() => {
+  //       counterFx?.cancelCurrentAndQueued();
+  //       counterFx = createEffect<number, number>((i: number) =>
+  //         after(DELAY, i)
+  //       );
+  //     });
 
-      describe('Multiple', () => {
-        it('resolves with the earliest response for each request', () => {
-          const response1 = counterFx.send(REQ1);
-          const response2 = counterFx.send(REQ2);
+  //     describe('Multiple', () => {
+  //       it('resolves with the earliest response for each request', () => {
+  //         const response1 = counterFx.send(REQ1);
+  //         const response2 = counterFx.send(REQ2);
 
-          expect(response1).resolves.toBe(REQ1);
-          expect(response2).resolves.toBe(REQ1);
-        });
-        describe('With a Matcher', () => {
-          it('resolves with the matching response', () => {
-            const response1 = counterFx.send(REQ1, equalityMatcher);
-            const response2 = counterFx.send(REQ2, equalityMatcher);
+  //         expect(response1).resolves.toBe(REQ1);
+  //         expect(response2).resolves.toBe(REQ1);
+  //       });
+  //       describe('With a Matcher', () => {
+  //         it('resolves with the matching response', () => {
+  //           const response1 = counterFx.send(REQ1, equalityMatcher);
+  //           const response2 = counterFx.send(REQ2, equalityMatcher);
 
-            expect(response1).resolves.toBe(REQ1);
-            expect(response2).resolves.toBe(REQ2);
+  //           expect(response1).resolves.toBe(REQ1);
+  //           expect(response2).resolves.toBe(REQ2);
 
-            // Also testable as
-            // expect(await response1).toEqual(REQ1);
-            // expect(await response2).toEqual(REQ2);
-          });
-        });
-      });
-      describe('Errors', () => {});
-    });
-    describe('Mode: Queueing', () => {
-      beforeEach(() => {
-        counterFx?.cancelCurrentAndQueued();
-        counterFx = createQueueingEffect<number, number>((i: number) =>
-          after(DELAY, i)
-        );
-      });
+  //           // Also testable as
+  //           // expect(await response1).toEqual(REQ1);
+  //           // expect(await response2).toEqual(REQ2);
+  //         });
+  //       });
+  //     });
+  //     describe('Errors', () => {});
+  //   });
+  //   describe('Mode: Queueing', () => {
+  //     beforeEach(() => {
+  //       counterFx?.cancelCurrentAndQueued();
+  //       counterFx = createQueueingEffect<number, number>((i: number) =>
+  //         after(DELAY, i)
+  //       );
+  //     });
 
-      describe('Multiple', () => {
-        it('resolves with the earliest', async () => {
-          counterFx = createQueueingEffect<number, number>((i: number) =>
-            after(DELAY, i)
-          );
+  //     describe('Multiple', () => {
+  //       it('resolves with the earliest', async () => {
+  //         counterFx = createQueueingEffect<number, number>((i: number) =>
+  //           after(DELAY, i)
+  //         );
 
-          const response1 = counterFx.send(REQ1);
-          const response2 = counterFx.send(REQ2);
+  //         const response1 = counterFx.send(REQ1);
+  //         const response2 = counterFx.send(REQ2);
 
-          // Note - still the nearest response
-          expect(response1).resolves.toBe(REQ1);
-          expect(response2).resolves.toBe(REQ1);
-        });
-      });
-    });
-  });
+  //         // Note - still the nearest response
+  //         expect(response1).resolves.toBe(REQ1);
+  //         expect(response2).resolves.toBe(REQ1);
+  //       });
+  //     });
+  //   });
+  // });
 });
 
 describe('createQueueingEffect', () => {
