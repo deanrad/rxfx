@@ -3,7 +3,7 @@ import { BehaviorSubject, EMPTY, firstValueFrom, from, merge, Observable, Observ
 // prettier-ignore
 import { concatMap, distinctUntilChanged, endWith, exhaustMap, filter, map, mergeMap, scan, switchMap, takeUntil, tap } from 'rxjs/operators';
 
-import { Action, ActionCreator, actionCreatorFactory } from '@rxfx/fsa';
+import { Action, ActionCreator, createProcessEvents } from '@rxfx/fsa';
 
 import { Bus, defaultBus } from '@rxfx/bus';
 import type { EventHandler } from '@rxfx/bus';
@@ -79,17 +79,7 @@ export function createServiceListener<
     },
   concurrencyOperator = mergeMap
 ): Service<TRequest, TNext, TError, TState> {
-  const namespacedAction = actionCreatorFactory(actionNamespace);
-
-  const ACs: ProcessLifecycleActions<TRequest, TNext, TError> = {
-    request: namespacedAction<TRequest>('request'),
-    cancel: namespacedAction<void>('cancel'),
-    started: namespacedAction<TRequest>('started'),
-    next: namespacedAction<TNext>('next'),
-    error: namespacedAction<TError>('error'),
-    complete: namespacedAction<void>('complete'),
-    canceled: namespacedAction<void>('canceled'),
-  };
+  const ACs = createProcessEvents<TRequest, TNext, TError>(actionNamespace);
 
   const allSubscriptions = new Subscription();
 
