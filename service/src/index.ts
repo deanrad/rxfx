@@ -1,5 +1,4 @@
 export * from './createService';
-export * from './createEffect';
 export * from './createAsyncListService';
 export * from './modifyHandler';
 export * from './types';
@@ -16,5 +15,6 @@ export {
   BehaviorSubject,
   Subscription,
   merge,
+  concat
 } from 'rxjs';
 export { map, tap, filter, skip, takeUntil } from 'rxjs/operators';
