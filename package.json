@@ -1,7 +1,7 @@
 {
-  "name": "rxfx",
+  "name": "rxfx-repo",
   "version": "0.9.0",
-  "description": "Effect manager for RxJS",
+  "description": "Generators, Observables, and Pub-Sub for Conversational UX",
   "main": "index.js",
   "license": "MIT",
   "private": true,
@@ -14,6 +14,7 @@
     "operators",
     "after",
     "ajax",
+    "all",
     "bus",
     "react",
     "service",
