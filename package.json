@@ -7,8 +7,7 @@
   "private": true,
   "repository": "https://github.com/deanrad/rxfx",
   "scripts": {
-    "test": "yarn workspaces foreach run test",
-    "example:file-writer": "scripty"
+    "test": "yarn workspaces foreach run test"
   },
   "workspaces": [
     "operators",

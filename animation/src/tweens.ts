@@ -1,7 +1,7 @@
 import { animationFrames, Observable } from 'rxjs';
 import { share } from 'rxjs/operators';
 
-import { Easing, Group, Tween } from './tweenjs/';
+import { Easing, Group, Tween } from './tweenjs';
 import { UnknownProps } from './tweenjs/Tween';
 
 /** Returns an Observable, increasing from startValue
