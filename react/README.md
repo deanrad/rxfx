@@ -66,6 +66,59 @@ export const Counter = () => {
 };
 ```
 
+### Basic Usage
+
+```tsx
+import { useService } from '@rxfx/react';
+import { after } from '@rxfx/after';
+import { createService } from '@rxfx/service';
+
+// Create a service that logs after 1 second
+const loggerService = createService('logger', (message: string) => {
+  return after(1000, () =>console.log(message));
+});
+
+const queuedLogService = createQueueingService('logger', (message: string) => {
+  return after(1000, () =>console.log(message));
+});
+
+function LoggerComponent() {
+  const { request, isActive } = useService(loggerService);
+  
+  return (
+    <div>
+      <button onClick={() => request('Hello after 1 second')} disabled={isActive}>
+        {isActive ? 'Logging...' : 'Log Message'}
+      </button>
+    </div>
+  );
+}
+```
+
+### Unmount Behavior Options
+
+Control what happens when your component unmounts:
+
+```tsx
+function SafeLogger() {
+  // Cancels current request when unmounting
+  const { request } = useService(loggerService, { 
+    unmount: 'cancelCurrent' 
+  });
+  
+  // ...
+}
+
+function StrictLogger() {
+  // Cancels both current and queued requests when unmounting
+  const { request } = useService(queuedLogService, { 
+    unmount: 'cancelCurrentAndQueued' 
+  });
+  
+  // ...
+}
+```
+
 ### useWhileMounted
 A readable version of `useEffect(fn, [])` that works with RxJS Subscriptions and Observables as well as React style.
 
@@ -94,8 +147,6 @@ useWhileMounted(() => {
   console.log('mount')
   return new Subscription(() => console.log('unmounted'))
 })
-
-
 ```
 
 ### useSubject
@@ -145,7 +196,6 @@ Equivalent to `useCallback(producer, [])`. Makes the stability more readable.
 ```ts
 const sendAnalytics = useStableCallback(() => sendPing());
 ```
-
 
 ### useObservable
 Exposes each latest value of an RxJS `Observable` to React, rerendering when it changes, subscribing on mount, and unsubscribing on unmount.
