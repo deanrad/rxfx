@@ -2,6 +2,30 @@ import { Bus } from '@rxfx/bus';
 import { Action, ActionCreator, ProcessLifecycleActions } from '@rxfx/fsa';
 import { Subscription, Observable, BehaviorSubject, Subject } from 'rxjs';
 
+/** A dictionary of matchers for use in reducers */
+export interface LifecycleEventMatchers<TRequest, TNext, TError> {
+  isRequest: (e: Action<any>) => e is Action<TRequest>;
+  isCancel: (e: Action<any>) => e is Action<void>;
+  isStart: (e: Action<any>) => e is Action<TRequest>;
+  isResponse: (e: Action<any>) => e is Action<TNext>;
+  isError: (e: Action<any>) => e is Action<TError>;
+  isCompletion: (e: Action<any>) => e is Action<void>;
+  isCancelation: (e: Action<any>) => e is Action<void>;
+}
+
+
+export type LifecycleEventAttributes<TRequest, TNext, TError> = Record<
+  keyof LifecycleEventMatchers<TRequest, TNext, TError>,
+  boolean
+>;
+
+export type LifecycleEventFlags = Partial<
+  Record<
+    keyof LifecycleEventMatchers<any, any, any>,
+    boolean /* LEFTOFF - the flags aren't good enough they can't be type-guards */
+  >
+>;
+
 /** The interface for a reducer with an optional getInitialState synchronous property. */
 export interface ServiceReducer<
   TRequest,
@@ -13,6 +37,19 @@ export interface ServiceReducer<
   getInitialState?: () => TState;
 }
 
+export interface ServiceReducerWithACs<
+  TRequest,
+  TNext = void,
+  TError = Error,
+  TState = {}
+> {
+  (
+    state: TState,
+    action: Action<TRequest | TNext | TError | void>,
+    eventAttrs: LifecycleEventAttributes<TRequest, TNext, TError>
+  ): TState;
+  getInitialState?: () => TState;
+}
 /** Signature for a function that closes over action creators and returns a Producer */
 export type ReducerProducer<
   TRequest,
@@ -78,17 +115,6 @@ export interface ProcessLifecycleCallbacks<TRequest, TNext, TError> {
   canceled: () => void;
   /** an invocation concluded, in any fashion */
   finalized: () => void;
-}
-
-/** A dictionary of matchers for use in reducers */
-export interface LifecycleEventMatchers<TRequest, TNext, TError> {
-  isRequest: (e: Action<any>) => e is Action<TRequest>;
-  isCancel: (e: Action<any>) => e is Action<void>;
-  isStart: (e: Action<any>) => e is Action<TRequest>;
-  isResponse: (e: Action<any>) => e is Action<TNext>;
-  isError: (e: Action<any>) => e is Action<TError>;
-  isCompletion: (e: Action<any>) => e is Action<void>;
-  isCancelation: (e: Action<any>) => e is Action<void>;
 }
 
 /** A dictionary of action creators assigned to the service */

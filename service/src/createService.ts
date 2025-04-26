@@ -127,7 +127,7 @@ export function createServiceListener<
     isCancelation: (e: any): e is Action<void> => ACs.canceled.match(e),
   };
 
-  // ACs should only enumerate ACs
+  // ACs have special isRequest, isResponse etc functions
   Object.entries(matchers).forEach(([name, fn]) => {
     Object.defineProperty(ACs, name, {
       enumerable: false,
