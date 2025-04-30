@@ -40,6 +40,7 @@ describe('createServiceListener', () => {
     bus.reset(); // stops existing services, handlings
   });
   const counterReducer = (s = 0, e) => (e ? s + 1 : s);
+  const ASYNC_DELAY = 10;
 
   it('triggers a request to the bus when called', () => {
     const seen = eventsOf(bus);
@@ -593,8 +594,6 @@ describe('createServiceListener', () => {
     });
 
     describe('#isActive', () => {
-      const ASYNC_DELAY = 10;
-
       describe('Immediate', () => {
         it('stays true across multiple activities (F, T, F)', async () => {
           const statuses: boolean[] = [];
@@ -712,6 +711,31 @@ describe('createServiceListener', () => {
 
           expect(statuses).toEqual([false, true, false]); // YAY!
         });
+      });
+    });
+
+    describe('#onceInactive', () => {
+      it('resolves once .isActive has become false ', async () => {
+        const statuses: boolean[] = [];
+        const svc = createServiceListener<void, string, Error>(
+          'onceActive-immediate',
+          bus,
+          () => after(ASYNC_DELAY, '3.14')
+        );
+
+        svc.isActive.subscribe((s) => statuses.push(s));
+
+        svc.request();
+        expect(statuses).toEqual([false, true]);
+
+        //
+        svc.request();
+        expect(statuses).toEqual([false, true]);
+
+        // await after(ASYNC_DELAY * 3);
+        await svc.onceInactive();
+
+        expect(statuses).toEqual([false, true, false]); // YAY!
       });
     });
 
