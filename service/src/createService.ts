@@ -97,6 +97,12 @@ export function createServiceListener<
   );
 
   const isActive = new BehaviorSubject(false);
+  const onceInactive = () => {
+    return firstValueFrom(
+      isActive.pipe(filter((x) => x === false))
+    ) as Promise<false>;
+  };
+
   allSubscriptions.add(
     isHandling
       .asObservable()
@@ -361,6 +367,7 @@ export function createServiceListener<
     // Queryable
     ...queries,
     isActive,
+    onceInactive,
     isHandling,
     currentError,
     observe,

@@ -138,6 +138,8 @@ export interface Queryable<TRequest, TNext, TError, TState> {
   isHandling: BehaviorSubject<boolean>;
   /** Contains the last error object, but becomes `null` at the start of the next handling. */
   currentError: BehaviorSubject<TError | null>;
+  /** Useful when: 1-or-more requests are made, and you want a Promise for all their completions (success or error).` */
+  onceInactive: () => Promise<false>;
   /** Creates an independent subscription, invoking callbacks on process lifecycle events */
   observe: (
     cbs: Partial<ProcessLifecycleCallbacks<TRequest, TNext, TError>>
