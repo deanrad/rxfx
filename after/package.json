@@ -50,7 +50,7 @@
     "jest-silent-reporter": ">= 0.5.0",
     "prettier": "^2.8.8",
     "rimraf": ">= 3.0.2",
-    "rollup": "^3.21.4",
+    "rollup": "^3.29.5",
     "typedoc": "^0.25.3",
     "typescript": "^5.3.2"
   },

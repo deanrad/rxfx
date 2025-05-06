@@ -2681,7 +2681,7 @@ __metadata:
     jest-silent-reporter: ">= 0.5.0"
     prettier: ^2.8.8
     rimraf: ">= 3.0.2"
-    rollup: ^3.21.4
+    rollup: ^3.29.5
     rxjs: ^7.8.1
     tslib: ^2.6.2
     typedoc: ^0.25.3
@@ -2709,7 +2709,7 @@ __metadata:
     jest-silent-reporter: ">= 0.5.0"
     prettier: ^2.8.8
     rimraf: ">= 3.0.2"
-    rollup: ^3.21.4
+    rollup: ^3.29.5
     rxjs: ^7.8.1
     tslib: ^2.6.2
     typedoc: ^0.25.3
@@ -2852,7 +2852,7 @@ __metadata:
     jest-silent-reporter: ">= 0.5.0"
     prettier: ^2.8.8
     rimraf: ">= 3.0.2"
-    rollup: ^3.21.4
+    rollup: ^3.29.5
     rxjs: ^7.8.1
     tslib: ^2.6.2
     typedoc: ^0.25.3
@@ -2984,7 +2984,7 @@ __metadata:
     jest-silent-reporter: ">= 0.5.0"
     prettier: ^2.8.8
     rimraf: ">= 3.0.2"
-    rollup: ^3.21.4
+    rollup: ^3.29.5
     rxjs: ^7.8.1
     tslib: ^2.6.2
     typedoc: ^0.25.3
@@ -9146,21 +9146,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rollup@npm:^3.21.4":
-  version: 3.26.0
-  resolution: "rollup@npm:3.26.0"
-  dependencies:
-    fsevents: ~2.3.2
-  dependenciesMeta:
-    fsevents:
-      optional: true
-  bin:
-    rollup: dist/bin/rollup
-  checksum: 2d00f1ec8f5b3e84b005b7158446aacfbe669b61a55cea26d4cfb7014fed9169d78dffa8f845c8ef2c8cbc596b9de6e9f925597b87e7ef9b7de4c7da21f188ad
-  languageName: node
-  linkType: hard
-
-"rollup@npm:^3.29.4":
+"rollup@npm:^3.29.4, rollup@npm:^3.29.5":
   version: 3.29.5
   resolution: "rollup@npm:3.29.5"
   dependencies:
