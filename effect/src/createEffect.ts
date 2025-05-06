@@ -27,6 +27,7 @@ import {
   tap,
 } from 'rxjs/operators';
 import { EffectRunner, EffectSource } from './types';
+export { EffectRunner } from './types';
 
 const allShutdowns = new Subject<void>();
 

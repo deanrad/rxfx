@@ -21,6 +21,7 @@ exports[`UX Constants defines thresholds of perception 1`] = `
   "MovieFrame": 42,
   "PageLoadMax": 2000,
   "Sentence": 5000,
+  "Swipe": 1000,
   "Thought": 1000,
   "TypingKey48": 250,
   "TypingKey90": 150,

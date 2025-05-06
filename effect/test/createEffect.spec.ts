@@ -12,18 +12,9 @@ import {
   EffectRunner,
   shutdownAll,
 } from '../src/createEffect';
-import { concat, Observable, of, throwError } from 'rxjs';
+import { concat, of, throwError } from 'rxjs';
 
 const DELAY = 10;
-
-function makeArray<T>(obs: Observable<T>) {
-  const arr = [] as T[];
-  obs.subscribe((v) => {
-    arr.push(v);
-  });
-
-  return arr;
-}
 
 /**
  * Related ChatGPT sessions for test writing:
