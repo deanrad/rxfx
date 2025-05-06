@@ -17,3 +17,5 @@ operators/gdocs
 assets/_private
 examples/codegen
 .parcel-cache
+
+**/.claude/settings.local.json
