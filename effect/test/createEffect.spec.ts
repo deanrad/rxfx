@@ -9,21 +9,12 @@ import {
   createSwitchingEffect,
   createThrottledEffect,
   createTogglingEffect,
-  EffectRunner,
   shutdownAll,
 } from '../src/createEffect';
-import { concat, Observable, of, throwError } from 'rxjs';
+import { EffectRunner } from '../src/types';
+import { concat, of, throwError } from 'rxjs';
 
 const DELAY = 10;
-
-function makeArray<T>(obs: Observable<T>) {
-  const arr = [] as T[];
-  obs.subscribe((v) => {
-    arr.push(v);
-  });
-
-  return arr;
-}
 
 /**
  * Related ChatGPT sessions for test writing:
@@ -131,6 +122,7 @@ describe('createEffect - returns a function which', () => {
         likePost(234);
       }
       ops.push(`end ${postId}`);
+      return [];
     });
 
     likePost(123);
@@ -153,6 +145,74 @@ describe('createEffect - returns a function which', () => {
 
     // Note it handles 234 in the same call stack - no extra time,
     // just strict sequencing.
+  });
+
+  it('can track state with a reducer', async () => {
+    const likePost = createEffect<number, string, Error, any[]>(
+      (postId: number) => {
+        return after(10, () => {
+          return `post liked ${postId}`;
+        });
+      }
+    );
+
+    // Supply a reducer so that likePost.state is populated
+    likePost.reduceWith((s = ['YYY'], e) => {
+      if (e.type === 'response') {
+        return [...s, e.payload];
+      }
+      return [...s, e];
+    }, []);
+    expect(likePost.state.value).toEqual([]);
+
+    likePost(123);
+    likePost(345);
+    await after(10);
+    likePost(456);
+    likePost.cancelCurrent();
+
+    expect(likePost.state.value).toMatchInlineSnapshot(`
+      [
+        {
+          "payload": 123,
+          "type": "request",
+        },
+        {
+          "payload": 123,
+          "type": "started",
+        },
+        {
+          "payload": 345,
+          "type": "request",
+        },
+        {
+          "payload": 345,
+          "type": "started",
+        },
+        "post liked 123",
+        {
+          "payload": 123,
+          "type": "complete",
+        },
+        "post liked 345",
+        {
+          "payload": 345,
+          "type": "complete",
+        },
+        {
+          "payload": 456,
+          "type": "request",
+        },
+        {
+          "payload": 456,
+          "type": "started",
+        },
+        {
+          "payload": 456,
+          "type": "canceled",
+        },
+      ]
+    `);
   });
 
   describe('Effect Handler', () => {
@@ -242,7 +302,7 @@ describe('createEffect - returns a function which', () => {
     });
 
     describe('Errors: Do not affect caller, requests are still handled, and errors appear on #errors', () => {
-      let errs = [];
+      let errs = [] as Error[];
       let counterFx: EffectRunner<number, number>;
 
       beforeEach(() => {
@@ -304,6 +364,7 @@ describe('createEffect - returns a function which', () => {
             if (i === 1) {
               throw new Error(`req ${i} errored`);
             }
+            return [];
           });
 
           expect(counterFx?.currentError.value).toBeNull();
@@ -767,6 +828,7 @@ describe('createCustomEffect', () => {
       return after(DELAY, () => {
         liked.push(`post liked ${postId}`);
       });
+      // @ts-ignore
     }, queueOnlyLatest);
 
     likeIt(2718);

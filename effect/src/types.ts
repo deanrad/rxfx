@@ -25,13 +25,12 @@ export interface Cancelable {
 
 /** The Stateful interface represents information the EffectRunner retains about previous or current effect executions.
  */
-export interface Stateful<Response, TError> {
+export interface Stateful<Response, TError, TState> {
   lastResponse: BehaviorSubject<Response | null>;
   currentError: BehaviorSubject<TError | null>;
   isHandling: BehaviorSubject<boolean>;
   isActive: BehaviorSubject<boolean>;
-  /** Reserved for future use. */
-  state: BehaviorSubject<null>;
+  state: BehaviorSubject<TState | null>;
 }
 
 /** The Events interface contains Observables that an effect triggerer may use to get updates on executions. */
@@ -46,15 +45,35 @@ export interface Events<Request, Response, TError> {
 /**
  * An EffectRunner is a function, enhanced with Observable properties
  */
-export interface EffectRunner<Request, Response, TError = Error>
-  extends EffectTriggerer<Request>,
+export interface EffectRunner<
+  Request,
+  Response,
+  TError = Error,
+  TState = Response
+> extends EffectTriggerer<Request>,
     Cancelable,
     Events<Request, Response, TError>,
-    Stateful<Response, TError> {
+    Stateful<Response, TError, TState> {
   request: (req: Request) => void;
 
   send: (
     req: Request,
     matcher?: (req: Request, res: Response) => boolean
   ) => Promise<Response>;
+
+  reduceWith: (
+    reducer: (
+      state: TState,
+      evt: LifecycleReducerEvent<Request, Response, Error>
+    ) => TState,
+    initial: TState
+  ) => BehaviorSubject<TState>;
 }
+
+export type LifecycleReducerEvent<Req, Res, Err> =
+  | { type: 'request'; payload: Req }
+  | { type: 'started'; payload: Req }
+  | { type: 'response'; payload: Res }
+  | { type: 'complete'; payload?: Req }
+  | { type: 'error'; payload: Err }
+  | { type: 'canceled'; payload?: Req };

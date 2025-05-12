@@ -26,7 +26,7 @@ import {
   takeUntil,
   tap,
 } from 'rxjs/operators';
-import { EffectRunner, EffectSource } from './types';
+import { EffectRunner, EffectSource, LifecycleReducerEvent } from './types';
 
 const allShutdowns = new Subject<void>();
 
@@ -41,16 +41,22 @@ export function shutdownAll() {
  * @param handler The Promise or Observable-returning effect function - the EffectSource
  * @param concurrencyOperator The concurrency-control function (defaults to `mergeMap` aka Immediate)
  * @summary ![immediate mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-immediate-sm.png) */
-export function createEffect<Request, Response = void, TError = Error>(
+export function createEffect<
+  Request,
+  Response = void,
+  TError = Error,
+  TState = Response
+>(
   handler: EffectSource<Request, Response>,
   concurrencyOperator = mergeMap
-): EffectRunner<Request, Response, TError> {
+): EffectRunner<Request, Response, TError, TState> {
   const errors = new Subject<TError>();
 
   const currentError = new BehaviorSubject<TError | null>(null);
   const lastResponse = new BehaviorSubject<Response | null>(null);
-  const state = new BehaviorSubject(null);
+  const state = new BehaviorSubject<TState | null>(null);
 
+  const incoming = new Subject<Request>();
   const requests = new Subject<Request>();
   const responses = new Subject<Response>();
   const starts = new Subject<Request>();
@@ -160,6 +166,7 @@ export function createEffect<Request, Response = void, TError = Error>(
   const executor = function Effect(req: Request) {
     handlings.next(
       new Observable((notify) => {
+        incoming.next(req);
         requests.next(req);
         notify.complete();
       })
@@ -200,6 +207,32 @@ export function createEffect<Request, Response = void, TError = Error>(
     isHandling,
     isActive,
     state,
+    reduceWith(
+      reducer: (
+        state: TState,
+        evt: LifecycleReducerEvent<Request, Response, Error>
+      ) => TState,
+      initial: TState
+    ) {
+      const events$ = merge(
+        incoming.pipe(
+          map((payload) => ({ type: 'request' as const, payload }))
+        ),
+        starts.pipe(map((payload) => ({ type: 'started' as const, payload }))),
+        responses.pipe(
+          map((payload) => ({ type: 'response' as const, payload }))
+        ),
+        completions.pipe(
+          map((payload) => ({ type: 'complete' as const, payload }))
+        ),
+        cancelations.pipe(
+          map((payload) => ({ type: 'canceled' as const, payload }))
+        )
+      );
+      state.next(initial);
+      mainSub.add(events$.pipe(scan(reducer, initial)).subscribe(state));
+      return state as BehaviorSubject<TState>;
+    },
   };
 
   // The first batch starts us listening
@@ -211,18 +244,28 @@ export function createEffect<Request, Response = void, TError = Error>(
 /** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
  * The effect is cancelable if it returns an Observable. `createQueueingEffect` runs in concurrency mode: "queueing" aka `concatMap`.
  * @summary ![queueing mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-queueing-sm.png) */
-export function createQueueingEffect<Request, Response>(
+export function createQueueingEffect<
+  Request,
+  Response = void,
+  TError = Error,
+  TState = Response
+>(
   handler: EffectSource<Request, Response>
-) {
+): EffectRunner<Request, Response, TError, TState> {
   return createEffect(handler, concatMap);
 }
 
 /** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
  * The effect is cancelable if it returns an Observable. `createSwitchingEffect` runs in concurrency mode: "switching" aka `switchMap`.
  * @summary ![switching mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-switching-sm.png) */
-export function createSwitchingEffect<Request, Response>(
+export function createSwitchingEffect<
+  Request,
+  Response = void,
+  TError = Error,
+  TState = Response
+>(
   handler: EffectSource<Request, Response>
-) {
+): EffectRunner<Request, Response, TError, TState> {
   return createEffect(handler, switchMap);
 }
 
@@ -230,9 +273,14 @@ export function createSwitchingEffect<Request, Response>(
  * The effect is cancelable if it returns an Observable. `createBlockingEffect` runs in concurrency mode: "blocking" aka `exhaustMap`.
  * @summary ![blocking mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-blocking-sm.png)
  */
-export function createBlockingEffect<Request, Response>(
+export function createBlockingEffect<
+  Request,
+  Response = void,
+  TError = Error,
+  TState = Response
+>(
   handler: EffectSource<Request, Response>
-) {
+): EffectRunner<Request, Response, TError, TState> {
   return createEffect(handler, exhaustMap);
 }
 
@@ -240,9 +288,14 @@ export function createBlockingEffect<Request, Response>(
  * The effect is cancelable if it returns an Observable. `createTogglingEffect` runs in concurrency mode: "blocking" aka `exhaustMap`.
  * @summary ![toggling mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-toggling-sm.png)
  */
-export function createTogglingEffect<Request, Response>(
+export function createTogglingEffect<
+  Request,
+  Response = void,
+  TError = Error,
+  TState = Response
+>(
   handler: EffectSource<Request, Response>
-) {
+): EffectRunner<Request, Response, TError, TState> {
   return createEffect(handler, toggleMap as typeof mergeMap);
 }
 
@@ -257,9 +310,9 @@ export const DEFAULT_DEBOUNCE_INTERVAL = 330;
 export function createThrottledEffect(
   msec: number = DEFAULT_DEBOUNCE_INTERVAL
 ) {
-  return function <Request, Response = void>(
+  return function <Request, Response = void, TError = Error, TState = Response>(
     handler: EffectSource<Request, Response>
-  ) {
+  ): EffectRunner<Request, Response, TError, TState> {
     return createEffect((args: Request) => {
       return concat(
         // do the work up front
@@ -279,9 +332,9 @@ export function createThrottledEffect(
 export function createDebouncedEffect(
   msec: number = DEFAULT_DEBOUNCE_INTERVAL
 ) {
-  return function <Request, Response = void>(
+  return function <Request, Response = void, TError = Error, TState = Response>(
     handler: EffectSource<Request, Response>
-  ) {
+  ): EffectRunner<Request, Response, TError, TState> {
     return createEffect((args: Request) => {
       return concat(
         // wait initially
