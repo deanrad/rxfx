@@ -1,4 +1,9 @@
-import { BehaviorSubject, Observable, ObservableInput } from 'rxjs';
+import {
+  BehaviorSubject,
+  Observable,
+  ObservableInput,
+  Subscription,
+} from 'rxjs';
 
 /** An EffectSource is an async function, or a function with a Promise, Observable, or Iterable return value,
  * whose lifecycle events will be exposed to the EffectRunner.
@@ -35,9 +40,9 @@ export interface Stateful<Response, TError, TState> {
 
 /** The Events interface contains Observables that an effect triggerer may use to get updates on executions. */
 export interface Events<Request, Response, TError> {
-  errors: Observable<TError>;
-  responses: Observable<Response>;
   starts: Observable<Request>;
+  responses: Observable<Response>;
+  errors: Observable<TError>;
   completions: Observable<Request>;
   cancelations: Observable<Request>;
 }
@@ -48,7 +53,7 @@ export interface Events<Request, Response, TError> {
 export interface EffectRunner<
   Request,
   Response,
-  TError = Error,
+  TError extends Error = Error,
   TState = Response
 > extends EffectTriggerer<Request>,
     Cancelable,
@@ -61,6 +66,7 @@ export interface EffectRunner<
     matcher?: (req: Request, res: Response) => boolean
   ) => Promise<Response>;
 
+  /** Populates #state via the reducer. Meant to be called only once, before  */
   reduceWith: (
     reducer: (
       state: TState,
@@ -68,6 +74,10 @@ export interface EffectRunner<
     ) => TState,
     initial: TState
   ) => BehaviorSubject<TState>;
+
+  observe(
+    callbacks: Partial<ProcessLifecycleCallbacks<Request, Response, Error>>
+  ): Subscription;
 }
 
 export type LifecycleReducerEvent<Req, Res, Err> =
@@ -77,3 +87,21 @@ export type LifecycleReducerEvent<Req, Res, Err> =
   | { type: 'complete'; payload?: Req }
   | { type: 'error'; payload: Err }
   | { type: 'canceled'; payload?: Req };
+
+/** Callbacks corresponding to lifecycle events of a process. */
+export interface ProcessLifecycleCallbacks<TRequest, TNext, TError = Error> {
+  /** invokes the effects */
+  request: (r: TRequest) => void;
+  /** an invocation has begun */
+  started: (r: TRequest) => void;
+  /** an invocation has produced data */
+  response: (next: TNext) => void;
+  /** an invocation has terminated with an error */
+  error: (err: TError) => void;
+  /** an invocation has terminated successfully */
+  complete: (r: TRequest) => void;
+  /** an invocation was canceled by a subscriber */
+  canceled: (r: TRequest) => void;
+  /** an invocation concluded, in any fashion */
+  finalized: () => void;
+}

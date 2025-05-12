@@ -11,7 +11,7 @@ import {
   createTogglingEffect,
   shutdownAll,
 } from '../src/createEffect';
-import { EffectRunner } from '../src/types';
+import { EffectRunner, ProcessLifecycleCallbacks } from '../src/types';
 import { concat, of, throwError } from 'rxjs';
 
 const DELAY = 10;
@@ -213,6 +213,38 @@ describe('createEffect - returns a function which', () => {
         },
       ]
     `);
+  });
+
+  const spies: Partial<ProcessLifecycleCallbacks<number, number>> = {
+    request: jest.fn(),
+    started: jest.fn(),
+    response: jest.fn(),
+    complete: jest.fn(),
+    canceled: jest.fn(),
+    error: jest.fn(),
+    finalized: jest.fn(),
+  };
+
+  it('can be observed', async () => {
+    const countFx = createEffect<number, number, Error, number>((i) =>
+      after(1, () => i * 2)
+    );
+
+    countFx.observe(spies);
+    // trigger
+    countFx.request(1); // req 0
+
+    expect(spies.request).toHaveBeenCalledWith(1);
+    expect(spies.started).toHaveBeenCalledTimes(1);
+
+    await after(1);
+    expect(spies.complete).toHaveBeenCalledTimes(1);
+
+    // XXX //
+    expect(spies.finalized).toHaveBeenCalledTimes(1);
+
+    countFx(3);
+    expect(spies.request).toHaveBeenCalledWith(3);
   });
 
   describe('Effect Handler', () => {

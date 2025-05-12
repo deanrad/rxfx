@@ -26,7 +26,12 @@ import {
   takeUntil,
   tap,
 } from 'rxjs/operators';
-import { EffectRunner, EffectSource, LifecycleReducerEvent } from './types';
+import {
+  EffectRunner,
+  EffectSource,
+  LifecycleReducerEvent,
+  ProcessLifecycleCallbacks,
+} from './types';
 
 const allShutdowns = new Subject<void>();
 
@@ -44,7 +49,7 @@ export function shutdownAll() {
 export function createEffect<
   Request,
   Response = void,
-  TError = Error,
+  TError extends Error = Error,
   TState = Response
 >(
   handler: EffectSource<Request, Response>,
@@ -207,6 +212,7 @@ export function createEffect<
     isHandling,
     isActive,
     state,
+
     reduceWith(
       reducer: (
         state: TState,
@@ -233,6 +239,29 @@ export function createEffect<
       mainSub.add(events$.pipe(scan(reducer, initial)).subscribe(state));
       return state as BehaviorSubject<TState>;
     },
+    observe(fns: Partial<ProcessLifecycleCallbacks<Request, Response, Error>>) {
+      const streams = [
+        tap(fns.request ? fns.request : noop)(requests),
+        tap(fns.started ? fns.started : noop)(starts),
+        tap(fns.response ? fns.response : noop)(responses),
+        tap(fns.complete ? fns.complete : noop)(completions),
+        tap(fns.canceled ? fns.canceled : noop)(cancelations),
+        tap(fns.error ? fns.error : noop)(errors),
+      ];
+      const allEvents = merge(...streams).pipe(
+        tap({
+          finalize: fns.finalized,
+        })
+      );
+      const sub = allEvents.subscribe();
+      sub.add(
+        merge(completions, cancelations)
+          .pipe(tap(fns.finalized ?? noop))
+          .subscribe()
+      );
+
+      return sub;
+    },
   };
 
   // The first batch starts us listening
@@ -247,7 +276,7 @@ export function createEffect<
 export function createQueueingEffect<
   Request,
   Response = void,
-  TError = Error,
+  TError extends Error = Error,
   TState = Response
 >(
   handler: EffectSource<Request, Response>
@@ -261,7 +290,7 @@ export function createQueueingEffect<
 export function createSwitchingEffect<
   Request,
   Response = void,
-  TError = Error,
+  TError extends Error = Error,
   TState = Response
 >(
   handler: EffectSource<Request, Response>
@@ -276,7 +305,7 @@ export function createSwitchingEffect<
 export function createBlockingEffect<
   Request,
   Response = void,
-  TError = Error,
+  TError extends Error = Error,
   TState = Response
 >(
   handler: EffectSource<Request, Response>
@@ -291,7 +320,7 @@ export function createBlockingEffect<
 export function createTogglingEffect<
   Request,
   Response = void,
-  TError = Error,
+  TError extends Error = Error,
   TState = Response
 >(
   handler: EffectSource<Request, Response>
@@ -310,7 +339,12 @@ export const DEFAULT_DEBOUNCE_INTERVAL = 330;
 export function createThrottledEffect(
   msec: number = DEFAULT_DEBOUNCE_INTERVAL
 ) {
-  return function <Request, Response = void, TError = Error, TState = Response>(
+  return function <
+    Request,
+    Response = void,
+    TError extends Error = Error,
+    TState = Response
+  >(
     handler: EffectSource<Request, Response>
   ): EffectRunner<Request, Response, TError, TState> {
     return createEffect((args: Request) => {
@@ -332,7 +366,12 @@ export function createThrottledEffect(
 export function createDebouncedEffect(
   msec: number = DEFAULT_DEBOUNCE_INTERVAL
 ) {
-  return function <Request, Response = void, TError = Error, TState = Response>(
+  return function <
+    Request,
+    Response = void,
+    TError extends Error = Error,
+    TState = Response
+  >(
     handler: EffectSource<Request, Response>
   ): EffectRunner<Request, Response, TError, TState> {
     return createEffect((args: Request) => {
@@ -354,3 +393,5 @@ export function createCustomEffect<Request, Response>(
 ) {
   return createEffect(handler, concurrencyOperator);
 }
+
+function noop() {}
