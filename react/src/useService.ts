@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Subscription } from 'rxjs';
-import type { Service } from '@rxfx/service';
+import { Subscription, BehaviorSubject } from 'rxjs';
 import { useWhileMounted } from './useWhileMounted';
 
 type UseServiceOptions = {
@@ -8,13 +7,29 @@ type UseServiceOptions = {
   unmount?: 'cancelCurrent' | 'cancelCurrentAndQueued';
 };
 
+/** Only the bits of Service that useService actually needs */
+export interface UsableAsService<TRequest, TState, TError> {
+  /** fire off a request */
+  request(req: TRequest): void;
+  /** cancel only the in-flight request */
+  cancelCurrent(): void;
+  /** cancel in-flight + queued requests */
+  cancelCurrentAndQueued(): void;
+  /** the current value + subscription */
+  state: BehaviorSubject<TState>;
+  /** whether any handler is active */
+  isActive: BehaviorSubject<boolean>;
+  /** last error or null */
+  currentError: BehaviorSubject<TError | null>;
+}
+
 /** Provides updates to state, isActive, and currentError populated from the service.
  * Allows requesting of the service via `request`. Optionally cancels requests on unmount.
  * @param service - The service to connect to
  * @param options - Configuration including unmount behavior
  */
-export function useService<TRequest, TNext, TError, TState>(
-  service: Service<TRequest, TNext, TError, TState>,
+export function useService<TRequest, TState, TError>(
+  service: UsableAsService<TRequest, TState, TError>,
   options: UseServiceOptions = {}
 ) {
   // hook fields

@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@rxfx/bus": "workspace:^",
+    "@rxfx/effect": "workspace:^",
     "@rxfx/service": "workspace:^",
     "rxjs": "^7.8.1",
     "tslib": "^2.6.2"

@@ -4,6 +4,7 @@ import { createServiceListener } from '@rxfx/service';
 import { Bus } from '@rxfx/bus';
 import { render } from '@testing-library/react';
 import { useService } from '../src/useService';
+import { createEffect } from '@rxfx/effect';
 
 const defaultBus = new Bus<Action<any>>();
 const reducer = (c = 1.1, { type } = { type: '' }) => {
@@ -15,6 +16,10 @@ const testService = createServiceListener(
   () => {},
   () => reducer
 );
+
+const testFx = createEffect((i: num) => {
+  return [i];
+});
 
 const Wrapper = () => {
   const { request, state } = useService(testService);
@@ -41,6 +46,14 @@ describe('useService', () => {
     const result = render(React.createElement(Wrapper));
     const cnt = result.getByTestId('count');
     expect(cnt).toHaveProperty('value', '1.1');
+  });
+  it('works with an effect a hook function', async () => {
+    const FxWrapper = () => {
+      const { state } = useService(testFx);
+      return React.createElement('button', {}, 'Hello');
+    };
+
+    const result = render(React.createElement(FxWrapper));
   });
   describe('return value', () => {
     it.todo('is [request, state, isActive, currentError]');

@@ -2926,6 +2926,7 @@ __metadata:
     "@open-wc/building-rollup": ">= 1.10.0"
     "@rollup/plugin-typescript": ">= 8.2.5"
     "@rxfx/bus": "workspace:^"
+    "@rxfx/effect": "workspace:^"
     "@rxfx/service": "workspace:^"
     "@testing-library/dom": ^9.3.3
     "@testing-library/jest-dom": ^6.1.4
