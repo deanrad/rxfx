@@ -17,7 +17,7 @@ const testService = createServiceListener(
   () => reducer
 );
 
-const testFx = createEffect((i: num) => {
+const testFx = createEffect((i: number) => {
   return [i];
 });
 
@@ -49,11 +49,11 @@ describe('useService', () => {
   });
   it('works with an effect a hook function', async () => {
     const FxWrapper = () => {
-      const { state } = useService(testFx);
+      useService(testFx);
       return React.createElement('button', {}, 'Hello');
     };
 
-    const result = render(React.createElement(FxWrapper));
+    render(React.createElement(FxWrapper));
   });
   describe('return value', () => {
     it.todo('is [request, state, isActive, currentError]');
