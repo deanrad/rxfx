@@ -1,6 +1,13 @@
 # 𝗥𝘅𝑓𝑥 `effect`
-![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
 
+![package](https://img.shields.io/badge/package-@rxfx%2Feffect-blue)
+![npm version](https://img.shields.io/npm/v/@rxfx/effect.svg)
+![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
+![build passing](https://img.shields.io/badge/build-passing-brightgreen)
+
+A pure Typescript, framework agnostic, higher-order wrapper for async side-effect functions. Based on RxJS. Supports cancelation, concurrency modes (queueing, throttling, debouncing), and TypeScript.
+
+Part of the [𝗥𝘅𝑓𝑥](https://github.com/deanrad/rxfx) family of libraries.
 A Vanilla JS container for Effect Management, based on RxJS. Supports cancelation, concurrency modes (queueing, throttling, debouncing), and TypeScript.
 
 Part of the [𝗥𝘅𝑓𝑥](https://github.com/deanrad/rxfx) family of libraries.
@@ -42,7 +49,7 @@ queuedRing.cancelCurrentAndQueued(); // cancels this ring, empties the queue
 
 // Query if active now, or subscribe to all activity updates
 queuedRing.isActive.value;
-queuedRing.isActive.subscribe(fn)
+queuedRing.isActive.subscribe(fn);
 
 // The current error, or all errors
 queuedRing.currentError.value;

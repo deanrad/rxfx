@@ -14,6 +14,7 @@ import {
 } from '../src/createEffect';
 import { concat, of, Subscription, throwError } from 'rxjs';
 import { z } from 'zod/v4';
+import { ProcessLifecycleCallbacks } from '../src/types';
 
 const DELAY = 10;
 
@@ -126,7 +127,7 @@ describe('createEffect - returns a function with properties which', () => {
   it('doesnt nest handlings', () => {
     const ops = [] as string[];
 
-    const likePost = createEffect((postId: number) => {
+    const likePost = createEffect<number, void>((postId: number) => {
       ops.push(`begin ${postId}`);
       if (postId === 123) {
         likePost(234);
@@ -259,6 +260,106 @@ describe('createEffect - returns a function with properties which', () => {
 
       // we have the value now
       expect(responses).toEqual(VALUES);
+    });
+
+    it('can track state with a reducer', async () => {
+      const likePost = createEffect<number, string, Error, any[]>(
+        (postId: number) => {
+          return after(10, () => {
+            return `post liked ${postId}`;
+          });
+        }
+      );
+
+      // Supply a reducer so that likePost.state is populated
+      likePost.reduceWith((s = ['YYY'], e) => {
+        if (e.type === 'response') {
+          return [...s, e.payload];
+        }
+        return [...s, e];
+      }, []);
+      expect(likePost.state.value).toEqual([]);
+
+      likePost(123);
+      likePost(345);
+      await after(10);
+      likePost(456);
+      likePost.cancelCurrent();
+
+      expect(likePost.state.value).toMatchInlineSnapshot(`
+      [
+        {
+          "payload": 123,
+          "type": "request",
+        },
+        {
+          "payload": 123,
+          "type": "started",
+        },
+        {
+          "payload": 345,
+          "type": "request",
+        },
+        {
+          "payload": 345,
+          "type": "started",
+        },
+        "post liked 123",
+        {
+          "payload": 123,
+          "type": "complete",
+        },
+        "post liked 345",
+        {
+          "payload": 345,
+          "type": "complete",
+        },
+        {
+          "payload": 456,
+          "type": "request",
+        },
+        {
+          "payload": 456,
+          "type": "started",
+        },
+        {
+          "payload": 456,
+          "type": "canceled",
+        },
+      ]
+    `);
+    });
+
+    const spies: Partial<ProcessLifecycleCallbacks<number, number>> = {
+      request: jest.fn(),
+      started: jest.fn(),
+      response: jest.fn(),
+      complete: jest.fn(),
+      canceled: jest.fn(),
+      error: jest.fn(),
+      finalized: jest.fn(),
+    };
+
+    it('can be observed', async () => {
+      const countFx = createEffect<number, number, Error, number>((i) =>
+        after(1, () => i * 2)
+      );
+
+      countFx.observe(spies);
+      // trigger
+      countFx.request(1); // req 0
+
+      expect(spies.request).toHaveBeenCalledWith(1);
+      expect(spies.started).toHaveBeenCalledTimes(1);
+
+      await after(1);
+      expect(spies.complete).toHaveBeenCalledTimes(1);
+
+      // XXX //
+      expect(spies.finalized).toHaveBeenCalledTimes(1);
+
+      countFx(3);
+      expect(spies.request).toHaveBeenCalledWith(3);
     });
 
     describe('Errors: Do not affect caller, requests are still handled, and errors appear on #errors', () => {

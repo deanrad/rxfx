@@ -1,11 +1,16 @@
-import { BehaviorSubject, Observable, ObservableInput } from 'rxjs';
+import {
+  BehaviorSubject,
+  Observable,
+  ObservableInput,
+  Subscription,
+} from 'rxjs';
 
 /** An EffectSource is an async function, or a function with a Promise, Observable, or Iterable return value,
  * whose lifecycle events will be exposed to the EffectRunner.
  */
 export type EffectSource<Request, Response> = (
   args: Request
-) => ObservableInput<Response>;
+) => ObservableInput<Response> | void;
 
 export type EffectTriggerer<Request> = (req: Request) => void;
 
@@ -25,20 +30,19 @@ export interface Cancelable {
 
 /** The Stateful interface represents information the EffectRunner retains about previous or current effect executions.
  */
-export interface Stateful<Response, TError> {
+export interface Stateful<Response, TError, TState> {
   lastResponse: BehaviorSubject<Response | null>;
   currentError: BehaviorSubject<TError | null>;
   isHandling: BehaviorSubject<boolean>;
   isActive: BehaviorSubject<boolean>;
-  /** Reserved for future use. */
-  state: BehaviorSubject<null>;
+  state: BehaviorSubject<TState | null>;
 }
 
 /** The Events interface contains Observables that an effect triggerer may use to get updates on executions. */
 export interface Events<Request, Response, TError> {
-  errors: Observable<TError>;
-  responses: Observable<Response>;
   starts: Observable<Request>;
+  responses: Observable<Response>;
+  errors: Observable<TError>;
   completions: Observable<Request>;
   cancelations: Observable<Request>;
 }
@@ -46,16 +50,58 @@ export interface Events<Request, Response, TError> {
 /**
  * An EffectRunner is a function, enhanced with Observable properties
  */
-export interface EffectRunner<Request, Response, TError = Error>
-  extends EffectTriggerer<Request>,
+export interface EffectRunner<
+  Request,
+  Response,
+  TError extends Error = Error,
+  TState = Response
+> extends EffectTriggerer<Request>,
     Cancelable,
     Events<Request, Response, TError>,
-    Stateful<Response, TError> {
+    Stateful<Response, TError, TState> {
   request: (req: Request) => void;
 
-  /** Returns a Promise for the next result. CAUTION: In concurrent situations this is usually not what you want! */
-  send: (
+  /** Returns a Promise for the next result. CAUTION: In concurrent situations this is usually not what you want! */ send: (
     req: Request,
     matcher?: (req: Request, res: Response) => boolean
   ) => Promise<Response>;
+
+  /** Populates #state via the reducer. Meant to be called only once, before  */
+  reduceWith: (
+    reducer: (
+      state: TState,
+      evt: LifecycleReducerEvent<Request, Response, Error>
+    ) => TState,
+    initial: TState
+  ) => BehaviorSubject<TState>;
+
+  observe(
+    callbacks: Partial<ProcessLifecycleCallbacks<Request, Response, Error>>
+  ): Subscription;
+}
+
+export type LifecycleReducerEvent<Req, Res, Err> =
+  | { type: 'request'; payload: Req }
+  | { type: 'started'; payload: Req }
+  | { type: 'response'; payload: Res }
+  | { type: 'complete'; payload?: Req }
+  | { type: 'error'; payload: Err }
+  | { type: 'canceled'; payload?: Req };
+
+/** Callbacks corresponding to lifecycle events of a process. */
+export interface ProcessLifecycleCallbacks<TRequest, TNext, TError = Error> {
+  /** invokes the effects */
+  request: (r: TRequest) => void;
+  /** an invocation has begun */
+  started: (r: TRequest) => void;
+  /** an invocation has produced data */
+  response: (next: TNext) => void;
+  /** an invocation has terminated with an error */
+  error: (err: TError) => void;
+  /** an invocation has terminated successfully */
+  complete: (r: TRequest) => void;
+  /** an invocation was canceled by a subscriber */
+  canceled: (r: TRequest) => void;
+  /** an invocation concluded, in any fashion */
+  finalized: () => void;
 }
