@@ -53,6 +53,7 @@ export interface EffectRunner<Request, Response, TError = Error>
     Stateful<Response, TError> {
   request: (req: Request) => void;
 
+  /** Returns a Promise for the next result. CAUTION: In concurrent situations this is usually not what you want! */
   send: (
     req: Request,
     matcher?: (req: Request, res: Response) => boolean

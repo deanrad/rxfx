@@ -1,5 +1,5 @@
 import { makeAbortableHandler } from '../src/makeAbortableHandler';
-import { createEffect } from '@rxfx/service';
+import { createEffect } from '@rxfx/effect';
 
 describe('makeAbortableHandler', () => {
   // Drive by test just for coverage purposes

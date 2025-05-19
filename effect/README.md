@@ -1,4 +1,5 @@
 # 𝗥𝘅𝑓𝑥 `effect`
+![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
 
 A Vanilla JS container for Effect Management, based on RxJS. Supports cancelation, concurrency modes (queueing, throttling, debouncing), and TypeScript.
 

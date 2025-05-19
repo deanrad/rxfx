@@ -12,7 +12,8 @@ import {
   EffectRunner,
   shutdownAll,
 } from '../src/createEffect';
-import { concat, of, throwError } from 'rxjs';
+import { concat, of, Subscription, throwError } from 'rxjs';
+import { z } from 'zod/v4';
 
 const DELAY = 10;
 
@@ -21,12 +22,21 @@ const DELAY = 10;
  * [Immediate vs Queueing](https://chatgpt.com/share/d324a2b3-e8b6-471b-8b46-5aa0b0bc36a2)
  * [Throttled](https://chatgpt.com/share/0466b99d-77a3-4df5-85bf-1a4d464ec925)
  */
-describe('createEffect - returns a function which', () => {
-  it('calls the effect function synchronously', () => {
+describe('createEffect - returns a function with properties which', () => {
+  it('calls the wrapped fn synchronously as a function', () => {
     const fxFn = jest.fn();
     const fx = createEffect<void>(fxFn);
 
     fx();
+
+    expect(fxFn).toHaveBeenCalled();
+  });
+
+  it('calls the wrapped fn synchronously via .request()', () => {
+    const fxFn = jest.fn();
+    const fx = createEffect<void>(fxFn);
+
+    fx.request();
 
     expect(fxFn).toHaveBeenCalled();
   });
@@ -146,6 +156,25 @@ describe('createEffect - returns a function which', () => {
     // just strict sequencing.
   });
 
+  it('can provide a Promise for the next response via .send(). Not concurrency-safe!', async () => {
+    const counterFx = createEffect<number, number>((i: number) =>
+      after(DELAY, i + 1)
+    );
+    const REQ1 = 25;
+    const REQ2 = 27;
+
+    const resP = counterFx.send(REQ1);
+    const response = await resP;
+    expect(response).toBe(REQ1 + 1);
+
+    // Not concurrency-safe! Use CQRS instead or prevent concurrency
+    const res2 = counterFx.send(REQ1);
+    const res3 = counterFx.send(REQ2);
+
+    const [response2, response3] = await Promise.all([res2, res3]);
+    expect(response2).toBe(REQ1 + 1);
+    expect(response3).toBe(REQ1 + 1);
+  });
   describe('Effect Handler', () => {
     it('Can return a Promise', async () => {
       const VALUE = 1.1;
@@ -250,6 +279,45 @@ describe('createEffect - returns a function which', () => {
         expect(errs[0]).toHaveProperty('message', 'req 1 errored');
         counterFx(2);
         expect(errs[1]).toHaveProperty('message', 'req 2 errored');
+      });
+      it('Zod Request Schema Validation error', () => {
+        const Req = z.object({ reqId: z.number() });
+        type Request = z.infer<typeof Req>;
+
+        const reqFx = createEffect<Request, number>((req: Request) => {
+          Req.parse(req);
+          return Promise.resolve(314 + req.reqId);
+        });
+        reqFx?.errors.subscribe((e) => errs.push(e));
+
+        // @ts-ignore
+        reqFx({ requestId: 33 });
+        // sync validation
+        expect(errs[0]).toBeInstanceOf(z.ZodError);
+        expect(errs[0]).toHaveProperty('issues[0].message');
+      });
+
+      it('Zod Response Schema Validation error', async () => {
+        const Res = z.object({ userId: z.number() });
+        type Response = z.infer<typeof Res>;
+
+        // @ts-ignore
+        const reqFx = createEffect<number, Response>((req: number) => {
+          return Promise.resolve(req + 314).then((response) => {
+            Res.parse(response);
+            return response;
+          });
+        });
+        reqFx?.errors.subscribe((e) => errs.push(e));
+
+        reqFx(25);
+        await after(Promise.resolve());
+
+        expect(errs[0]).toBeInstanceOf(z.ZodError);
+        expect(errs[0]).toHaveProperty(
+          'issues[0].message',
+          'Invalid input: expected object, received number'
+        );
       });
 
       it('Rejected Async Promise', async () => {
@@ -610,7 +678,7 @@ describe('createQueueingEffect', () => {
     expect(liked).toEqual(['post liked 234', 'post liked 345']);
   });
 
-  it('is cancelable for whole queue', async () => {
+  it('is cancelable for whole queue with .cancelCurrentAndQueued()', async () => {
     const liked = [] as string[];
 
     const likePost = createQueueingEffect((postId: number) => {
@@ -622,6 +690,34 @@ describe('createQueueingEffect', () => {
     likePost(234);
 
     likePost.cancelCurrentAndQueued();
+
+    // The 1st would have finished
+    await after(10 + 1);
+    expect(liked).toEqual([]);
+
+    // The 2nd would have finished
+    await after(10 + 1);
+    expect(liked).toEqual([]);
+
+    // yet still requestable
+    likePost(345);
+    await after(10 + 1);
+    expect(liked).toEqual(['post liked 345']);
+  });
+
+  it('Can be canceled by being returned anywhere a Subscription would be (eg useService)', async () => {
+    const liked = [] as string[];
+
+    const likePost = createQueueingEffect((postId: number) => {
+      return after(10, () => {
+        liked.push(`post liked ${postId}`);
+      });
+    });
+    likePost(123);
+    likePost(234);
+
+    // Can be treated like one
+    (likePost as unknown as Subscription).unsubscribe();
 
     // The 1st would have finished
     await after(10 + 1);
