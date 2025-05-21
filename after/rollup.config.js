@@ -20,6 +20,13 @@ export default {
       format: 'cjs',
       sourcemap: true,
     },
+    {
+      file: './dist/rxfx-after.umd.js',
+      format: 'umd',
+      exports: 'named',
+      name: 'after',
+      sourcemap: true,
+    },
   ],
   plugins: [typescript()],
 };
