@@ -12,7 +12,7 @@ import {
   EffectRunner,
   shutdownAll,
 } from '../src/createEffect';
-import { concat, of, Subscription, throwError } from 'rxjs';
+import { concat, mergeMap, of, Subscription, throwError } from 'rxjs';
 import { z } from 'zod/v4';
 import { ProcessLifecycleCallbacks } from '../src/types';
 
@@ -268,8 +268,11 @@ describe('createEffect - returns a function with properties which', () => {
           return after(10, () => {
             return `post liked ${postId}`;
           });
-        }
+        },
+        mergeMap,
+        []
       );
+      expect(likePost.state.value).toEqual([]);
 
       // Supply a reducer so that likePost.state is populated
       likePost.reduceWith((s = ['YYY'], e) => {

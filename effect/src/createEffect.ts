@@ -53,13 +53,15 @@ export function createEffect<
   TState = Response
 >(
   handler: EffectSource<Request, Response>,
-  concurrencyOperator = mergeMap
+  concurrencyOperator = mergeMap,
+  initialState?: TState
 ): EffectRunner<Request, Response, TError, TState> {
   const errors = new Subject<TError>();
 
   const currentError = new BehaviorSubject<TError | null>(null);
   const lastResponse = new BehaviorSubject<Response | null>(null);
-  const state = new BehaviorSubject<TState | null>(null);
+  // seed `state` with initialState or null
+  const state = new BehaviorSubject<TState | null>(initialState ?? null);
 
   const incoming = new Subject<Request>();
   const requests = new Subject<Request>();
@@ -271,6 +273,21 @@ export function createEffect<
 }
 
 /** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
+ * The effect is cancelable if it returns an Observable. `createQueueingEffect` runs in concurrency mode: "immediate" aka `mergeMap`.
+ * @summary ![immediate mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-immediate-sm.png) */
+export function createImmediateEffect<
+  Request,
+  Response = void,
+  TError extends Error = Error,
+  TState = Response
+>(
+  handler: EffectSource<Request, Response>,
+  initialState?: TState
+): EffectRunner<Request, Response, TError, TState> {
+  return createEffect(handler, mergeMap, initialState);
+}
+
+/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
  * The effect is cancelable if it returns an Observable. `createQueueingEffect` runs in concurrency mode: "queueing" aka `concatMap`.
  * @summary ![queueing mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-queueing-sm.png) */
 export function createQueueingEffect<
@@ -279,9 +296,10 @@ export function createQueueingEffect<
   TError extends Error = Error,
   TState = Response
 >(
-  handler: EffectSource<Request, Response>
+  handler: EffectSource<Request, Response>,
+  initialState?: TState
 ): EffectRunner<Request, Response, TError, TState> {
-  return createEffect(handler, concatMap);
+  return createEffect(handler, concatMap, initialState);
 }
 
 /** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
@@ -293,9 +311,10 @@ export function createSwitchingEffect<
   TError extends Error = Error,
   TState = Response
 >(
-  handler: EffectSource<Request, Response>
+  handler: EffectSource<Request, Response>,
+  initialState?: TState
 ): EffectRunner<Request, Response, TError, TState> {
-  return createEffect(handler, switchMap);
+  return createEffect(handler, switchMap, initialState);
 }
 
 /** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
@@ -308,9 +327,10 @@ export function createBlockingEffect<
   TError extends Error = Error,
   TState = Response
 >(
-  handler: EffectSource<Request, Response>
+  handler: EffectSource<Request, Response>,
+  initialState?: TState
 ): EffectRunner<Request, Response, TError, TState> {
-  return createEffect(handler, exhaustMap);
+  return createEffect(handler, exhaustMap, initialState);
 }
 
 /** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
@@ -323,9 +343,10 @@ export function createTogglingEffect<
   TError extends Error = Error,
   TState = Response
 >(
-  handler: EffectSource<Request, Response>
+  handler: EffectSource<Request, Response>,
+  initialState?: TState
 ): EffectRunner<Request, Response, TError, TState> {
-  return createEffect(handler, toggleMap as typeof mergeMap);
+  return createEffect(handler, toggleMap as typeof mergeMap, initialState);
 }
 
 /** @see rxfx/perception for why this duration */
@@ -345,17 +366,22 @@ export function createThrottledEffect(
     TError extends Error = Error,
     TState = Response
   >(
-    handler: EffectSource<Request, Response>
+    handler: EffectSource<Request, Response>,
+    initialState?: TState
   ): EffectRunner<Request, Response, TError, TState> {
-    return createEffect((args: Request) => {
-      return concat(
-        // do the work up front
-        // @ts-ignore
-        handler(args),
-        // include the throttling interval
-        after(msec, EMPTY)
-      );
-    }, exhaustMap);
+    return createEffect(
+      (args: Request) => {
+        return concat(
+          // do the work up front
+          // @ts-ignore
+          handler(args),
+          // include the throttling interval
+          after(msec, EMPTY)
+        );
+      },
+      exhaustMap,
+      initialState
+    );
   };
 }
 
@@ -373,27 +399,39 @@ export function createDebouncedEffect(
     TError extends Error = Error,
     TState = Response
   >(
-    handler: EffectSource<Request, Response>
+    handler: EffectSource<Request, Response>,
+    initialState?: TState
   ): EffectRunner<Request, Response, TError, TState> {
-    return createEffect((args: Request) => {
-      return concat(
-        // wait initially
-        after(msec, EMPTY),
-        // then do the work - if not yet canceled
-        // @ts-ignore
-        handler(args)
-      );
-    }, switchMap);
+    return createEffect(
+      (args: Request) => {
+        return concat(
+          // wait initially
+          after(msec, EMPTY),
+          // then do the work - if not yet canceled
+          // @ts-ignore
+          handler(args)
+        );
+      },
+      switchMap,
+      initialState
+    );
   };
 }
+
 /** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
  * The effect is cancelable if it returns an Observable. `createCustomEffect` runs in the concurrency mode of the
  * RxJS operator it is passed as its 2nd argument */
-export function createCustomEffect<Request, Response>(
+export function createCustomEffect<
+  Request,
+  Response,
+  TError extends Error = Error,
+  TState = Response
+>(
   handler: EffectSource<Request, Response>,
-  concurrencyOperator = mergeMap
-) {
-  return createEffect(handler, concurrencyOperator);
+  concurrencyOperator = mergeMap,
+  initialState?: TState
+): EffectRunner<Request, Response, TError, TState> {
+  return createEffect(handler, concurrencyOperator, initialState);
 }
 
 function noop() {}
