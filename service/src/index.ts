@@ -3,6 +3,7 @@ export * from './createAsyncListService';
 export * from './modifyHandler';
 export * from './types';
 export * from './reducers';
+export * from './immutablyReduce';
 
 export * from '@rxfx/after';
 export * from '@rxfx/bus';
@@ -18,3 +19,4 @@ export {
   concat
 } from 'rxjs';
 export { map, tap, filter, skip, takeUntil } from 'rxjs/operators';
+

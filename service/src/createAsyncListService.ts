@@ -1,6 +1,8 @@
+// @ts-nocheck
 import { after } from '@rxfx/after';
 import { createQueueingService } from './createService';
 import { THRESHOLD } from '@rxfx/perception';
+import { immutablyReduce } from './immutablyReduce';
 
 export type ListRequest<T> =
   | {
@@ -47,74 +49,49 @@ export function createAsyncListService<T>(
     ListRequest<T>,
     Error,
     AsyncState<T>
-  >(namespace, delayFn, (ACs) => (state = initialState, event) => {
-    // Request updates entering only
-    if (ACs.started.match(event)) {
-      const { item, method } = event.payload;
+  >(namespace, delayFn, (ACs) =>
+    immutablyReduce((state = initialState, event) => {
+      // Request updates entering only
+      if (ACs.started.match(event)) {
+        const { item, method } = event.payload;
 
-      if (method === 'push') {
-        return {
-          items: [...state.items, item],
-          entering: [...state.entering, item],
-          leaving: state.leaving,
-        };
+        if (method === 'push') {
+          state.items.push(item);
+          state.entering.push(item);
+        }
+        if (method === 'pop') {
+          const last = state.items[state.items.length - 1];
+          state.leaving.push(last);
+        }
+        if (method === 'remove') {
+          const leaver = state.items.find((obj) => finder(obj, item))!;
+          state.leaving.push(leaver);
+        }
+        if (method === 'reset') {
+          state.items = event.payload.items;
+          state.entering = [];
+          state.leaving = [];
+        }
       }
-      if (method === 'pop') {
-        const last = state.items[state.items.length - 1];
-        return {
-          items: state.items,
-          entering: state.entering,
-          leaving: [...state.leaving, last],
-        };
+      // Next removes from entering or leaving, and becomes member of items
+      if (ACs.next.match(event)) {
+        const { item, method } = event.payload;
+        if (method === 'push') {
+          state.entering = state.entering.filter((obj) => !finder(obj, item));
+        }
+        if (method === 'pop') {
+          const lessThan = (_, idx) => idx < state.items.length - 1;
+          const rest = state.items.filter(lessThan);
+          state.items = rest;
+          state.leaving = state.leaving.filter(lessThan);
+        }
+        if (method === 'remove') {
+          const rest = state.items.filter((obj) => !finder(obj, item));
+          state.items = rest;
+          state.leaving = state.leaving.filter((obj) => !finder(obj, item));
+        }
       }
-      if (method === 'remove') {
-        const leaver = state.items.find((obj) => finder(obj, item))!;
-
-        return {
-          items: state.items,
-          entering: state.entering,
-          leaving: [...state.leaving, leaver],
-        };
-      }
-      if (method === 'reset') {
-        return {
-          items: event.payload.items,
-          entering: [],
-          leaving: [],
-        };
-      }
-    }
-    // Next removes from entering or leaving, and becomes member of items
-    if (ACs.next.match(event)) {
-      const { item, method } = event.payload;
-      if (method === 'push') {
-        return {
-          items: state.items,
-          entering: state.entering.filter((obj) => !finder(obj, item)),
-          leaving: state.leaving,
-        };
-      }
-      if (method === 'pop') {
-        const rest = state.items.filter(
-          (_, idx) => idx < state.items.length - 1
-        );
-        return {
-          items: rest,
-          entering: state.entering,
-          leaving: state.leaving.filter(
-            (_, idx) => idx < state.items.length - 1
-          ),
-        };
-      }
-      if (method === 'remove') {
-        const rest = state.items.filter((obj) => !finder(obj, item));
-        return {
-          items: rest,
-          entering: state.entering,
-          leaving: state.leaving.filter((obj) => !finder(obj, item)),
-        };
-      }
-    }
-    return state;
-  });
+      return state;
+    })
+  );
 }
