@@ -728,14 +728,60 @@ describe('createServiceListener', () => {
         svc.request();
         expect(statuses).toEqual([false, true]);
 
-        //
-        svc.request();
-        expect(statuses).toEqual([false, true]);
-
         // await after(ASYNC_DELAY * 3);
         await svc.onceInactive();
 
         expect(statuses).toEqual([false, true, false]); // YAY!
+      });
+    });
+
+    describe('#onceSettled', () => {
+      it('resolves after service becomes active and then inactive', async () => {
+        const statuses: boolean[] = [];
+        const svc = createServiceListener<void, string, Error>(
+          'onceSettled-immediate',
+          bus,
+          () => after(ASYNC_DELAY, '3.14')
+        );
+
+        svc.isActive.subscribe((s) => statuses.push(s));
+
+        // Start a promise that will resolve when the service settles
+        const settledPromise = svc.onceSettled();
+
+        // Service hasn't been requested yet
+        expect(statuses).toEqual([false]);
+
+        // Make the request
+        svc.request();
+        expect(statuses).toEqual([false, true]);
+
+        // Wait for the service to settle
+        await settledPromise;
+
+        // Service should have gone from inactive -> active -> inactive
+        expect(statuses).toEqual([false, true, false]);
+      });
+
+      it('acts like onceInactive when service is already active', async () => {
+        const statuses: boolean[] = [];
+        const svc = createServiceListener<void, string, Error>(
+          'onceSettled-already-active',
+          bus,
+          () => after(ASYNC_DELAY, '3.14')
+        );
+
+        svc.isActive.subscribe((s) => statuses.push(s));
+
+        // Make the request first
+        svc.request();
+        expect(statuses).toEqual([false, true]);
+
+        // Then start waiting for it to settle
+        await svc.onceSettled();
+
+        // Service should have gone from inactive -> active -> inactive
+        expect(statuses).toEqual([false, true, false]);
       });
     });
 

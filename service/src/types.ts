@@ -137,9 +137,11 @@ export interface Queryable<TRequest, TNext, TError, TState> {
   /** Indicates whether a handling is in progress. Use `.value`, or `subscribe()` for updates.  */
   isHandling: BehaviorSubject<boolean>;
   /** Contains the last error object, but becomes `null` at the start of the next handling. */
-currentError: BehaviorSubject<TError | null>;
-  /** Useful when: 1-or-more requests are made, and you want a Promise for all their successful completions.` */
+  currentError: BehaviorSubject<TError | null>;
+  /** The next time (including the present) this service is inactive. Represents the completion of an already-running service. */
   onceInactive: () => Promise<false>;
+  /** The next time isActive turns from true to false. Represents the completion of a not-yet-running service. */
+  onceSettled: () => Promise<false>;
   /** Creates an independent subscription, invoking callbacks on process lifecycle events */
   observe: (
     cbs: Partial<ProcessLifecycleCallbacks<TRequest, TNext, TError>>

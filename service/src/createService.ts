@@ -103,6 +103,14 @@ export function createServiceListener<
     ) as Promise<false>;
   };
 
+  const onceSettled = () => {
+    if (isActive.value === true) return onceInactive();
+
+    return firstValueFrom(isActive.pipe(filter(Boolean))).then(() =>
+      onceInactive()
+    );
+  };
+
   allSubscriptions.add(
     isHandling
       .asObservable()
@@ -368,6 +376,7 @@ export function createServiceListener<
     ...queries,
     isActive,
     onceInactive,
+    onceSettled,
     isHandling,
     currentError,
     observe,
