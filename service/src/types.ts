@@ -142,7 +142,15 @@ export interface Queryable<TRequest, TNext, TError, TState> {
   onceInactive: () => Promise<false>;
   /** The next time isActive turns from true to false. Represents the completion of a not-yet-running service. */
   onceSettled: () => Promise<false>;
-  /** Creates an independent subscription, invoking callbacks on process lifecycle events */
+  /** Creates an independent subscription, invoking callbacks on process lifecycle events.
+   * Caveat: Not useful for indefinitely running effects like subscriptions, as it will not resolve.
+   * @example ```
+   * const fx = createEffect(...)
+   * const whenSettled = fx.whenSettled();
+   * fx.request(...)
+   * await whenSettled
+   * ```
+   */
   observe: (
     cbs: Partial<ProcessLifecycleCallbacks<TRequest, TNext, TError>>
   ) => Subscription;

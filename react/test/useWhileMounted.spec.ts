@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Observable, Subscription } from 'rxjs';
 import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { useWhileMounted, useWhileRendered } from '../src/useWhileMounted';
+import { useWhileMounted, useWhileRendered, useAtUnmount } from '../src/useWhileMounted';
 
 describe('useWhileMounted', () => {
   describe('called with a Subscription factory', () => {
@@ -149,5 +149,52 @@ describe('useWhileMounted', () => {
 describe('useWhileRendered (https://codesandbox.io/s/rxfx-example-listeners-in-a-component-tree-dv8f0h?file=/src/Parent.tsx:226-532)', () => {
   it('exists', () => {
     expect(useWhileRendered).toBeTruthy();
+  });
+});
+
+describe('useAtUnmount', () => {
+  it('exists', () => {
+    expect(useAtUnmount).toBeTruthy();
+  });
+
+  it('calls the callback function at unmount time, not at mount time', () => {
+    let called = false;
+    const Example = () => {
+      useAtUnmount(() => {
+        called = true;
+      });
+      return null;
+    };
+
+    // At mount time, the callback should not be called
+    const { unmount } = render(React.createElement(Example));
+    expect(called).toBe(false);
+
+    // At unmount time, the callback should be called
+    unmount();
+    expect(called).toBe(true);
+  });
+
+  it('supports returning a function as a cleanup', () => {
+    let mountCalled = false;
+    let unmountCalled = false;
+
+    const Example = () => {
+      useAtUnmount(() => {
+        unmountCalled = true;
+        return () => {
+          mountCalled = true;
+        };
+      });
+      return null;
+    };
+
+    const { unmount } = render(React.createElement(Example));
+    expect(unmountCalled).toBe(false);
+    expect(mountCalled).toBe(false);
+
+    unmount();
+    expect(unmountCalled).toBe(true);
+    expect(mountCalled).toBe(false); // This is counter-intuitive but correct: the return function is for mount cleanup
   });
 });

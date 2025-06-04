@@ -3,13 +3,26 @@ import { useEffect, useMemo } from 'react';
 import { Observable, Subscription } from 'rxjs';
 
 /**
- * Ties a subscription to the lifetime of the component that calls useWhileMounted.
- * Given a function which is either a useEffect-style callback, or returns an Observable of subscription,
- * runs/subscribes it at component mount time, and runs the cleanup callback/unsubscribes at unmount time.
+ * Represents a factory function that can return an effect cleanup function,
+ * a Subscription, or an Observable
  */
-export function useWhileMounted(
-  sourceFactory: React.EffectCallback | (() => Subscription) | (() => Observable<any>)
-) {
+export type SubscriptionFactory =
+  | React.EffectCallback
+  | (() => Subscription)
+  | (() => Observable<any>);
+
+/**
+ * A function that returns a Subscription
+ */
+export type SubscriptionMaker = () => Subscription;
+
+/**
+ * Synonym for `useEffect(fn, [])`, but works with Subscriptions and Observbles.
+ * Ties a resources to the lifetime of the component that invokes it.
+ * Given a function which is either a useEffect-style callback, or returns an Observable or Subscription,
+ * runs/subscribes to sit at component mount time, and runs the cleanup callback/unsubscribes at unmount time.
+ */
+export function useWhileMounted(sourceFactory: SubscriptionFactory) {
   useEffect(() => {
     const source = sourceFactory();
     const teardown = (source as Observable<any>)?.subscribe
@@ -28,9 +41,7 @@ export function useWhileMounted(
  * Synonym for `useEffect(fn, [])`, but works with Subscriptions and Observbles.
  * An alias for `useWhileMounted`.
  */
-export function useWhenMounted(
-  sourceFactory: React.EffectCallback | (() => Subscription) | (() => Observable<any>)
-) {
+export function useWhenMounted(sourceFactory: SubscriptionFactory) {
   useWhileMounted(sourceFactory);
 }
 
@@ -38,9 +49,7 @@ export function useWhenMounted(
  * Synonym for `useEffect(fn, [])`, but works with Subscriptions and Observbles.
  * An alias for `useWhileMounted`.
  */
-export function useAtMountTime(
-  sourceFactory: React.EffectCallback | (() => Subscription) | (() => Observable<any>)
-) {
+export function useAtMountTime(sourceFactory: SubscriptionFactory) {
   useWhileMounted(sourceFactory);
 }
 
@@ -49,7 +58,7 @@ export function useAtMountTime(
  * Given spread args of subscription-returning functions, gets the subscriptions from each
  * subscription factory at component mount time, and unsubscribes them all at unmount time.
  */
-export function useAllWhileMounted(...subFactories: Array<() => Subscription>) {
+export function useAllWhileMounted(...subFactories: SubscriptionMaker[]) {
   useEffect(() => {
     const allSubs = new Subscription();
     for (let subFactory of subFactories) {
@@ -66,8 +75,27 @@ export function useAllWhileMounted(...subFactories: Array<() => Subscription>) {
  * it renders the children - that's what useWhileRendered is for.
  * @example `useWhileRendered(() => bus.listen(CHILD_EVENT.match, log))`
  */
-export function useWhileRendered(listenerMaker: () => Subscription) {
+export function useWhileRendered(listenerMaker: SubscriptionMaker) {
   // invoke the listenerMaker once, immediately
   const sub = useMemo(() => listenerMaker(), []);
   useWhileMounted(() => sub);
+}
+
+/**
+ * Executes a callback function when the component unmounts.
+ * Useful for cleanup operations that need to run only at unmount time.
+ *
+ * @example
+ * ```
+ * useAtUnmount(() => {
+ *   analytics.trackComponentClosed();
+ *   return saveUserState();
+ * });
+ * ```
+ */
+export function useAtUnmount(unmountCallback: () => void) {
+  useWhileMounted(() => {
+    // Return the callback to be executed at unmount time
+    return unmountCallback;
+  });
 }
