@@ -80,6 +80,8 @@ export function createEffect<
   const singleRequestHandler = (request: Request) => {
     let oneResult: any = [];
 
+    currentError.next(null);
+
     try {
       oneResult = handler(request);
     } catch (e) {
@@ -202,6 +204,7 @@ export function createEffect<
     },
     shutdown: shutdownSelf,
     // Events
+    requests: incoming.asObservable(),
     errors: errors.asObservable(),
     responses: responses.asObservable(),
     starts: starts.asObservable(),
@@ -243,7 +246,7 @@ export function createEffect<
     },
     observe(fns: Partial<ProcessLifecycleCallbacks<Request, Response, Error>>) {
       const streams = [
-        tap(fns.request ? fns.request : noop)(requests),
+        tap(fns.request ? fns.request : noop)(incoming),
         tap(fns.started ? fns.started : noop)(starts),
         tap(fns.response ? fns.response : noop)(responses),
         tap(fns.complete ? fns.complete : noop)(completions),

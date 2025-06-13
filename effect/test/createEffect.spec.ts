@@ -223,7 +223,7 @@ describe('createEffect - returns a function with properties which', () => {
       expect(responses).toEqual([VALUE]);
     });
 
-    it('Can return an Observable (async, multiple)', async () => {
+    it('Can return an Observable (async, multiple) ⭐️', async () => {
       const VALUE = 1.2;
       const DELAY = 1;
       const handler = jest
@@ -290,60 +290,61 @@ describe('createEffect - returns a function with properties which', () => {
       likePost.cancelCurrent();
 
       expect(likePost.state.value).toMatchInlineSnapshot(`
-      [
-        {
-          "payload": 123,
-          "type": "request",
-        },
-        {
-          "payload": 123,
-          "type": "started",
-        },
-        {
-          "payload": 345,
-          "type": "request",
-        },
-        {
-          "payload": 345,
-          "type": "started",
-        },
-        "post liked 123",
-        {
-          "payload": 123,
-          "type": "complete",
-        },
-        "post liked 345",
-        {
-          "payload": 345,
-          "type": "complete",
-        },
-        {
-          "payload": 456,
-          "type": "request",
-        },
-        {
-          "payload": 456,
-          "type": "started",
-        },
-        {
-          "payload": 456,
-          "type": "canceled",
-        },
-      ]
-    `);
+              [
+                {
+                  "payload": 123,
+                  "type": "request",
+                },
+                {
+                  "payload": 123,
+                  "type": "started",
+                },
+                {
+                  "payload": 345,
+                  "type": "request",
+                },
+                {
+                  "payload": 345,
+                  "type": "started",
+                },
+                "post liked 123",
+                {
+                  "payload": 123,
+                  "type": "complete",
+                },
+                "post liked 345",
+                {
+                  "payload": 345,
+                  "type": "complete",
+                },
+                {
+                  "payload": 456,
+                  "type": "request",
+                },
+                {
+                  "payload": 456,
+                  "type": "started",
+                },
+                {
+                  "payload": 456,
+                  "type": "canceled",
+                },
+              ]
+          `);
     });
 
+    const calls = [] as { type: string; arg: number }[];
     const spies: Partial<ProcessLifecycleCallbacks<number, number>> = {
-      request: jest.fn(),
-      started: jest.fn(),
-      response: jest.fn(),
-      complete: jest.fn(),
-      canceled: jest.fn(),
-      error: jest.fn(),
-      finalized: jest.fn(),
+      request: jest.fn((arg) => calls.push({ type: 'request', arg })),
+      started: jest.fn((arg) => calls.push({ type: 'started', arg })),
+      response: jest.fn((arg) => calls.push({ type: 'response', arg })),
+      complete: jest.fn((arg) => calls.push({ type: 'complete', arg })),
+      canceled: jest.fn((arg) => calls.push({ type: 'canceled', arg })),
+      error: jest.fn((arg) => calls.push({ type: 'error', arg })),
+      finalized: jest.fn((arg) => calls.push({ type: 'finalized', arg })),
     };
 
-    it('can be observed', async () => {
+    it('can be observed (request shouldnt lag started', async () => {
       const countFx = createEffect<number, number, Error, number>((i) =>
         after(1, () => i * 2)
       );
@@ -363,6 +364,39 @@ describe('createEffect - returns a function with properties which', () => {
 
       countFx(3);
       expect(spies.request).toHaveBeenCalledWith(3);
+
+      expect(calls).toMatchInlineSnapshot(`
+        [
+          {
+            "arg": 1,
+            "type": "request",
+          },
+          {
+            "arg": 1,
+            "type": "started",
+          },
+          {
+            "arg": 2,
+            "type": "response",
+          },
+          {
+            "arg": 1,
+            "type": "complete",
+          },
+          {
+            "arg": 1,
+            "type": "finalized",
+          },
+          {
+            "arg": 3,
+            "type": "request",
+          },
+          {
+            "arg": 3,
+            "type": "started",
+          },
+        ]
+      `);
     });
 
     describe('Errors: Do not affect caller, requests are still handled, and errors appear on #errors', () => {
@@ -477,57 +511,37 @@ describe('createEffect - returns a function with properties which', () => {
             'message',
             'req 1 errored'
           );
+
+          // TODO: Test that the error is cleared by the next start
+          counterFx(2);
+          expect(counterFx?.currentError.value).toBeNull();
         });
-        it.todo('Is cleared by the next start');
       });
     });
   });
+  describe('Observable properties', () => {
+    it('#lastResponse', async () => {
+      const likePost = createEffect((postId: number) => {
+        return after(10, () => {
+          return `post liked ${postId}`;
+        });
+      });
 
-  // describe('Observable properties', () => {
-  //   it('#responses', async () => {
-  //     const likePost = createEffect((postId: number) => {
-  //       return after(10, () => {
-  //         return `post liked ${postId}`;
-  //       });
-  //     });
+      likePost(123);
 
-  //     const responses = makeArray(likePost.responses);
+      // When both are done
+      await after(10);
 
-  //     likePost(123);
-  //     likePost(234);
+      expect(likePost.lastResponse.value).toBe('post liked 123');
+    });
 
-  //     // When both are done
-  //     await after(10);
+    it.todo('exposes requests');
+    it.todo('exposes starts');
+    it.todo('exposes completions');
+    it.todo('exposes errors');
+    it.todo('exposes cancelations');
+  })
 
-  //     // We have seen these responses
-  //     expect(responses).toMatchInlineSnapshot(`
-  //     [
-  //       "post liked 123",
-  //       "post liked 234",
-  //     ]
-  //   `);
-  //   });
-
-  //   it('#lastResponse', async () => {
-  //     const likePost = createEffect((postId: number) => {
-  //       return after(10, () => {
-  //         return `post liked ${postId}`;
-  //       });
-  //     });
-
-  //     likePost(123);
-
-  //     // When both are done
-  //     await after(10);
-
-  //     expect(likePost.lastResponse.value).toBe('post liked 123');
-  //   });
-
-  //   it.todo('exposes starts');
-  //   it.todo('exposes completions');
-  //   it.todo('exposes errors');
-  //   it.todo('exposes cancelations');
-  // });
 
   // // TODO Repeat test for each mode
   // describe('#isHandling', () => {

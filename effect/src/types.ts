@@ -40,6 +40,7 @@ export interface Stateful<Response, TError, TState> {
 
 /** The Events interface contains Observables that an effect triggerer may use to get updates on executions. */
 export interface Events<Request, Response, TError> {
+  requests: Observable<Request>;
   starts: Observable<Request>;
   responses: Observable<Response>;
   errors: Observable<TError>;
