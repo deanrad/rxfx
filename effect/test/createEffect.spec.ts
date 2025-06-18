@@ -5,12 +5,14 @@ import {
   createCustomEffect,
   createDebouncedEffect,
   createEffect,
+  createImmediateEffect,
   createQueueingEffect,
   createSwitchingEffect,
   createThrottledEffect,
   createTogglingEffect,
   EffectRunner,
   shutdownAll,
+  trace,
 } from '../src/createEffect';
 import { concat, mergeMap, of, Subscription, throwError } from 'rxjs';
 import { z } from 'zod/v4';
@@ -344,7 +346,7 @@ describe('createEffect - returns a function with properties which', () => {
       finalized: jest.fn((arg) => calls.push({ type: 'finalized', arg })),
     };
 
-    it('can be observed (request shouldnt lag started', async () => {
+    it('can be observed (request shouldnt lag started)', async () => {
       const countFx = createEffect<number, number, Error, number>((i) =>
         after(1, () => i * 2)
       );
@@ -540,134 +542,133 @@ describe('createEffect - returns a function with properties which', () => {
     it.todo('exposes completions');
     it.todo('exposes errors');
     it.todo('exposes cancelations');
-  })
+  });
 
+  describe('#isHandling', () => {
+    let asyncHandler, asyncService;
 
-  // // TODO Repeat test for each mode
-  // describe('#isHandling', () => {
-  //   let asyncHandler, asyncService;
+    beforeEach(() => {
+      asyncHandler = jest.fn(() => {
+        return after(DELAY, '3.14');
+      });
+      asyncService = createEffect(asyncHandler);
+    });
 
-  //   beforeEach(() => {
-  //     asyncHandler = jest.fn(() => {
-  //       return after(DELAY, '3.14');
-  //     });
-  //     asyncService = createEffect(asyncHandler);
-  //   });
+    it('initially is false', () => {
+      expect(asyncService.isHandling.value).toBeFalsy();
+    });
 
-  //   it('initially is false', () => {
-  //     expect(asyncService.isHandling.value).toBeFalsy();
-  //   });
+    it('becomes true when a handler is in-flight', async () => {
+      asyncService();
 
-  //   it('becomes true when a handler is in-flight', async () => {
-  //     asyncService();
+      expect(asyncHandler).toHaveBeenCalled();
+      expect(asyncService.isHandling.value).toBeTruthy();
 
-  //     expect(asyncHandler).toHaveBeenCalled();
-  //     expect(asyncService.isHandling.value).toBeTruthy();
+      await after(DELAY);
+      expect(asyncService.isHandling.value).toBeFalsy();
+    });
 
-  //     await after(DELAY);
-  //     expect(asyncService.isHandling.value).toBeFalsy();
-  //   });
+    it('doesnt immediately repeat values', () => {
+      const statuses = [];
+      asyncService.isHandling.subscribe((s) => statuses.push(s));
 
-  //   it('doesnt immediately repeat values', () => {
-  //     const statuses = makeArray(asyncService.isHandling);
+      asyncService();
+      // trigger again
+      asyncService();
 
-  //     asyncService();
-  //     // trigger again
-  //     asyncService();
+      // no double true
+      expect(statuses).toEqual([false, true]);
+    });
 
-  //     // no double true
-  //     expect(statuses).toEqual([false, true]);
-  //   });
+    describe('Mode: Queueing', () => {
+      it('toggles on and off across handlings', async () => {
+        const statuses: boolean[] = [];
+        const fx = createQueueingEffect<void>(() => after(DELAY, '3.14'));
 
-  //   describe('Mode: Queueing', () => {
-  //     it('toggles on and off across handlings', async () => {
-  //       const statuses: boolean[] = [];
-  //       const fx = createQueueingEffect<void>(() => after(DELAY, '3.14'));
+        fx.isHandling.subscribe((s) => statuses.push(s));
+        expect(statuses).toEqual([false]);
 
-  //       fx.isHandling.subscribe((s) => statuses.push(s));
-  //       expect(statuses).toEqual([false]);
+        fx();
+        expect(statuses).toEqual([false, true]);
 
-  //       fx();
-  //       expect(statuses).toEqual([false, true]);
+        // queue another
+        fx();
+        expect(statuses).toEqual([false, true]);
+        await after(DELAY * 3);
 
-  //       // queue another
-  //       fx();
-  //       expect(statuses).toEqual([false, true]);
-  //       await after(DELAY * 3);
+        expect(statuses).toEqual([false, true, false, true, false]);
+      });
+    });
 
-  //       expect(statuses).toEqual([false, true, false, true, false]);
-  //     });
-  //   });
+    it('has a final value of false on a shutdown', () => {
+      const statuses: boolean[] = [];
+      const fx = createQueueingEffect<void>(() => after(DELAY, '3.14'));
 
-  //   it('has a final value of false on a shutdown', () => {
-  //     const statuses: boolean[] = [];
-  //     const fx = createQueueingEffect<void>(() => after(DELAY, '3.14'));
+      fx.isHandling.subscribe((s) => statuses.push(s));
+      expect(statuses).toEqual([false]);
 
-  //     fx.isHandling.subscribe((s) => statuses.push(s));
-  //     expect(statuses).toEqual([false]);
+      fx();
+      expect(statuses).toEqual([false, true]);
+      fx.shutdown();
 
-  //     fx();
-  //     expect(statuses).toEqual([false, true]);
-  //     fx.shutdown();
+      expect(statuses).toEqual([false, true, false]);
+    });
 
-  //     expect(statuses).toEqual([false, true, false]);
-  //   });
+    // it.skip('has a final value of false on a shutdownAll', () => {
+    //   const fx = createQueueingEffect<void>(() => after(DELAY, '3.14'));
 
-  //   // it.skip('has a final value of false on a shutdownAll', () => {
-  //   //   const fx = createQueueingEffect<void>(() => after(DELAY, '3.14'));
+    //   const statuses = makeArray(fx.isHandling) as boolean[];
+    //   fx.isHandling.subscribe((s) => statuses.push(s));
 
-  //   //   const statuses = makeArray(fx.isHandling) as boolean[];
-  //   //   fx.isHandling.subscribe((s) => statuses.push(s));
+    //   fx();
+    //   expect(statuses).toEqual([false, true]);
+    //   shutdownAll();
 
-  //   //   fx();
-  //   //   expect(statuses).toEqual([false, true]);
-  //   //   shutdownAll();
+    //   expect(statuses).toEqual([false, true, false]);
+    // });
+  });
 
-  //   //   expect(statuses).toEqual([false, true, false]);
-  //   // });
-  // });
+  describe('#isActive', () => {
+    it('is like #isHandling usually', async () => {
+      const statuses: boolean[] = [];
+      const effect = createEffect<void, string>(() => after(DELAY, '3.14'));
 
-  // describe('#isActive', () => {
-  //   it('is like #isHandling usually', async () => {
-  //     const statuses: boolean[] = [];
-  //     const effect = createEffect<void, string>(() => after(DELAY, '3.14'));
+      effect.isActive.subscribe((s) => statuses.push(s));
+      expect(statuses).toEqual([false]);
 
-  //     effect.isActive.subscribe((s) => statuses.push(s));
-  //     expect(statuses).toEqual([false]);
+      effect();
+      expect(statuses).toEqual([false, true]);
 
-  //     effect();
-  //     expect(statuses).toEqual([false, true]);
+      effect();
+      expect(statuses).toEqual([false, true]);
+      await after(DELAY * 3);
 
-  //     effect();
-  //     expect(statuses).toEqual([false, true]);
-  //     await after(DELAY * 3);
+      expect(statuses).toEqual([false, true, false]); // YAY!
+    });
 
-  //     expect(statuses).toEqual([false, true, false]); // YAY!
-  //   });
+    describe('Mode: Queueing', () => {
+      it('stays "true" across handlings', async () => {
+        const statuses: boolean[] = [];
+        const effect = createQueueingEffect<void, string>(() =>
+          after(DELAY, '3.14')
+        );
 
-  //   describe('Mode: Queueing', () => {
-  //     it('stays "true" across handlings', async () => {
-  //       const statuses: boolean[] = [];
-  //       const effect = createQueueingEffect<void, string>(() =>
-  //         after(DELAY, '3.14')
-  //       );
+        effect.isActive.subscribe((s) => statuses.push(s));
+        expect(statuses).toEqual([false]);
 
-  //       effect.isActive.subscribe((s) => statuses.push(s));
-  //       expect(statuses).toEqual([false]);
+        effect();
+        expect(statuses).toEqual([false, true]);
 
-  //       effect();
-  //       expect(statuses).toEqual([false, true]);
+        effect();
+        expect(statuses).toEqual([false, true]);
+        await after(DELAY * 3);
 
-  //       effect();
-  //       expect(statuses).toEqual([false, true]);
-  //       await after(DELAY * 3);
-
-  //       // Note - not [false, true, false, true, false] - stays active
-  //       // while moving to the next in the queue
-  //       expect(statuses).toEqual([false, true, false]);
-  //     });
-  //   });
-  // });
+        // Note - not [false, true, false, true, false] - stays active
+        // while moving to the next in the queue
+        expect(statuses).toEqual([false, true, false]);
+      });
+    });
+  });
 
   // describe('#send', () => {
   //   const REQ1 = 1;
@@ -874,6 +875,115 @@ describe('createSwitchingEffect', () => {
   });
 });
 
+describe('createQueueingEffect', () => {
+  it('runs queued', async () => {
+    const liked = [] as string[];
+
+    const likePost = createQueueingEffect((postId: number) => {
+      return after(10, () => {
+        liked.push(`post liked ${postId}`);
+      });
+    });
+    likePost(123);
+    likePost(234);
+
+    // The first has finished, the second was queued
+    await after(10 + 1);
+    expect(liked).toMatchInlineSnapshot(`
+      [
+        "post liked 123",
+      ]
+    `);
+
+    // now done
+    await after(10 + 1);
+    expect(liked).toMatchInlineSnapshot(`
+      [
+        "post liked 123",
+        "post liked 234",
+      ]
+    `);
+  });
+
+  it('is cancelable singly', async () => {
+    const liked = [] as string[];
+
+    const likePost = createQueueingEffect((postId: number) => {
+      return after(10, () => {
+        liked.push(`post liked ${postId}`);
+      });
+    });
+    likePost(123);
+    likePost(234);
+
+    likePost.cancelCurrent();
+
+    // The first has finished, the second was queued
+    await after(10 + 1);
+    expect(liked).toEqual(['post liked 234']);
+
+    // yet still requestable
+    likePost(345);
+    await after(10 + 1);
+    expect(liked).toEqual(['post liked 234', 'post liked 345']);
+  });
+
+  it('is cancelable for whole queue with .cancelCurrentAndQueued()', async () => {
+    const liked = [] as string[];
+
+    const likePost = createQueueingEffect((postId: number) => {
+      return after(10, () => {
+        liked.push(`post liked ${postId}`);
+      });
+    });
+    likePost(123);
+    likePost(234);
+
+    likePost.cancelCurrentAndQueued();
+
+    // The 1st would have finished
+    await after(10 + 1);
+    expect(liked).toEqual([]);
+
+    // The 2nd would have finished
+    await after(10 + 1);
+    expect(liked).toEqual([]);
+
+    // yet still requestable
+    likePost(345);
+    await after(10 + 1);
+    expect(liked).toEqual(['post liked 345']);
+  });
+
+  it('Can be canceled by being returned anywhere a Subscription would be (eg useService)', async () => {
+    const liked = [] as string[];
+
+    const likePost = createQueueingEffect((postId: number) => {
+      return after(10, () => {
+        liked.push(`post liked ${postId}`);
+      });
+    });
+    likePost(123);
+    likePost(234);
+
+    // Can be treated like one
+    (likePost as unknown as Subscription).unsubscribe();
+
+    // The 1st would have finished
+    await after(10 + 1);
+    expect(liked).toEqual([]);
+
+    // The 2nd would have finished
+    await after(10 + 1);
+    expect(liked).toEqual([]);
+
+    // yet still requestable
+    likePost(345);
+    await after(10 + 1);
+    expect(liked).toEqual(['post liked 345']);
+  });
+});
+
 describe('createDebouncedEffect', () => {
   it('runs debounced', async () => {
     const liked = [] as string[];
@@ -976,4 +1086,62 @@ describe('createCustomEffect', () => {
 
     likeIt(2718);
   });
+});
+
+describe('createImmediateEffect', () => {
+  it('runs can be called', async () => {
+    const likePost = createImmediateEffect((postId: number) => {
+      return after(10, () => {
+        liked.push(`post liked ${postId}`);
+      });
+    });
+    likePost(123);
+  });
+});
+
+// export function trace(
+//   effect,
+//   prefix = "rxfx-" + generateId(),
+//   fn = console.log
+// ) {
+//   return effect.observe({
+//     request: fn.bind(null, `${prefix}/request`),
+//     started: fn.bind(null, `${prefix}/started`),
+//     response: fn.bind(null, `${prefix}/next`),
+//     error: fn.bind(null, `${prefix}/error`),
+//     complete: fn.bind(null, `${prefix}/complete`),
+//     canceled: fn.bind(null, `${prefix}/canceled`),
+//   });
+// }
+describe('trace', () => {
+  const events = [] as any[];
+  const likePost = createImmediateEffect((postId: number) => {
+    return after(0, postId);
+  });
+  // trace(likePost, 'post/like', events.push.bind(events));
+  trace(likePost, 'post/like', (prefix, payload) =>
+    events.push([prefix, payload])
+  );
+
+  likePost(123);
+  expect(events).toMatchInlineSnapshot(`
+    [
+      [
+        "post/like/request",
+        123,
+      ],
+      [
+        "post/like/started",
+        123,
+      ],
+      [
+        "post/like/next",
+        123,
+      ],
+      [
+        "post/like/complete",
+        123,
+      ],
+    ]
+  `);
 });

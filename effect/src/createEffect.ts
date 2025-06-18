@@ -438,3 +438,21 @@ export function createCustomEffect<
 }
 
 function noop() {}
+
+/** Sends every ProcessLifecycleEvent of an effect into a given function, in positional argument order.
+ * Example: trace(chatFx) // console.log('chatFx/request', 123);
+ */
+export function trace(
+  effect: EffectRunner<any, any, any, any>,
+  prefix = 'rxfx',
+  fn = console.log
+) {
+  return effect.observe({
+    request: fn.bind(null, `${prefix}/request`),
+    started: fn.bind(null, `${prefix}/started`),
+    response: fn.bind(null, `${prefix}/next`),
+    error: fn.bind(null, `${prefix}/error`),
+    complete: fn.bind(null, `${prefix}/complete`),
+    canceled: fn.bind(null, `${prefix}/canceled`),
+  });
+}
