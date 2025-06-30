@@ -59,4 +59,8 @@ describe('useService', () => {
     it.todo('is [request, state, isActive, currentError]');
   });
   it.todo('subscribes to #state and #isActive');
+
+  describe('#isLoading', () => {
+    it.todo('is true until the first response, or finalization');
+  });
 });
