@@ -534,7 +534,7 @@ describe('createEffect - returns a function with properties which', () => {
       // When both are done
       await after(10);
 
-      expect(likePost.lastResponse.value).toBe('post liked 123');
+      expect(likePost.lastResponse.value).toBe(`post liked 123`);
     });
 
     it.todo('exposes requests');
@@ -1144,4 +1144,97 @@ describe('trace', () => {
       ],
     ]
   `);
+});
+
+describe('reset', () => {
+  it('resets state to initial value', async () => {
+    const initialState = { count: 0 };
+    const counterFx = createEffect<number, number, Error, { count: number }>(
+      (i: number) => after(5, i),
+      mergeMap,
+      initialState
+    );
+
+    // Set up reducer to track the count
+    counterFx.reduceWith((state, event) => {
+      if (event.type === 'response') {
+        return { count: state.count + event.payload };
+      }
+      return state;
+    }, initialState);
+
+    // Initial state check
+    expect(counterFx.state.value).toEqual(initialState);
+
+    // Execute effect to update state
+    await counterFx.send(5);
+    await counterFx.send(10);
+
+    // State should be updated
+    expect(counterFx.state.value).toEqual({ count: 15 });
+
+    // Reset the effect
+    counterFx.reset();
+
+    // State should be restored to initial value
+    expect(counterFx.state.value).toEqual(initialState);
+  });
+
+  it('cancels current operations', async () => {
+    const operations = [] as string[];
+    const longFx = createEffect<number, string>((i: number) => {
+      return after(20, () => {
+        const result = `processed ${i}`;
+        operations.push(result);
+        return result;
+      });
+    });
+
+    // Start a long-running operation
+    longFx(123);
+
+    // Reset should cancel the current operation
+    longFx.reset();
+
+    // Wait enough time for the operation to have completed if not canceled
+    await after(30);
+
+    // The operation should have been canceled
+    expect(operations).toEqual([]);
+
+    // But the effect should still be usable
+    longFx(456);
+    await after(30);
+    expect(operations).toEqual(['processed 456']);
+  });
+
+  it('cancels queued operations', async () => {
+    const operations = [] as string[];
+    const queuedFx = createQueueingEffect<number, string>((i: number) => {
+      return after(10, () => {
+        const result = `processed ${i}`;
+        operations.push(result);
+        return result;
+      });
+    });
+
+    // Queue multiple operations
+    queuedFx(1);
+    queuedFx(2);
+    queuedFx(3);
+
+    // Reset should cancel all queued operations
+    queuedFx.reset();
+
+    // Wait enough time for all operations to have completed if not canceled
+    await after(40);
+
+    // No operations should have completed
+    expect(operations).toEqual([]);
+
+    // But the effect should still be usable
+    queuedFx(4);
+    await after(15);
+    expect(operations).toEqual(['processed 4']);
+  });
 });

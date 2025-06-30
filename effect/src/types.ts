@@ -79,6 +79,8 @@ export interface EffectRunner<
   observe(
     callbacks: Partial<ProcessLifecycleCallbacks<Request, Response, Error>>
   ): Subscription;
+
+  reset(): void;
 }
 
 export type LifecycleReducerEvent<Req, Res, Err> =

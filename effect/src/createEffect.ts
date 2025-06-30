@@ -202,6 +202,11 @@ export function createEffect<
     unsubscribe() {
       batch.next();
     },
+    reset() {
+      batch.next();
+      // @ts-expect-error
+      state.next(initialState);
+    },
     shutdown: shutdownSelf,
     // Events
     requests: incoming.asObservable(),
