@@ -11,6 +11,7 @@ import {
   merge,
   of,
   firstValueFrom,
+  Subscription,
 } from 'rxjs';
 import {
   catchError,
@@ -114,6 +115,9 @@ export function createEffect<
     concatMap(h => h)
   ).subscribe();
 
+  let stateSub: Subscription;
+  let _reducer: unknown;
+
   // The main driver of EffectSource execution
   // prettier-ignore
   const handlerSub = batch.pipe(
@@ -204,6 +208,11 @@ export function createEffect<
     },
     reset() {
       batch.next();
+      if (_reducer) {
+        stateSub.unsubscribe();
+        // @ts-expect-error
+        this.reduceWith(_reducer, initialState);
+      }
       // @ts-expect-error
       state.next(initialState);
     },
@@ -230,6 +239,7 @@ export function createEffect<
       ) => TState,
       initial: TState
     ) {
+      _reducer = reducer; // save to resubscribe after reset
       const events$ = merge(
         incoming.pipe(
           map((payload) => ({ type: 'request' as const, payload }))
@@ -246,7 +256,8 @@ export function createEffect<
         )
       );
       state.next(initial);
-      mainSub.add(events$.pipe(scan(reducer, initial)).subscribe(state));
+      stateSub = events$.pipe(scan(reducer, initial)).subscribe(state);
+      mainSub.add(stateSub);
       return state as BehaviorSubject<TState>;
     },
     observe(fns: Partial<ProcessLifecycleCallbacks<Request, Response, Error>>) {

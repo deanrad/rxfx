@@ -1146,7 +1146,7 @@ describe('trace', () => {
   `);
 });
 
-describe('reset', () => {
+describe('#reset', () => {
   it('resets state to initial value', async () => {
     const initialState = { count: 0 };
     const counterFx = createEffect<number, number, Error, { count: number }>(
@@ -1208,7 +1208,7 @@ describe('reset', () => {
     expect(operations).toEqual(['processed 456']);
   });
 
-  it('cancels queued operations', async () => {
+  it('stays reset after next request', async () => {
     const operations = [] as string[];
     const queuedFx = createQueueingEffect<number, string>((i: number) => {
       return after(10, () => {
@@ -1216,25 +1216,25 @@ describe('reset', () => {
         operations.push(result);
         return result;
       });
+    }, []);
+
+    queuedFx.reduceWith((state = [], event) => {
+      if (event.type === 'request') {
+        return [...state, event.payload];
+      }
+      return state;
     });
 
-    // Queue multiple operations
+    // Call it
     queuedFx(1);
+    await after(10);
+    expect(queuedFx.state.value).toEqual([1]);
+
+    queuedFx.reset();
+    expect(queuedFx.state.value).toEqual([]); // reset
     queuedFx(2);
     queuedFx(3);
-
-    // Reset should cancel all queued operations
-    queuedFx.reset();
-
-    // Wait enough time for all operations to have completed if not canceled
-    await after(40);
-
-    // No operations should have completed
-    expect(operations).toEqual([]);
-
-    // But the effect should still be usable
-    queuedFx(4);
-    await after(15);
-    expect(operations).toEqual(['processed 4']);
+    await after(10);
+    expect(queuedFx.state.value).toEqual([2, 3]);
   });
 });
