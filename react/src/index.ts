@@ -7,3 +7,4 @@ export * from './useClosureHandlers';
 export * from './stabilityHooks';
 export * from './useMyMountEvent';
 export * from './useSubject';
+export * from './useTrace';
