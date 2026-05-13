@@ -149,6 +149,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@babel/helper-annotate-as-pure@npm:^7.27.3":
+  version: 7.27.3
+  resolution: "@babel/helper-annotate-as-pure@npm:7.27.3"
+  dependencies:
+    "@babel/types": ^7.27.3
+  checksum: 63863a5c936ef82b546ca289c9d1b18fabfc24da5c4ee382830b124e2e79b68d626207febc8d4bffc720f50b2ee65691d7d12cc0308679dee2cd6bdc926b7190
+  languageName: node
+  linkType: hard
+
 "@babel/helper-compilation-targets@npm:^7.17.7, @babel/helper-compilation-targets@npm:^7.22.6":
   version: 7.22.6
   resolution: "@babel/helper-compilation-targets@npm:7.22.6"
@@ -204,6 +213,23 @@ __metadata:
   peerDependencies:
     "@babel/core": ^7.0.0
   checksum: 406954b455e5b20924e7d1b41cf932e6e98e95c3a5224c7a70c3ad96a84e8fbde915ceff7ddbf9c7d121397c4e9274f061241648475122cf6fe54e0a95caae15
+  languageName: node
+  linkType: hard
+
+"@babel/helper-create-class-features-plugin@npm:^7.28.6":
+  version: 7.29.3
+  resolution: "@babel/helper-create-class-features-plugin@npm:7.29.3"
+  dependencies:
+    "@babel/helper-annotate-as-pure": ^7.27.3
+    "@babel/helper-member-expression-to-functions": ^7.28.5
+    "@babel/helper-optimise-call-expression": ^7.27.1
+    "@babel/helper-replace-supers": ^7.28.6
+    "@babel/helper-skip-transparent-expression-wrappers": ^7.27.1
+    "@babel/traverse": ^7.29.0
+    semver: ^6.3.1
+  peerDependencies:
+    "@babel/core": ^7.0.0
+  checksum: ed7e755d83a59679ea9554b733e2f4b41fd1dd68ef4d8d3e5009930d8ff323f7aabdb8577abea0d98e5cc62a7ce5d14aca501e4446ccfe397c6c2fa3d8164f4b
   languageName: node
   linkType: hard
 
@@ -290,6 +316,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@babel/helper-member-expression-to-functions@npm:^7.28.5":
+  version: 7.28.5
+  resolution: "@babel/helper-member-expression-to-functions@npm:7.28.5"
+  dependencies:
+    "@babel/traverse": ^7.28.5
+    "@babel/types": ^7.28.5
+  checksum: 447d385233bae2eea713df1785f819b5a5ca272950740da123c42d23f491045120f0fbbb5609c091f7a9bbd40f289a442846dde0cb1bf0c59440fa093690cf7c
+  languageName: node
+  linkType: hard
+
 "@babel/helper-module-imports@npm:^7.0.0, @babel/helper-module-imports@npm:^7.10.4, @babel/helper-module-imports@npm:^7.18.6, @babel/helper-module-imports@npm:^7.22.5":
   version: 7.22.5
   resolution: "@babel/helper-module-imports@npm:7.22.5"
@@ -361,6 +397,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@babel/helper-plugin-utils@npm:^7.28.6":
+  version: 7.28.6
+  resolution: "@babel/helper-plugin-utils@npm:7.28.6"
+  checksum: a0b4caab5e2180b215faa4d141ceac9e82fad9d446b8023eaeb8d82a6e62024726675b07fe8e616dd12f34e2bb59747e8d57aa8adab3e0717d1b8d691b118379
+  languageName: node
+  linkType: hard
+
 "@babel/helper-remap-async-to-generator@npm:^7.27.1":
   version: 7.27.1
   resolution: "@babel/helper-remap-async-to-generator@npm:7.27.1"
@@ -384,6 +427,19 @@ __metadata:
   peerDependencies:
     "@babel/core": ^7.0.0
   checksum: 3690266c304f21008690ba68062f889a363583cabc13c3d033b94513953147af3e0a3fdb48fa1bb9fa3734b64e221fc65e5222ab70837f02321b7225f487c6ef
+  languageName: node
+  linkType: hard
+
+"@babel/helper-replace-supers@npm:^7.28.6":
+  version: 7.28.6
+  resolution: "@babel/helper-replace-supers@npm:7.28.6"
+  dependencies:
+    "@babel/helper-member-expression-to-functions": ^7.28.5
+    "@babel/helper-optimise-call-expression": ^7.27.1
+    "@babel/traverse": ^7.28.6
+  peerDependencies:
+    "@babel/core": ^7.0.0
+  checksum: aa6530a52010883b6be88465e3b9e789509786a40203650a23a51c315f7442b196e5925fb8e2d66d1e3dc2c604cdc817bd8c5c170dbb322ab5ebc7486fd8a022
   languageName: node
   linkType: hard
 
@@ -440,6 +496,13 @@ __metadata:
   version: 7.27.1
   resolution: "@babel/helper-validator-identifier@npm:7.27.1"
   checksum: 3c7e8391e59d6c85baeefe9afb86432f2ab821c6232b00ea9082a51d3e7e95a2f3fb083d74dc1f49ac82cf238e1d2295dafcb001f7b0fab479f3f56af5eaaa47
+  languageName: node
+  linkType: hard
+
+"@babel/helper-validator-identifier@npm:^7.28.5":
+  version: 7.28.5
+  resolution: "@babel/helper-validator-identifier@npm:7.28.5"
+  checksum: 5a251a6848e9712aea0338f659a1a3bd334d26219d5511164544ca8ec20774f098c3a6661e9da65a0d085c745c00bb62c8fada38a62f08fa1f8053bc0aeb57e4
   languageName: node
   linkType: hard
 
@@ -787,14 +850,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/plugin-syntax-typescript@npm:^7.27.1":
-  version: 7.27.1
-  resolution: "@babel/plugin-syntax-typescript@npm:7.27.1"
+"@babel/plugin-syntax-typescript@npm:^7.28.6":
+  version: 7.28.6
+  resolution: "@babel/plugin-syntax-typescript@npm:7.28.6"
   dependencies:
-    "@babel/helper-plugin-utils": ^7.27.1
+    "@babel/helper-plugin-utils": ^7.28.6
   peerDependencies:
     "@babel/core": ^7.0.0-0
-  checksum: 87836f7e32af624c2914c73cd6b9803cf324e07d43f61dbb973c6a86f75df725e12540d91fac7141c14b697aa9268fd064220998daced156e96ac3062d7afb41
+  checksum: 5c55f9c63bd36cf3d7e8db892294c8f85000f9c1526c3a1cc310d47d1e174f5c6f6605e5cc902c4636d885faba7a9f3d5e5edc6b35e4f3b1fd4c2d58d0304fa5
   languageName: node
   linkType: hard
 
@@ -1391,18 +1454,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/plugin-transform-typescript@npm:^7.27.1":
-  version: 7.27.1
-  resolution: "@babel/plugin-transform-typescript@npm:7.27.1"
+"@babel/plugin-transform-typescript@npm:^7.28.5":
+  version: 7.28.6
+  resolution: "@babel/plugin-transform-typescript@npm:7.28.6"
   dependencies:
-    "@babel/helper-annotate-as-pure": ^7.27.1
-    "@babel/helper-create-class-features-plugin": ^7.27.1
-    "@babel/helper-plugin-utils": ^7.27.1
+    "@babel/helper-annotate-as-pure": ^7.27.3
+    "@babel/helper-create-class-features-plugin": ^7.28.6
+    "@babel/helper-plugin-utils": ^7.28.6
     "@babel/helper-skip-transparent-expression-wrappers": ^7.27.1
-    "@babel/plugin-syntax-typescript": ^7.27.1
+    "@babel/plugin-syntax-typescript": ^7.28.6
   peerDependencies:
     "@babel/core": ^7.0.0-0
-  checksum: 0037db32fedaacf42b5b3df774263bb7176d455859f77322f57135f7e50e457e5c95151280fc83bb9942fc1839e785489b098d73c9539d0f3c7dc9d42b3a8e86
+  checksum: 029add39a37e4a1960a43c3a109680462f631bc63cc8457ea65add2cce3271c9fd4d6a1782177c65ea5f77731e2f8e2bc65a9aec9cc826346ba540ecd0b97e5a
   languageName: node
   linkType: hard
 
@@ -1545,18 +1608,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/preset-typescript@npm:^7.27.1":
-  version: 7.27.1
-  resolution: "@babel/preset-typescript@npm:7.27.1"
+"@babel/preset-typescript@npm:^7.28.5":
+  version: 7.28.5
+  resolution: "@babel/preset-typescript@npm:7.28.5"
   dependencies:
     "@babel/helper-plugin-utils": ^7.27.1
     "@babel/helper-validator-option": ^7.27.1
     "@babel/plugin-syntax-jsx": ^7.27.1
     "@babel/plugin-transform-modules-commonjs": ^7.27.1
-    "@babel/plugin-transform-typescript": ^7.27.1
+    "@babel/plugin-transform-typescript": ^7.28.5
   peerDependencies:
     "@babel/core": ^7.0.0-0
-  checksum: 38020f1b23e88ec4fbffd5737da455d8939244bddfb48a2516aef93fb5947bd9163fb807ce6eff3e43fa5ffe9113aa131305fef0fb5053998410bbfcfe6ce0ec
+  checksum: 22f889835d9db1e627846e71ca2f02e2d24e2eb9ebcf9845b3b1d37bd3a53787967bafabbbcb342f06aaf7627399a7102ba6ca18f9a0e17066c865d680d2ceb9
   languageName: node
   linkType: hard
 
@@ -1631,6 +1694,16 @@ __metadata:
     "@babel/helper-string-parser": ^7.27.1
     "@babel/helper-validator-identifier": ^7.27.1
   checksum: 357c13f37aaa2f2e2cfcdb63f986d5f7abc9f38df20182b620ace34387d2460620415770fe5856eb54d70c9f0ba2f71230d29465e789188635a948476b830ae4
+  languageName: node
+  linkType: hard
+
+"@babel/types@npm:^7.27.3, @babel/types@npm:^7.28.5":
+  version: 7.29.0
+  resolution: "@babel/types@npm:7.29.0"
+  dependencies:
+    "@babel/helper-string-parser": ^7.27.1
+    "@babel/helper-validator-identifier": ^7.28.5
+  checksum: 83f190438e94c22b2574aaeef7501830311ef266eaabfb06523409f64e2fe855e522951607085d71cad286719adef14e1ba37b671f334a7cd25b0f8506a01e0b
   languageName: node
   linkType: hard
 
@@ -2665,9 +2738,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@rxfx/after@workspace:after"
   dependencies:
-    "@babel/core": ^7.27.1
-    "@babel/preset-env": ^7.27.1
-    "@babel/preset-typescript": ^7.27.1
+    "@babel/core": ^7.29.0
+    "@babel/preset-env": ^7.29.5
+    "@babel/preset-typescript": ^7.28.5
     "@open-wc/building-rollup": ">= 1.10.0"
     "@rollup/plugin-typescript": ">= 8.2.5"
     "@types/jest": ">= 27.0.1"
@@ -2678,14 +2751,14 @@ __metadata:
     eslint-plugin-jest: ">= 24.4.2"
     husky: ">= 7.0.2"
     jest: ^29.7.0
-    jest-silent-reporter: ">= 0.5.0"
+    jest-silent-reporter: ^0.6.0
     prettier: ^2.8.8
     rimraf: ">= 3.0.2"
-    rollup: ^3.29.5
-    rxjs: ^7.8.1
-    tslib: ^2.6.2
+    rollup: ^3.30.0
+    rxjs: ^7.8.2
+    tslib: ^2.8.1
     typedoc: ^0.25.3
-    typescript: ^5.3.2
+    typescript: ^5.9.3
   languageName: unknown
   linkType: soft
 
@@ -2693,9 +2766,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@rxfx/ajax@workspace:ajax"
   dependencies:
-    "@babel/core": ^7.27.1
-    "@babel/preset-env": ^7.27.1
-    "@babel/preset-typescript": ^7.27.1
+    "@babel/core": ^7.29.0
+    "@babel/preset-env": ^7.29.5
+    "@babel/preset-typescript": ^7.28.5
     "@open-wc/building-rollup": ">= 1.10.0"
     "@rollup/plugin-typescript": ">= 8.2.5"
     "@types/jest": ">= 27.0.1"
@@ -2706,14 +2779,14 @@ __metadata:
     eslint-plugin-jest: ">= 24.4.2"
     husky: ">= 7.0.2"
     jest: ^29.7.0
-    jest-silent-reporter: ">= 0.5.0"
+    jest-silent-reporter: ^0.6.0
     prettier: ^2.8.8
     rimraf: ">= 3.0.2"
-    rollup: ^3.29.5
-    rxjs: ^7.8.1
-    tslib: ^2.6.2
+    rollup: ^3.30.0
+    rxjs: ^7.8.2
+    tslib: ^2.8.1
     typedoc: ^0.25.3
-    typescript: ^5.3.2
+    typescript: ^5.9.3
   languageName: unknown
   linkType: soft
 
@@ -2721,9 +2794,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@rxfx/animation@workspace:animation"
   dependencies:
-    "@babel/core": ^7.27.1
-    "@babel/preset-env": ^7.27.1
-    "@babel/preset-typescript": ^7.27.1
+    "@babel/core": ^7.29.0
+    "@babel/preset-env": ^7.29.5
+    "@babel/preset-typescript": ^7.28.5
     "@open-wc/building-rollup": ">= 1.10.0"
     "@rollup/plugin-typescript": ">= 8.2.5"
     "@rxfx/after": "workspace:^"
@@ -2737,14 +2810,14 @@ __metadata:
     husky: ">= 7.0.2"
     jest: ^29.7.0
     jest-environment-jsdom: ^29.7.0
-    jest-silent-reporter: ">= 0.5.0"
+    jest-silent-reporter: ^0.6.0
     prettier: ^2.8.8
     rimraf: ">= 3.0.2"
-    rollup: ^3.29.4
-    rxjs: ^7.8.1
-    tslib: ^2.6.2
+    rollup: ^3.30.0
+    rxjs: ^7.8.2
+    tslib: ^2.8.1
     typedoc: ^0.25.3
-    typescript: ^5.3.2
+    typescript: ^5.9.3
   languageName: unknown
   linkType: soft
 
@@ -2752,9 +2825,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@rxfx/bus@workspace:bus"
   dependencies:
-    "@babel/core": ^7.27.1
-    "@babel/preset-env": ^7.27.1
-    "@babel/preset-typescript": ^7.27.1
+    "@babel/core": ^7.29.0
+    "@babel/preset-env": ^7.29.5
+    "@babel/preset-typescript": ^7.28.5
     "@open-wc/building-rollup": ^1.10.0
     "@rollup/plugin-typescript": ^8.2.5
     "@rxfx/operators": "workspace:^"
@@ -2767,15 +2840,15 @@ __metadata:
     eslint-plugin-jest: ^27.6.0
     husky: ^8.0.3
     jest: ^29.7.0
-    jest-silent-reporter: ^0.5.0
+    jest-silent-reporter: ^0.6.0
     prettier: ^2.8.8
     rimraf: ^5.0.5
-    rollup: ^3.29.4
-    rxjs: ^7.8.1
+    rollup: ^3.30.0
+    rxjs: ^7.8.2
     symbol-observable: ^4.0.0
-    tslib: ^2.6.2
+    tslib: ^2.8.1
     typedoc: ^0.25.3
-    typescript: ^5.3.2
+    typescript: ^5.9.3
   languageName: unknown
   linkType: soft
 
@@ -2783,9 +2856,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@rxfx/effect@workspace:effect"
   dependencies:
-    "@babel/core": ^7.27.1
-    "@babel/preset-env": ^7.27.1
-    "@babel/preset-typescript": ^7.27.1
+    "@babel/core": ^7.29.0
+    "@babel/preset-env": ^7.29.5
+    "@babel/preset-typescript": ^7.28.5
     "@open-wc/building-rollup": ">= 1.10.0"
     "@rollup/plugin-typescript": ">= 8.2.5"
     "@types/jest": ^29.5.10
@@ -2796,14 +2869,14 @@ __metadata:
     eslint-plugin-jest: ^27.6.0
     husky: ^8.0.3
     jest: ^29.7.0
-    jest-silent-reporter: ">= 0.5.0"
+    jest-silent-reporter: ^0.6.0
     prettier: ^2.8.8
     rimraf: ^5.0.5
-    rollup: ^3.29.4
-    rxjs: ^7.8.1
-    tslib: ^2.6.2
+    rollup: ^3.30.0
+    rxjs: ^7.8.2
+    tslib: ^2.8.1
     typedoc: ^0.25.3
-    typescript: ^5.3.2
+    typescript: ^5.9.3
   languageName: unknown
   linkType: soft
 
@@ -2811,9 +2884,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@rxfx/fsa@workspace:fsa"
   dependencies:
-    "@babel/core": ^7.27.1
-    "@babel/preset-env": ^7.27.1
-    "@babel/preset-typescript": ^7.27.1
+    "@babel/core": ^7.29.0
+    "@babel/preset-env": ^7.29.5
+    "@babel/preset-typescript": ^7.28.5
     "@open-wc/building-rollup": ">= 1.10.0"
     "@rollup/plugin-typescript": ">= 8.2.5"
     "@types/jest": ^29.5.10
@@ -2823,12 +2896,12 @@ __metadata:
     eslint: ^8.57.0
     eslint-plugin-jest: ^27.6.0
     jest: ^29.7.0
-    jest-silent-reporter: ">= 0.5.0"
+    jest-silent-reporter: ^0.6.0
     prettier: ^2.8.8
     rimraf: ^5.0.5
-    rollup: ^3.29.4
+    rollup: ^3.30.0
     typedoc: ^0.25.3
-    typescript: ^5.3.2
+    typescript: ^5.9.3
   languageName: unknown
   linkType: soft
 
@@ -2836,9 +2909,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@rxfx/operators@workspace:operators"
   dependencies:
-    "@babel/core": ^7.27.1
-    "@babel/preset-env": ^7.27.1
-    "@babel/preset-typescript": ^7.27.1
+    "@babel/core": ^7.29.0
+    "@babel/preset-env": ^7.29.5
+    "@babel/preset-typescript": ^7.28.5
     "@open-wc/building-rollup": ">= 1.10.0"
     "@rollup/plugin-typescript": ">= 8.2.5"
     "@types/jest": ">= 27.0.1"
@@ -2849,14 +2922,14 @@ __metadata:
     eslint-plugin-jest: ">= 24.4.2"
     husky: ">= 7.0.2"
     jest: ^29.7.0
-    jest-silent-reporter: ">= 0.5.0"
+    jest-silent-reporter: ^0.6.0
     prettier: ^2.8.8
     rimraf: ">= 3.0.2"
-    rollup: ^3.29.5
-    rxjs: ^7.8.1
-    tslib: ^2.6.2
+    rollup: ^3.30.0
+    rxjs: ^7.8.2
+    tslib: ^2.8.1
     typedoc: ^0.25.3
-    typescript: ^5.3.2
+    typescript: ^5.9.3
   languageName: unknown
   linkType: soft
 
@@ -2864,9 +2937,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@rxfx/peer@workspace:peer"
   dependencies:
-    "@babel/core": ^7.27.1
-    "@babel/preset-env": ^7.27.1
-    "@babel/preset-typescript": ^7.27.1
+    "@babel/core": ^7.29.0
+    "@babel/preset-env": ^7.29.5
+    "@babel/preset-typescript": ^7.28.5
     "@open-wc/building-rollup": ">= 1.10.0"
     "@rollup/plugin-typescript": ">= 8.2.5"
     "@types/jest": ^29.5.10
@@ -2877,14 +2950,14 @@ __metadata:
     eslint-plugin-jest: ^27.6.0
     husky: ^8.0.3
     jest: ^29.7.0
-    jest-silent-reporter: ">= 0.5.0"
+    jest-silent-reporter: ^0.6.0
     prettier: ^2.8.8
     rimraf: ^5.0.5
-    rollup: ^3.29.4
-    rxjs: ^7.8.1
-    tslib: ^2.6.2
+    rollup: ^3.30.0
+    rxjs: ^7.8.2
+    tslib: ^2.8.1
     typedoc: ^0.25.3
-    typescript: ^5.3.2
+    typescript: ^5.9.3
   languageName: unknown
   linkType: soft
 
@@ -2892,9 +2965,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@rxfx/perception@workspace:perception"
   dependencies:
-    "@babel/core": ^7.27.1
-    "@babel/preset-env": ^7.27.1
-    "@babel/preset-typescript": ^7.27.1
+    "@babel/core": ^7.29.0
+    "@babel/preset-env": ^7.29.5
+    "@babel/preset-typescript": ^7.28.5
     "@open-wc/building-rollup": ">= 1.10.0"
     "@rollup/plugin-typescript": ">= 8.2.5"
     "@types/jest": ^29.5.10
@@ -2905,14 +2978,14 @@ __metadata:
     eslint-plugin-jest: ^27.6.0
     husky: ^8.0.3
     jest: ^29.7.0
-    jest-silent-reporter: ">= 0.5.0"
+    jest-silent-reporter: ^0.6.0
     prettier: ^2.8.8
     rimraf: ^5.0.5
-    rollup: ^3.29.4
-    rxjs: ^7.8.1
-    tslib: ^2.6.2
+    rollup: ^3.30.0
+    rxjs: ^7.8.2
+    tslib: ^2.8.1
     typedoc: ^0.25.3
-    typescript: ^5.3.2
+    typescript: ^5.9.3
   languageName: unknown
   linkType: soft
 
@@ -2920,21 +2993,21 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@rxfx/react@workspace:react"
   dependencies:
-    "@babel/core": ^7.27.1
-    "@babel/preset-env": ^7.27.1
-    "@babel/preset-typescript": ^7.27.1
+    "@babel/core": ^7.29.0
+    "@babel/preset-env": ^7.29.5
+    "@babel/preset-typescript": ^7.28.5
     "@open-wc/building-rollup": ">= 1.10.0"
     "@rollup/plugin-typescript": ">= 8.2.5"
     "@rxfx/bus": "workspace:^"
     "@rxfx/effect": "workspace:^"
     "@rxfx/service": "workspace:^"
-    "@testing-library/dom": ^9.3.3
-    "@testing-library/jest-dom": ^6.1.4
-    "@testing-library/react": ^14.1.2
+    "@testing-library/dom": ^9.3.4
+    "@testing-library/jest-dom": ^6.9.1
+    "@testing-library/react": ^14.3.1
     "@testing-library/react-hooks": ^8.0.1
     "@testing-library/user-event": ^14.5.1
     "@types/jest": ">= 27.0.1"
-    "@types/react": ^18.2.38
+    "@types/react": ^18.3.28
     "@typescript-eslint/eslint-plugin": ^6.12.0
     "@typescript-eslint/parser": ^6.12.0
     babel-jest: ">= 27.0.6"
@@ -2943,17 +3016,17 @@ __metadata:
     husky: ">= 7.0.2"
     jest: ^29.7.0
     jest-environment-jsdom: ^29.7.0
-    jest-silent-reporter: ">= 0.5.0"
+    jest-silent-reporter: ^0.6.0
     prettier: ^2.8.8
-    react: ^18.2.0
-    react-dom: ^18.2.0
-    react-test-renderer: ^18.2.0
+    react: ^18.3.1
+    react-dom: ^18.3.1
+    react-test-renderer: ^18.3.1
     rimraf: ">= 3.0.2"
-    rollup: ^3.29.4
-    rxjs: ^7.8.1
-    tslib: ^2.6.2
+    rollup: ^3.30.0
+    rxjs: ^7.8.2
+    tslib: ^2.8.1
     typedoc: ^0.25.3
-    typescript: ^5.3.2
+    typescript: ^5.9.3
   peerDependencies:
     react: ">=18.2.0"
   languageName: unknown
@@ -2963,9 +3036,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@rxfx/service@workspace:service"
   dependencies:
-    "@babel/core": ^7.27.1
-    "@babel/preset-env": ^7.27.1
-    "@babel/preset-typescript": ^7.27.1
+    "@babel/core": ^7.29.0
+    "@babel/preset-env": ^7.29.5
+    "@babel/preset-typescript": ^7.28.5
     "@open-wc/building-rollup": ">= 1.10.0"
     "@reduxjs/toolkit": ^1.9.7
     "@rollup/plugin-typescript": ">= 8.2.5"
@@ -2982,14 +3055,14 @@ __metadata:
     eslint-plugin-jest: ">= 24.4.2"
     husky: ">= 7.0.2"
     jest: ^29.7.0
-    jest-silent-reporter: ">= 0.5.0"
+    jest-silent-reporter: ^0.6.0
     prettier: ^2.8.8
     rimraf: ">= 3.0.2"
-    rollup: ^3.29.5
-    rxjs: ^7.8.1
-    tslib: ^2.6.2
+    rollup: ^3.30.0
+    rxjs: ^7.8.2
+    tslib: ^2.8.1
     typedoc: ^0.25.3
-    typescript: ^5.3.2
+    typescript: ^5.9.3
   languageName: unknown
   linkType: soft
 
@@ -3040,7 +3113,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@testing-library/dom@npm:^9.0.0, @testing-library/dom@npm:^9.3.3":
+"@testing-library/dom@npm:^9.0.0, @testing-library/dom@npm:^9.3.4":
   version: 9.3.4
   resolution: "@testing-library/dom@npm:9.3.4"
   dependencies:
@@ -3056,18 +3129,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@testing-library/jest-dom@npm:^6.1.4":
-  version: 6.6.3
-  resolution: "@testing-library/jest-dom@npm:6.6.3"
+"@testing-library/jest-dom@npm:^6.9.1":
+  version: 6.9.1
+  resolution: "@testing-library/jest-dom@npm:6.9.1"
   dependencies:
     "@adobe/css-tools": ^4.4.0
     aria-query: ^5.0.0
-    chalk: ^3.0.0
     css.escape: ^1.5.1
     dom-accessibility-api: ^0.6.3
-    lodash: ^4.17.21
+    picocolors: ^1.1.1
     redent: ^3.0.0
-  checksum: c1dc4260b05309a0084416639006cd105849acc5b102bef682a3b19bd6fce07ff6762085fc7f2599546c995a2fc66fdb1d70e50e22a634a0098524056cc9e511
+  checksum: 5c77126a59a1c0df5935d29569652364c56e5026982f0357f0daaeb21b75fcd9a6aeff8365bdcba719687a4359b3f8bf74bba81ccbae7635cf18ad9789e1e323
   languageName: node
   linkType: hard
 
@@ -3093,7 +3165,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@testing-library/react@npm:^14.1.2":
+"@testing-library/react@npm:^14.3.1":
   version: 14.3.1
   resolution: "@testing-library/react@npm:14.3.1"
   dependencies:
@@ -3356,13 +3428,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:^18.2.38":
-  version: 18.3.20
-  resolution: "@types/react@npm:18.3.20"
+"@types/react@npm:^18.3.28":
+  version: 18.3.28
+  resolution: "@types/react@npm:18.3.28"
   dependencies:
     "@types/prop-types": "*"
-    csstype: ^3.0.2
-  checksum: a93a4eec87c671ad9d68eaedaa2aa3688926409802939d2b291800cf926c771eb505a18721174364217ae9e1e8b89d09c1519f06ba1f168271de9f4c832710ea
+    csstype: ^3.2.2
+  checksum: 9d59fb3def4e712d4f8fa15998791a07f9799462f8d581d17039a9503017bfce3463d57fc737ce1d28d6aa3f482f4a3a5bae5a662d97560a9359aab111556c97
   languageName: node
   linkType: hard
 
@@ -4503,16 +4575,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chalk@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "chalk@npm:3.0.0"
-  dependencies:
-    ansi-styles: ^4.1.0
-    supports-color: ^7.1.0
-  checksum: 8e3ddf3981c4da405ddbd7d9c8d91944ddf6e33d6837756979f7840a29272a69a5189ecae0ff84006750d6d1e92368d413335eab4db5476db6e6703a1d1e0505
-  languageName: node
-  linkType: hard
-
 "chalk@npm:^4.0.0, chalk@npm:^4.0.2, chalk@npm:^4.1.0":
   version: 4.1.2
   resolution: "chalk@npm:4.1.2"
@@ -4862,6 +4924,13 @@ __metadata:
   version: 3.1.2
   resolution: "csstype@npm:3.1.2"
   checksum: e1a52e6c25c1314d6beef5168da704ab29c5186b877c07d822bd0806717d9a265e8493a2e35ca7e68d0f5d472d43fac1cdce70fd79fd0853dff81f3028d857b5
+  languageName: node
+  linkType: hard
+
+"csstype@npm:^3.2.2":
+  version: 3.2.3
+  resolution: "csstype@npm:3.2.3"
+  checksum: cb882521b3398958a1ce6ca98c011aec0bde1c77ecaf8a1dd4db3b112a189939beae3b1308243b2fe50fc27eb3edeb0f73a5a4d91d928765dc6d5ecc7bda92ee
   languageName: node
   linkType: hard
 
@@ -7192,13 +7261,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest-silent-reporter@npm:>= 0.5.0, jest-silent-reporter@npm:^0.5.0":
-  version: 0.5.0
-  resolution: "jest-silent-reporter@npm:0.5.0"
+"jest-silent-reporter@npm:^0.6.0":
+  version: 0.6.0
+  resolution: "jest-silent-reporter@npm:0.6.0"
   dependencies:
     chalk: ^4.0.0
     jest-util: ^26.0.0
-  checksum: 54853eb1fd342eb074ff97bbd2f177c3425e635deb008ce1a5feede398930b6472549797342e3ea536f8e2e538d8718d6f281f3d44dec2ae4d32f61da0eb547e
+  checksum: 443e0abaf5a6dc8c17da1e8495b7a55f813224adc39b6d1954bf49ff7fe70533b1020571453180dbb8388ace87f8e1dfc79610a4554bb93334f6c4154231c292
   languageName: node
   linkType: hard
 
@@ -7650,7 +7719,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash@npm:^4.17.11, lodash@npm:^4.17.14, lodash@npm:^4.17.20, lodash@npm:^4.17.21":
+"lodash@npm:^4.17.11, lodash@npm:^4.17.14, lodash@npm:^4.17.20":
   version: 4.17.21
   resolution: "lodash@npm:4.17.21"
   checksum: eb835a2e51d381e561e508ce932ea50a8e5a68f4ebdd771ea240d3048244a8d13658acbd502cd4829768c56f2e16bdd4340b9ea141297d472517b83868e677f7
@@ -8635,7 +8704,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-dom@npm:^18.2.0":
+"react-dom@npm:^18.3.1":
   version: 18.3.1
   resolution: "react-dom@npm:18.3.1"
   dependencies:
@@ -8691,7 +8760,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-test-renderer@npm:^18.2.0":
+"react-test-renderer@npm:^18.3.1":
   version: 18.3.1
   resolution: "react-test-renderer@npm:18.3.1"
   dependencies:
@@ -8704,7 +8773,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react@npm:^18.2.0":
+"react@npm:^18.3.1":
   version: 18.3.1
   resolution: "react@npm:18.3.1"
   dependencies:
@@ -9147,9 +9216,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rollup@npm:^3.29.4, rollup@npm:^3.29.5":
-  version: 3.29.5
-  resolution: "rollup@npm:3.29.5"
+"rollup@npm:^3.30.0":
+  version: 3.30.0
+  resolution: "rollup@npm:3.30.0"
   dependencies:
     fsevents: ~2.3.2
   dependenciesMeta:
@@ -9157,7 +9226,7 @@ __metadata:
       optional: true
   bin:
     rollup: dist/bin/rollup
-  checksum: 6f8304e58ac8170a715e61e46c4aa674b2ae2587ed2a712dab58f72e5e54803ae40b485fbe6b3e6a694f4c8f7a59ab936ccf9f6b686c7cfd1f1970fa9ecadf1a
+  checksum: b32c84f29aeb29762aa0a2b588288ca3cd0fdbd19b0f766b4f3cba9d1d7a980f540f54a4a28047da4197f33f7ade9655cc9cec1a855292f69aca504d81bd5fbf
   languageName: node
   linkType: hard
 
@@ -9174,14 +9243,14 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "rxfx-repo@workspace:."
   dependencies:
-    "@types/node": ^20.10.0
+    "@types/node": ^20.19.41
     nodemon: ^3.0.2
-    rxjs: ^7.8.1
+    rxjs: ^7.8.2
     say: ^0.16.0
     scripty: ^2.1.1
     ts-node: ^10.9.2
-    tslib: ^2.6.2
-    typescript: ^5.3.2
+    tslib: ^2.8.1
+    typescript: ^5.9.3
     zod: ^3.25.3
   languageName: unknown
   linkType: soft
@@ -9190,9 +9259,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "rxfx@workspace:all"
   dependencies:
-    "@babel/core": ^7.27.1
-    "@babel/preset-env": ^7.27.1
-    "@babel/preset-typescript": ^7.27.1
+    "@babel/core": ^7.29.0
+    "@babel/preset-env": ^7.29.5
+    "@babel/preset-typescript": ^7.28.5
     "@open-wc/building-rollup": ">= 1.10.0"
     "@rollup/plugin-typescript": ">= 8.2.5"
     "@rxfx/after": "workspace:^"
@@ -9214,23 +9283,23 @@ __metadata:
     eslint-plugin-jest: ^27.6.0
     husky: ^8.0.3
     jest: ^29.7.0
-    jest-silent-reporter: ">= 0.5.0"
+    jest-silent-reporter: ^0.6.0
     prettier: ^2.8.8
     rimraf: ^5.0.5
-    rollup: ^3.29.4
-    rxjs: ^7.8.1
-    tslib: ^2.6.2
+    rollup: ^3.30.0
+    rxjs: ^7.8.2
+    tslib: ^2.8.1
     typedoc: ^0.25.3
-    typescript: ^5.3.2
+    typescript: ^5.9.3
   languageName: unknown
   linkType: soft
 
-"rxjs@npm:^7.8.1":
-  version: 7.8.1
-  resolution: "rxjs@npm:7.8.1"
+"rxjs@npm:^7.8.2":
+  version: 7.8.2
+  resolution: "rxjs@npm:7.8.2"
   dependencies:
     tslib: ^2.1.0
-  checksum: de4b53db1063e618ec2eca0f7965d9137cabe98cf6be9272efe6c86b47c17b987383df8574861bcced18ebd590764125a901d5506082be84a8b8e364bf05f119
+  checksum: 2f233d7c832a6c255dabe0759014d7d9b1c9f1cb2f2f0d59690fd11c883c9826ea35a51740c06ab45b6ade0d9087bde9192f165cba20b6730d344b831ef80744
   languageName: node
   linkType: hard
 
