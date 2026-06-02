@@ -15,19 +15,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Install Yarn plugins
-        run: |
-          corepack yarn plugin import from sources @yarnpkg/plugin-workspace-tools
-          corepack yarn plugin import from sources @yarnpkg/plugin-version
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
           cache: 'yarn'
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
         run: yarn install --immutable --check-cache
