@@ -3012,6 +3012,8 @@ __metadata:
     "@babel/preset-typescript": ^7.28.5
     "@open-wc/building-rollup": ">= 1.10.0"
     "@rollup/plugin-typescript": ">= 8.2.5"
+    "@rxfx/after": "workspace:*"
+    "@rxfx/operators": "workspace:*"
     "@types/jest": ^29.5.10
     "@typescript-eslint/eslint-plugin": ^6.12.0
     "@typescript-eslint/parser": ^6.12.0
@@ -3093,6 +3095,8 @@ __metadata:
     "@babel/preset-typescript": ^7.28.5
     "@open-wc/building-rollup": ">= 1.10.0"
     "@rollup/plugin-typescript": ">= 8.2.5"
+    "@rxfx/after": "workspace:*"
+    "@rxfx/service": "workspace:*"
     "@types/jest": ^29.5.10
     "@typescript-eslint/eslint-plugin": ^6.12.0
     "@typescript-eslint/parser": ^6.12.0

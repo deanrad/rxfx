@@ -24,7 +24,7 @@ export function forward<Subtype, MappedType = Action<Subtype>>(
 ) {
   // @ts-expect-error
   return source.pipe(filter(matcher)).subscribe({
-    next(v) {
+    next(v: any) {
       sink(mapper(v));
     },
     ...handleErrors,
