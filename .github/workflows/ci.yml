@@ -27,5 +27,8 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable --check-cache
 
+      - name: Build all
+        run: yarn build
+
       - name: Run full tests
         run: yarn test:full
