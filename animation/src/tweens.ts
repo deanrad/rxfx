@@ -27,7 +27,7 @@ export function tweenToValue<Start extends UnknownProps, End extends Start>(
         framesSub.unsubscribe();
         notify.complete();
       })
-      .onUpdate(function (update) {
+      .onUpdate(function (update: any) {
         notify.next({ ...update } as End);
       });
 
