@@ -24,6 +24,11 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
 
+      - name: Install Yarn plugins
+        run: |
+          corepack yarn plugin import from sources @yarnpkg/plugin-workspace-tools
+          corepack yarn plugin import from sources @yarnpkg/plugin-version
+
       - name: Install dependencies
         run: yarn install --immutable --check-cache
 
