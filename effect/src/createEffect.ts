@@ -388,7 +388,7 @@ export function createThrottledEffect(
     handler: EffectSource<Request, Response>,
     initialState?: TState
   ): EffectRunner<Request, Response, TError, TState> {
-    return createEffect(
+    return createEffect<Request, Response, TError, TState>(
       (args: Request) => {
         return concat(
           // do the work up front
@@ -421,7 +421,7 @@ export function createDebouncedEffect(
     handler: EffectSource<Request, Response>,
     initialState?: TState
   ): EffectRunner<Request, Response, TError, TState> {
-    return createEffect(
+    return createEffect<Request, Response, TError, TState>(
       (args: Request) => {
         return concat(
           // wait initially

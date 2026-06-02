@@ -6,7 +6,7 @@ import {
   NEVER,
 } from 'rxjs';
 import { filter, switchMap } from 'rxjs/operators';
-import { Action, createEvent } from '@rxfx/service';
+import { Action, AnyAction, createEvent } from '@rxfx/service';
 import { after } from '@rxfx/after';
 
 import { forward, handleErrors } from './forward';
@@ -70,7 +70,7 @@ export const createPeer = (
     allSubs.add(
       forward<{ origin: string }, ReturnType<typeof DEMOTE>>(
         inbox,
-        (e) => PROMOTE.match(e) && e.payload.origin !== whoami(),
+        (e: AnyAction) => PROMOTE.match(e) && e.payload.origin !== whoami(),
         outbox,
         ({ payload: { origin } }) =>
           DEMOTE({ origin, target: origin, leader: whoami() })
