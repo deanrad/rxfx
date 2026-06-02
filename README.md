@@ -1,5 +1,7 @@
 # 𝗥𝘅𝑓𝑥
 
+[![CI](https://github.com/deanrad/rxfx/actions/workflows/ci.yml/badge.svg)](https://github.com/deanrad/rxfx/actions/workflows/ci.yml)
+
 𝗥𝘅𝑓𝑥 is effect and state management made simple, safe, and framework-independent. It helps you write less framework-specific code, escaping `useEffect` mazes, and `AbortController` complexities - basically making async user interfaces simple and air-tight.
 
 # Background
