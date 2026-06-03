@@ -8,8 +8,8 @@
   "repository": "https://github.com/deanrad/rxfx",
   "scripts": {
     "build": "yarn workspaces foreach -pt run build",
-    "test": "yarn workspaces foreach run test",
-    "test:full": "yarn workspaces foreach run test:full",
+    "test": "yarn workspaces foreach -pt run test",
+    "test:full": "yarn workspaces foreach -pt run test:full",
     "bump:info": "node scripts/bump-versions.mjs",
     "bump:patch": "bash scripts/bump-patch.sh"
   },
