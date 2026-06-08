@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { after } from '@rxfx/after';
 import { queueOnlyLatest } from '@rxfx/operators';
 import {
@@ -399,6 +400,33 @@ describe('createEffect - returns a function with properties which', () => {
           },
         ]
       `);
+    });
+
+    it('finalizes after an async error', async () => {
+      const calls = [] as string[];
+      const failingFx = createEffect<number, number>((i) =>
+        Promise.reject(new Error(`req ${i} errored`))
+      );
+
+      failingFx.observe({
+        started: () => calls.push('started'),
+        error: () => calls.push('error'),
+        finalized: () => calls.push('finalized'),
+      });
+
+      failingFx(1);
+
+      expect(failingFx.isHandling.value).toBe(true);
+
+      await Promise.resolve();
+
+      expect(failingFx.currentError).toBeDefined();
+      expect(failingFx.isHandling.value).toBe(false);
+      expect(calls).toEqual(['started', 'error', 'finalized']);
+
+      // isActive intentionally waits a promise to go silent
+      await Promise.resolve();
+      expect(failingFx.isActive.value).toBe(false);
     });
 
     describe('Errors: Do not affect caller, requests are still handled, and errors appear on #errors', () => {

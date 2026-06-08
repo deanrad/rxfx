@@ -275,11 +275,7 @@ export function createEffect<
         })
       );
       const sub = allEvents.subscribe();
-      sub.add(
-        merge(completions, cancelations)
-          .pipe(tap(fns.finalized ?? noop))
-          .subscribe()
-      );
+      sub.add(ends.pipe(tap(fns.finalized ?? noop)).subscribe());
 
       return sub;
     },
