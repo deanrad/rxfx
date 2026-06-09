@@ -47,7 +47,7 @@ export function operatorForMode(mode?: ConcurrencyMode) {
 
 /**
  * Creates a Service - a concurrency-controlled wrapper around an effect, which tracks state over the effect's lifecycle events.
- * The effect can be a Promise-or-Observable returning function, and is cancelable if Observable.
+ * The effect can be a Promise-or-Observable-or-AsyncIterator returning function, and is cancelable if Observable.
  * By default its concurrency is to run handlers immediately, but this is overridable with a 5th parameter - an RxJS operator implmenting the desired concurrency.
  *
  * @param actionNamespace - Prefix of all actions: The 'search' in search/request
@@ -388,7 +388,7 @@ export function createServiceListener<
 
 /**
  * Creates a Service - a concurrency-controlled wrapper around an effect, which tracks state over the effect's lifecycle events.
- * The effect can be a Promise-or-Observable returning function, and is cancelable if Observable.
+ * The effect can be a Promise-or-Observable-or-AsyncIterator returning function, and is cancelable if Observable.
  * Its concurrency mode is to run handlers immediately.
  *
  * @param actionNamespace - Prefix of all actions eg fetch/request
@@ -416,7 +416,7 @@ export function createService<
 }
 /**
  * Creates a Service - a concurrency-controlled wrapper around an effect, which tracks state over the effect's lifecycle events.
- * The effect can be a Promise-or-Observable returning function, and is cancelable if Observable.
+ * The effect can be a Promise-or-Observable-or-AsyncIterator returning function, and is cancelable if Observable.
  * Its concurrency mode is to queue up handlers.
  *
  * @param actionNamespace - Prefix of all actions eg fetch/request
@@ -448,7 +448,7 @@ export function createQueueingServiceListener<
 
 /**
  * Creates a Service - a concurrency-controlled wrapper around an effect, which tracks state over the effect's lifecycle events.
- * The effect can be a Promise-or-Observable returning function, and is cancelable if Observable.
+ * The effect can be a Promise-or-Observable-or-AsyncIterator returning function, and is cancelable if Observable.
  * Its concurrency mode is to queue up handlers.
  *
  * @param actionNamespace - Prefix of all actions eg fetch/request
@@ -478,7 +478,7 @@ export function createQueueingService<
 }
 /**
  * Creates a Service - a concurrency-controlled wrapper around an effect, which tracks state over the effect's lifecycle events.
- * The effect can be a Promise-or-Observable returning function, and is cancelable if Observable.
+ * The effect can be a Promise-or-Observable-or-AsyncIterator returning function, and is cancelable if Observable.
  * Its concurrency mode is to cancel a running effect, and switch to a new one.
  *
  * @param actionNamespace - Prefix of all actions eg fetch/request
@@ -510,7 +510,7 @@ export function createSwitchingServiceListener<
 
 /**
  * Creates a Service - a concurrency-controlled wrapper around an effect, which tracks state over the effect's lifecycle events.
- * The effect can be a Promise-or-Observable returning function, and is cancelable if Observable.
+ * The effect can be a Promise-or-Observable-or-AsyncIterator returning function, and is cancelable if Observable.
  * Its concurrency mode is to cancel a running effect, and switch to a new one.
  *
  * @param actionNamespace - Prefix of all actions eg fetch/request
@@ -598,7 +598,7 @@ export function createReplacingService<
 
 /**
  * Creates a Service - a concurrency-controlled wrapper around an effect, which tracks state over the effect's lifecycle events.
- * The effect can be a Promise-or-Observable returning function, and is cancelable if Observable.
+ * The effect can be a Promise-or-Observable-or-AsyncIterator returning function, and is cancelable if Observable.
  * Its concurrency mode is to prevent a new handler from starting, if one is in progress.
  *
  * @param actionNamespace - Prefix of all actions eg fetch/request
@@ -630,7 +630,7 @@ export function createBlockingServiceListener<
 
 /**
  * Creates a Service - a concurrency-controlled wrapper around an effect, which tracks state over the effect's lifecycle events.
- * The effect can be a Promise-or-Observable returning function, and is cancelable if Observable.
+ * The effect can be a Promise-or-Observable-or-AsyncIterator returning function, and is cancelable if Observable.
  * Its concurrency mode is to prevent a new handler from starting, if one is in progress.
  *
  * @param actionNamespace - Prefix of all actions eg fetch/request
@@ -661,7 +661,7 @@ export function createBlockingService<
 
 /**
  * Creates a Service - a concurrency-controlled wrapper around an effect, which tracks state over the effect's lifecycle events.
- * The effect can be a Promise-or-Observable returning function, and is cancelable if Observable.
+ * The effect can be a Promise-or-Observable-or-AsyncIterator returning function, and is cancelable if Observable.
  * Its concurrency mode is if a handler is running, terminates it, and does not begin a new handling.
  *
  * @param actionNamespace - Prefix of all actions eg fetch/request
@@ -694,7 +694,7 @@ export function createTogglingServiceListener<
 
 /**
  * Creates a Service - a concurrency-controlled wrapper around an effect, which tracks state over the effect's lifecycle events.
- * The effect can be a Promise-or-Observable returning function, and is cancelable if Observable.
+ * The effect can be a Promise-or-Observable-or-AsyncIterator returning function, and is cancelable if Observable.
  * Its concurrency mode is if a handler is running, terminates it, and does not begin a new handling.
  *
  * @param actionNamespace - Prefix of all actions eg fetch/request

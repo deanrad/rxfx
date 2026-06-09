@@ -265,6 +265,80 @@ describe('createEffect - returns a function with properties which', () => {
       expect(responses).toEqual(VALUES);
     });
 
+    it('Can return an AsyncIterator', async () => {
+      const VALUES = [1.1, 1.2];
+      const handler = jest.fn().mockReturnValue(
+        (async function* () {
+          await after(1);
+          yield VALUES[0];
+          await after(1);
+          yield VALUES[1];
+        })()
+      );
+      const fx = createEffect<void, number>(handler);
+
+      const responses = [] as number[];
+      fx.responses.subscribe((res) => responses.push(res));
+
+      fx();
+      expect(responses).toEqual([]);
+
+      await after(1);
+      expect(responses).toEqual([VALUES[0]]);
+
+      await after(1);
+      expect(responses).toEqual([VALUES[0], VALUES[1]]);
+    });
+
+    it('Can return an AsyncIterator whose first yield happens before any await', async () => {
+      const VALUES = [1.1, 1.2];
+      const handler = jest.fn().mockReturnValue(
+        (async function* () {
+          yield VALUES[0];
+          await after(1);
+          yield VALUES[1];
+        })()
+      );
+      const fx = createEffect<void, number>(handler);
+
+      const responses = [] as number[];
+      fx.responses.subscribe((res) => responses.push(res));
+
+      // The first value is still delayed by the length of a promise-resolution
+      // aka microtask flush. (An Observable can synchronously emit however).
+      fx();
+      expect(responses).toEqual([]);
+
+      await after(1); // wish it could be as short as Promise.resolve();
+      expect(responses).toEqual([VALUES[0]]);
+
+      await after(1);
+      expect(responses).toEqual(VALUES);
+    });
+
+    it('Can return an AsyncIterator that errors', async () => {
+      const handler = jest.fn().mockReturnValue(
+        (async function* () {
+          await after(1);
+          throw new Error('async iterator failed');
+        })()
+      );
+      const fx = createEffect<void, number>(handler);
+
+      const responses: number[] = [];
+      const errors: Error[] = [];
+      fx.responses.subscribe((res) => responses.push(res));
+      fx.errors.subscribe((err) => errors.push(err));
+
+      fx();
+      expect(responses).toEqual([]);
+
+      await after(1);
+      expect(responses).toEqual([]);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toHaveProperty('message', 'async iterator failed');
+    });
+
     it('can track state with a reducer', async () => {
       const likePost = createEffect<number, string, Error, any[]>(
         (postId: number) => {

@@ -14,11 +14,12 @@ Part of the [𝗥𝘅𝑓𝑥](https://github.com/deanrad/rxfx) family of librar
 
 # What Is It Good For?
 
-When you have an async effect, embodied in a function that returns a Promise or an Observable, but you want it to:
+When you have an async effect, embodied in a function that returns a Promise or an Observable or an AsyncIterator, but you want it to:
 
-- not run too often
-- be cancelable
-- automatically track whether it is active
+- Stream
+- Be cancelable
+- Automatically track whether it is active
+- Not have race conditions
 
 # Usage
 

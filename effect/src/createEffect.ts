@@ -42,7 +42,7 @@ export function shutdownAll() {
   allShutdowns.next();
 }
 
-/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
+/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable-or-AsyncIterator returning function.
  * The effect is cancelable if it returns an Observable. `createEffect` by default runs in concurrency mode: "immediate" aka `mergeMap`.
  * @param handler The Promise or Observable-returning effect function - the EffectSource
  * @param concurrencyOperator The concurrency-control function (defaults to `mergeMap` aka Immediate)
@@ -287,7 +287,7 @@ export function createEffect<
   return Object.assign(executor, extensions);
 }
 
-/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
+/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable-or-AsyncIterator returning function.
  * The effect is cancelable if it returns an Observable. `createQueueingEffect` runs in concurrency mode: "immediate" aka `mergeMap`.
  * @summary ![immediate mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-immediate-sm.png) */
 export function createImmediateEffect<
@@ -302,7 +302,7 @@ export function createImmediateEffect<
   return createEffect(handler, mergeMap, initialState);
 }
 
-/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
+/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable-or-AsyncIterator returning function.
  * The effect is cancelable if it returns an Observable. `createQueueingEffect` runs in concurrency mode: "queueing" aka `concatMap`.
  * @summary ![queueing mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-queueing-sm.png) */
 export function createQueueingEffect<
@@ -317,7 +317,7 @@ export function createQueueingEffect<
   return createEffect(handler, concatMap, initialState);
 }
 
-/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
+/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable-or-AsyncIterator returning function.
  * The effect is cancelable if it returns an Observable. `createSwitchingEffect` runs in concurrency mode: "switching" aka `switchMap`.
  * @summary ![switching mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-switching-sm.png) */
 export function createSwitchingEffect<
@@ -332,7 +332,7 @@ export function createSwitchingEffect<
   return createEffect(handler, switchMap, initialState);
 }
 
-/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
+/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable-or-AsyncIterator returning function.
  * The effect is cancelable if it returns an Observable. `createBlockingEffect` runs in concurrency mode: "blocking" aka `exhaustMap`.
  * @summary ![blocking mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-blocking-sm.png)
  */
@@ -348,7 +348,7 @@ export function createBlockingEffect<
   return createEffect(handler, exhaustMap, initialState);
 }
 
-/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
+/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable-or-AsyncIterator returning function.
  * The effect is cancelable if it returns an Observable. `createTogglingEffect` runs in concurrency mode: "blocking" aka `exhaustMap`.
  * @summary ![toggling mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-toggling-sm.png)
  */
@@ -367,7 +367,7 @@ export function createTogglingEffect<
 /** @see rxfx/perception for why this duration */
 export const DEFAULT_DEBOUNCE_INTERVAL = 330;
 
-/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
+/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable-or-AsyncIterator returning function.
  * The effect is throttled to within `msec`, meaning an existing execution or delay blocks new ones.
  * The effect is cancelable if it returns an Observable. `createThrottledEffect` runs in concurrency mode: "toggling".
  * @summary ![blocking mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-blocking-sm.png)
@@ -400,7 +400,7 @@ export function createThrottledEffect(
   };
 }
 
-/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
+/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable-or-AsyncIterator returning function.
  * The effect is debounced for `msec`, meaning a new invocation waits to being, and interrupts any existing delay or execution.
  * The effect is cancelable if it returns an Observable. `createDebouncedEffect` runs in concurrency mode: "toggling".
  * @summary ![switching mode](https://d2jksv3bi9fv68.cloudfront.net/rxfx/mode-switching-sm.png)
@@ -433,7 +433,7 @@ export function createDebouncedEffect(
   };
 }
 
-/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable returning function.
+/** Creates an Effect - A higher-order wrapper around a Promise-or-Observable-or-AsyncIterator returning function.
  * The effect is cancelable if it returns an Observable. `createCustomEffect` runs in the concurrency mode of the
  * RxJS operator it is passed as its 2nd argument */
 export function createCustomEffect<
