@@ -21,11 +21,16 @@
     "sourceMap": true,
     "removeComments": false,
     "declaration": true,
-    "declarationDir": "dist/tsc/types"
+    "declarationDir": "dist/tsc/types",
+    "ignoreDeprecations": "6.0",
+    "skipLibCheck": true
   },
   "include": [
-    "./src/**/*.ts"
-, "test/utils.spec.ts", "test/bus.spec.ts", "test/3rd-party.spec.ts"  ],
+    "./src/**/*.ts",
+    "test/utils.spec.ts",
+    "test/bus.spec.ts",
+    "test/3rd-party.spec.ts"
+  ],
   "exclude": [
     "./src/**/*.spec.ts",
     "dist"

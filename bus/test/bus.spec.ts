@@ -971,7 +971,7 @@ describe('Bus', () => {
           () => {
             try {
               micro.trigger(2); // raises error
-            } catch (ex) {
+            } catch (_ex) {
               throw 'Saw it';
             }
           }

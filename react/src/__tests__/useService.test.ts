@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react-hooks';
+import { renderHook } from '@testing-library/react';
 import { createService } from '@rxfx/service';
 import { useService } from '../useService';
 
