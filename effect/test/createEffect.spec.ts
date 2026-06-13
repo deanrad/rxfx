@@ -179,6 +179,19 @@ describe('createEffect - returns a function with properties which', () => {
     expect(response2).toBe(REQ1 + 1);
     expect(response3).toBe(REQ1 + 1);
   });
+
+  it('supports matching the sent response via .send()', async () => {
+    const counterFx = createEffect<number, number>((i: number) =>
+      after(DELAY, i + 1)
+    );
+
+    counterFx(1);
+
+    const response = await counterFx.send(2, (req, res) => res === req + 1);
+
+    expect(response).toBe(3);
+  });
+
   describe('Effect Handler', () => {
     it('Can return a Promise', async () => {
       const VALUE = 1.1;
