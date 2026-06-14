@@ -1,162 +1,146 @@
 import { act, renderHook } from '@testing-library/react';
-import { createService, ProcessLifecycleCallbacks } from '@rxfx/service';
-import { BehaviorSubject, Subscription } from 'rxjs';
+import { createEffect } from '@rxfx/effect';
+import { Subject, throwError } from 'rxjs';
 import { useService } from '../useService';
 
 describe('useService', () => {
-  const createTestService = () => {
-    const service = createService('test', jest.fn());
-    service.cancelCurrent = jest.fn();
-    service.cancelCurrentAndQueued = jest.fn();
-    return service;
-  };
-
-  const createMockService = () => {
-    const state = new BehaviorSubject('idle');
-    const isActive = new BehaviorSubject(false);
-    const currentError = new BehaviorSubject<Error | null>(null);
-    const request = jest.fn(function (this: unknown, _req?: string) {
-      return this;
-    });
-    const cancelCurrent = jest.fn();
-    const cancelCurrentAndQueued = jest.fn();
-    let observers: Partial<ProcessLifecycleCallbacks<string, string, Error>> =
-      {};
-
-    return {
-      service: {
-        request,
-        cancelCurrent,
-        cancelCurrentAndQueued,
-        state,
-        isActive,
-        currentError,
-        observe(
-          cbs: Partial<ProcessLifecycleCallbacks<string, string, Error>>
-        ) {
-          observers = cbs;
-          return new Subscription();
-        },
-      },
-      trigger<K extends keyof ProcessLifecycleCallbacks<string, string, Error>>(
-        key: K,
-        ...args: Parameters<ProcessLifecycleCallbacks<string, string, Error>[K]>
-      ) {
-        observers[key]?.(...args);
-      },
-    };
+  const createCancelableEffect = () => {
+    const fx = createEffect<string, string>(() => new Subject<string>());
+    jest.spyOn(fx, 'cancelCurrent');
+    jest.spyOn(fx, 'cancelCurrentAndQueued');
+    return fx;
   };
 
   it('provides state, isActive, and request function', () => {
-    const service = createTestService();
-    const { result } = renderHook(() => useService(service));
+    const fx = createEffect<string, string>(() => new Subject<string>());
+    const { result } = renderHook(() => useService(fx));
 
-    expect(result.current.state).toBeDefined();
+    expect(result.current.state).toBe(null);
     expect(result.current.isActive).toBe(false);
+    expect(typeof result.current.request).toBe('function');
   });
 
-  it('binds request to the service instance', () => {
-    const { service } = createMockService();
-    const { result } = renderHook(() => useService(service));
+  it('binds request to the effect instance and invokes the handler', async () => {
+    const handler = jest.fn(() => new Subject<string>());
+    const fx = createEffect<string, string>(handler);
+    const { result } = renderHook(() => useService(fx));
 
-    result.current.request('ping');
+    await act(async () => {
+      result.current.request('ping');
+      await Promise.resolve();
+    });
 
-    expect(service.request).toHaveBeenCalledWith('ping');
-    expect(service.request.mock.results[0]?.value).toBe(service);
+    expect(handler).toHaveBeenCalledWith('ping');
   });
 
-  it('updates state when the service state changes', () => {
-    const { service } = createMockService();
-    const { result } = renderHook(() => useService(service));
+  it('updates state when the effect reducer emits a response', async () => {
+    const responses = new Subject<string>();
+    const fx = createEffect<string, string>(() => responses);
+    fx.reduceWith(
+      (state, evt) => (evt.type === 'response' ? evt.payload : state),
+      'idle'
+    );
 
-    act(() => {
-      service.state.next('ready');
+    const { result } = renderHook(() => useService(fx));
+
+    await act(async () => {
+      result.current.request('ready');
+      await Promise.resolve();
+      responses.next('ready');
     });
 
     expect(result.current.state).toBe('ready');
   });
 
-  it('updates isActive when the service activity changes', () => {
-    const { service } = createMockService();
-    const { result } = renderHook(() => useService(service));
-
-    act(() => {
-      service.isActive.next(true);
-    });
-
-    expect(result.current.isActive).toBe(true);
-  });
-
-  it('updates currentError when the service errors', () => {
-    const { service } = createMockService();
-    const { result } = renderHook(() => useService(service));
+  it('updates currentError when the effect errors', async () => {
     const err = new Error('boom');
+    const fx = createEffect<string, string>(() => throwError(() => err));
+    const { result } = renderHook(() => useService(fx));
 
-    act(() => {
-      service.currentError.next(err);
+    await act(async () => {
+      result.current.request('ping');
+      await Promise.resolve();
     });
 
     expect(result.current.currentError).toBe(err);
   });
 
-  it('sets isLoading during started and clears it on next', () => {
-    const mock = createMockService();
-    const { result } = renderHook(() => useService(mock.service));
+  it('sets isActive when a request is in flight', async () => {
+    const responses = new Subject<string>();
+    const fx = createEffect<string, string>(() => responses);
+    const { result } = renderHook(() => useService(fx));
 
-    act(() => {
-      mock.trigger('started', 'ping');
+    await act(async () => {
+      result.current.request('ping');
+      await Promise.resolve();
+    });
+
+    expect(result.current.isActive).toBe(true);
+  });
+
+  it('sets isLoading during started and clears it on next', async () => {
+    const responses = new Subject<string>();
+    const fx = createEffect<string, string>(() => responses);
+    const { result } = renderHook(() => useService(fx));
+
+    await act(async () => {
+      result.current.request('ping');
+      await Promise.resolve();
     });
     expect(result.current.isLoading).toBe(true);
 
     act(() => {
-      mock.trigger('next', 'pong');
+      responses.next('pong');
     });
     expect(result.current.isLoading).toBe(false);
   });
 
-  it('clears isLoading when the request finalizes without a next value', () => {
-    const mock = createMockService();
-    const { result } = renderHook(() => useService(mock.service));
+  it('clears isLoading when the request finalizes without a next value', async () => {
+    const responses = new Subject<string>();
+    const fx = createEffect<string, string>(() => responses);
+    const { result } = renderHook(() => useService(fx));
 
-    act(() => {
-      mock.trigger('started', 'ping');
+    await act(async () => {
+      result.current.request('ping');
+      await Promise.resolve();
     });
     expect(result.current.isLoading).toBe(true);
 
-    act(() => {
-      mock.trigger('finalized');
+    await act(async () => {
+      responses.complete();
+      await Promise.resolve();
     });
     expect(result.current.isLoading).toBe(false);
   });
 
   describe('unmount behavior', () => {
     it('does not cancel by default', () => {
-      const service = createTestService();
-      const { unmount } = renderHook(() => useService(service));
+      const fx = createCancelableEffect();
+      const { unmount } = renderHook(() => useService(fx));
 
       unmount();
-      expect(service.cancelCurrent).not.toHaveBeenCalled();
-      expect(service.cancelCurrentAndQueued).not.toHaveBeenCalled();
+      expect(fx.cancelCurrent).not.toHaveBeenCalled();
+      expect(fx.cancelCurrentAndQueued).not.toHaveBeenCalled();
     });
 
     it('calls cancelCurrent when unmount option is cancelCurrent', () => {
-      const service = createTestService();
-      const { unmount } = renderHook(() => 
-        useService(service, { unmount: 'cancelCurrent' })
+      const fx = createCancelableEffect();
+      const { unmount } = renderHook(() =>
+        useService(fx, { unmount: 'cancelCurrent' })
       );
 
       unmount();
-      expect(service.cancelCurrent).toHaveBeenCalled();
+      expect(fx.cancelCurrent).toHaveBeenCalled();
     });
 
     it('calls cancelCurrentAndQueued when unmount option is cancelCurrentAndQueued', () => {
-      const service = createTestService();
-      const { unmount } = renderHook(() => 
-        useService(service, { unmount: 'cancelCurrentAndQueued' })
+      const fx = createCancelableEffect();
+      const { unmount } = renderHook(() =>
+        useService(fx, { unmount: 'cancelCurrentAndQueued' })
       );
 
       unmount();
-      expect(service.cancelCurrentAndQueued).toHaveBeenCalled();
+      expect(fx.cancelCurrentAndQueued).toHaveBeenCalled();
     });
   });
 });
