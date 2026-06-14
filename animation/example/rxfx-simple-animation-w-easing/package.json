@@ -12,13 +12,10 @@
     "@rxfx/animation": "^0.8.9",
     "@rxfx/bus": "^1.0.5",
     "@rxfx/perception": "^1.0.0",
-    "parcel-bundler": "^1.6.1"
+    "parcel": "^2.16.4"
   },
   "devDependencies": {
-    "typescript": "4.4.4"
-  },
-  "resolutions": {
-    "@babel/preset-env": "7.13.8"
+    "typescript": "^6.0.3"
   },
   "keywords": []
 }

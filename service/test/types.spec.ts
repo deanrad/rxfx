@@ -22,14 +22,14 @@ describe('Types', () => {
 
   describe('ServiceRequestType', () => {
     it('gets the type of .state.value', () => {
-      const mathService = createServiceListener<
+      const _mathService = createServiceListener<
         string | void,
         number,
         Error,
         InitialState
       >('math', bus, handler, reducerProducer);
 
-      const _initial: ServiceStateType<typeof mathService> = { constants: [] };
+      const _initial: ServiceStateType<typeof _mathService> = { constants: [] };
       const { constants } = _initial;
 
       // Type inference has worked - this is number[]
@@ -39,14 +39,14 @@ describe('Types', () => {
 
   describe('ServiceRequestType', () => {
     it('gets the .request arg type', () => {
-      const mathService = createServiceListener<
+      const _mathService = createServiceListener<
         string | void,
         number,
         Error,
         InitialState
       >('math', bus, handler, reducerProducer);
 
-      let _req: ServiceRequestType<typeof mathService>;
+      let _req: ServiceRequestType<typeof _mathService>;
 
       // Type inference has worked - _req is string|void
       expect.assertions(0);

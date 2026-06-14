@@ -21,5 +21,11 @@ export default {
       sourcemap: true,
     },
   ],
-  plugins: [typescript()],
+  plugins: [
+    typescript({
+      declaration: false,
+      declarationDir: undefined,
+      outDir: undefined,
+    }),
+  ],
 };

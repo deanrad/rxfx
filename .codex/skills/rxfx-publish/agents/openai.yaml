@@ -1,0 +1,7 @@
+interface:
+  display_name: "Rxfx Publish"
+  short_description: "Publish rxfx packages to npm"
+  default_prompt: "Use $rxfx-publish to publish one or more bumped rxfx packages from this repo to npm in dependency order."
+
+policy:
+  allow_implicit_invocation: true

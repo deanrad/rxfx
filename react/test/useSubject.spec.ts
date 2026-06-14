@@ -1,4 +1,4 @@
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react';
 import { useSubject } from '../src/useSubject';
 import { BehaviorSubject } from 'rxjs';
 

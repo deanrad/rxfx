@@ -4,23 +4,39 @@
     "module": "esnext",
     "moduleResolution": "node",
     "noEmitOnError": true,
-    "lib": ["es2017", "DOM"],
+    "lib": [
+      "es2017",
+      "DOM"
+    ],
     "strict": true,
     "esModuleInterop": false,
     "outDir": "dist/tsc",
     "rootDir": "./",
     "downlevelIteration": true,
     "importHelpers": true,
-    "types": ["node", "jest"],
+    "types": [
+      "node",
+      "jest"
+    ],
     "sourceMap": true,
     "removeComments": false,
     "declaration": true,
-    "declarationDir": "dist/tsc/types"
+    "declarationDir": "dist/tsc/types",
+    "ignoreDeprecations": "6.0",
+    "skipLibCheck": true
   },
-  "include": ["./src/**/*.ts", "./test/**/*.ts"],
-  "exclude": ["./src/**/*.spec.ts", "dist"],
+  "include": [
+    "./src/**/*.ts",
+    "./test/**/*.ts"
+  ],
+  "exclude": [
+    "./src/**/*.spec.ts",
+    "dist"
+  ],
   "typedocOptions": {
-    "entryPoints": ["src/index.ts"],
+    "entryPoints": [
+      "src/index.ts"
+    ],
     "out": "docs/api"
   }
 }

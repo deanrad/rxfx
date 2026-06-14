@@ -8,7 +8,7 @@
   "repository": "https://github.com/deanrad/rxfx",
   "scripts": {
     "build": "yarn workspaces foreach -pt run build",
-    "test": "yarn workspaces foreach -pt run test",
+    "test": "yarn workspaces foreach -pt run test:fast --watchman=false",
     "test:full": "yarn workspaces foreach -pt run test:full",
     "bump:info": "node scripts/bump-versions.mjs",
     "bump:patch": "bash scripts/bump-patch.sh"
@@ -32,24 +32,24 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@types/node": "^20.19.41",
-    "nodemon": "^3.0.2",
+    "@types/node": "^25.9.3",
+    "nodemon": "^3.1.14",
     "say": "^0.16.0",
-    "scripty": "^2.1.1",
+    "scripty": "^3.0.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3",
-    "zod": "^3.25.3"
+    "typescript": "^6.0.3",
+    "zod": "^4.4.3"
   },
   "resolutions": {
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.3",
     "tslib": "^2.8.1",
-    "@types/node": "^20.19.41",
+    "@types/node": "^25.9.3",
     "ts-node": "^10.9.2",
-    "@babel/traverse": "^7.27.1",
-    "@babel/core": "^7.29.0",
-    "@babel/preset-env": "^7.29.5",
-    "ejs": "^3.1.9",
-    "eslint": "^8.57.0"
+    "@babel/traverse": "^7.29.7",
+    "@babel/core": "^7.29.7",
+    "@babel/preset-env": "^7.29.7",
+    "ejs": "^3.1.10",
+    "eslint": "^10.5.0"
   },
   "packageManager": "yarn@3.2.3"
 }
