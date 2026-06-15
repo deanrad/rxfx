@@ -79,6 +79,7 @@ Though `rxfx` is tree-shakable, you may choose to import only the sub-libraries.
 
 ## When is it time to introduce 𝗥𝘅𝑓𝑥?
 
+- You are needing to handle streaming (like for building a Chat interface for LLMs), but are most comfortable with Promise-based APIs.
 - You notice you are introducing `loading` state fields which must be set and unset manually
 - You are manually outputting logging messages, and there is no standard convention between them.
 - You are using framework-specific constructs (`useEffect`, async pipe) to manage asynchrony.
