@@ -12,8 +12,7 @@ Use this skill when the user wants to release a single package or a set of bumpe
 
 ## Rules
 
-- Publish from the target package directory with `npm publish --access public --registry=https://registry.npmjs.org`.
-- Do not use `yarn npm publish` unless the user explicitly asks for it.
+- Publish from the target package directory with `yarn npm publish  --registry=https://registry.npmjs.org --access public`.
 - If npm auth is invalid, repair it with `npm login --registry=https://registry.npmjs.org`.
 - Expect npm to require an authenticator code during login and again during publish.
 - Reuse the most recent OTP when publishing multiple packages in quick succession.
