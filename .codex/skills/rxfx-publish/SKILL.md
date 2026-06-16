@@ -99,6 +99,13 @@ YARN_NPM_PUBLISH_REGISTRY=https://registry.npmjs.org yarn npm publish --access p
 - Keep reusing the latest code until npm rejects it.
 - On `EOTP`, ask the user for a fresh code and retry the current package.
 
+## Verify in CodeSandbox
+
+Update the dependencies using a logged in browser here:
+https://codesandbox.io/p/sandbox/rxfx-bell-effect-1-1-zk6289
+
+Verify that no errors appear on load, and that the "Ring" button can be clicked without causing an error.
+
 ## Reporting
 
 When done, report:
