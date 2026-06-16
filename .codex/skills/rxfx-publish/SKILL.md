@@ -1,24 +1,26 @@
 ---
 name: rxfx-publish
-description: Use when publishing one or more packages from this rxfx monorepo to npm, especially after version bumps. Handles npm login, dependency-order publishing, plain npm publish commands from each package directory, and OTP reuse or refresh during the release flow.
+description: Use when publishing one or more packages from this rxfx monorepo to npm, especially after version bumps. Handles Yarn npm auth, dependency-order publishing, and OTP reuse or refresh during the release flow.
 ---
 
 # Rxfx Publish
 
 ## Overview
 
-Publish rxfx workspace packages to npm with plain `npm`, not `yarn`.
+Publish rxfx workspace packages to npm with Yarn's npm plugin, not plain `npm`.
 Use this skill when the user wants to release a single package or a set of bumped packages from this repo.
 
 ## Rules
 
-- Publish from the target package directory with `yarn npm publish  --registry=https://registry.npmjs.org --access public`.
-- If npm auth is invalid, repair it with `npm login --registry=https://registry.npmjs.org`.
+- Never use `npm publish` for this Yarn monorepo.
+- Publish from the target package directory with `YARN_NPM_PUBLISH_REGISTRY=https://registry.npmjs.org yarn npm publish --access public`.
+- If npm auth is invalid, repair it with `yarn npm login`.
 - Expect npm to require an authenticator code during login and again during publish.
 - Reuse the most recent OTP when publishing multiple packages in quick succession.
 - If npm returns `EOTP`, stop and ask the user for a fresh authenticator code.
-- If npm returns `E401`, the saved npm credentials are invalid; rerun `npm login`.
-- If npm returns `404` on publish, treat it as a scope/account permission problem and verify the logged-in npm identity before continuing.
+- If npm returns `E401`, the saved npm credentials are invalid; rerun `yarn npm login`.
+- If Yarn returns `YN0033`, the publish registry credentials are missing; rerun `yarn npm login`.
+- If npm returns `404` on publish, first confirm Yarn is publishing to `https://registry.npmjs.org` rather than `https://registry.yarnpkg.com`.
 
 ## Dependency Order
 
@@ -63,9 +65,9 @@ Package-to-name mapping:
 ### 2. Verify npm auth
 
 - Preferred check:
-  `npm whoami --registry=https://registry.npmjs.org`
+  `yarn npm whoami --publish`
 - If that fails with `401`, run:
-  `npm login --registry=https://registry.npmjs.org`
+  `yarn npm login`
 
 Login flow:
 
@@ -79,10 +81,10 @@ Login flow:
 From the package directory:
 
 ```bash
-npm publish --access public --registry=https://registry.npmjs.org
+YARN_NPM_PUBLISH_REGISTRY=https://registry.npmjs.org yarn npm publish --access public
 ```
 
-If npm asks for `Enter OTP:`, request the code from the user and submit it.
+If npm asks for `Enter OTP:` or the command returns `EOTP`, request the code from the user and retry with `--otp=<code>`.
 
 ### 4. Publish multiple packages
 
@@ -91,7 +93,7 @@ If npm asks for `Enter OTP:`, request the code from the user and submit it.
 - For each package, run:
 
 ```bash
-npm publish --access public --registry=https://registry.npmjs.org --otp=<latest_code>
+YARN_NPM_PUBLISH_REGISTRY=https://registry.npmjs.org yarn npm publish --access public --otp=<latest_code>
 ```
 
 - Keep reusing the latest code until npm rejects it.
