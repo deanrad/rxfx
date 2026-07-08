@@ -110,6 +110,23 @@ describe('createEffect - returns a function with properties which', () => {
     expect(completions).toEqual([undefined]);
   });
 
+  it('allows createImmediateEffect to accept timeout options', async () => {
+    const fx = createImmediateEffect<void, string>(
+      () => after(20, 'slow'),
+      undefined,
+      { timeout: 5 }
+    );
+    const errs = [] as Error[];
+
+    fx.errors.subscribe((err) => errs.push(err));
+    fx();
+
+    await after(10);
+
+    expect(errs).toHaveLength(1);
+    expect(errs[0]).toHaveProperty('message', 'Rxfx process timed out in 5 ms');
+  });
+
   it('is cancelable', async () => {
     const liked = [] as string[];
     const likePost = createEffect((postId: number) => {

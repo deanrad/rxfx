@@ -323,9 +323,10 @@ export function createImmediateEffect<
   TState = Response
 >(
   handler: EffectSource<Request, Response>,
-  initialState?: TState
+  initialState?: TState,
+  options?: CreateEffectOptions
 ): EffectRunner<Request, Response, TError, TState> {
-  return createEffect(handler, mergeMap, initialState);
+  return createEffect(handler, mergeMap, initialState, options);
 }
 
 /** Creates an Effect - A higher-order wrapper around a Promise-or-Observable-or-AsyncIterator returning function.
@@ -338,9 +339,10 @@ export function createQueueingEffect<
   TState = Response
 >(
   handler: EffectSource<Request, Response>,
-  initialState?: TState
+  initialState?: TState,
+  options?: CreateEffectOptions
 ): EffectRunner<Request, Response, TError, TState> {
-  return createEffect(handler, concatMap, initialState);
+  return createEffect(handler, concatMap, initialState, options);
 }
 
 /** Creates an Effect - A higher-order wrapper around a Promise-or-Observable-or-AsyncIterator returning function.
@@ -353,9 +355,10 @@ export function createSwitchingEffect<
   TState = Response
 >(
   handler: EffectSource<Request, Response>,
-  initialState?: TState
+  initialState?: TState,
+  options?: CreateEffectOptions
 ): EffectRunner<Request, Response, TError, TState> {
-  return createEffect(handler, switchMap, initialState);
+  return createEffect(handler, switchMap, initialState, options);
 }
 
 /** Creates an Effect - A higher-order wrapper around a Promise-or-Observable-or-AsyncIterator returning function.
@@ -369,9 +372,10 @@ export function createBlockingEffect<
   TState = Response
 >(
   handler: EffectSource<Request, Response>,
-  initialState?: TState
+  initialState?: TState,
+  options?: CreateEffectOptions
 ): EffectRunner<Request, Response, TError, TState> {
-  return createEffect(handler, exhaustMap, initialState);
+  return createEffect(handler, exhaustMap, initialState, options);
 }
 
 /** Creates an Effect - A higher-order wrapper around a Promise-or-Observable-or-AsyncIterator returning function.
@@ -385,9 +389,15 @@ export function createTogglingEffect<
   TState = Response
 >(
   handler: EffectSource<Request, Response>,
-  initialState?: TState
+  initialState?: TState,
+  options?: CreateEffectOptions
 ): EffectRunner<Request, Response, TError, TState> {
-  return createEffect(handler, toggleMap as typeof mergeMap, initialState);
+  return createEffect(
+    handler,
+    toggleMap as typeof mergeMap,
+    initialState,
+    options
+  );
 }
 
 /** @see rxfx/perception for why this duration */
@@ -408,7 +418,8 @@ export function createThrottledEffect(
     TState = Response
   >(
     handler: EffectSource<Request, Response>,
-    initialState?: TState
+    initialState?: TState,
+    options?: CreateEffectOptions
   ): EffectRunner<Request, Response, TError, TState> {
     return createEffect<Request, Response, TError, TState>(
       (args: Request) => {
@@ -421,7 +432,8 @@ export function createThrottledEffect(
         );
       },
       exhaustMap,
-      initialState
+      initialState,
+      options
     );
   };
 }
@@ -441,7 +453,8 @@ export function createDebouncedEffect(
     TState = Response
   >(
     handler: EffectSource<Request, Response>,
-    initialState?: TState
+    initialState?: TState,
+    options?: CreateEffectOptions
   ): EffectRunner<Request, Response, TError, TState> {
     return createEffect<Request, Response, TError, TState>(
       (args: Request) => {
@@ -454,7 +467,8 @@ export function createDebouncedEffect(
         );
       },
       switchMap,
-      initialState
+      initialState,
+      options
     );
   };
 }
@@ -470,9 +484,10 @@ export function createCustomEffect<
 >(
   handler: EffectSource<Request, Response>,
   concurrencyOperator = mergeMap,
-  initialState?: TState
+  initialState?: TState,
+  options?: CreateEffectOptions
 ): EffectRunner<Request, Response, TError, TState> {
-  return createEffect(handler, concurrencyOperator, initialState);
+  return createEffect(handler, concurrencyOperator, initialState, options);
 }
 
 function noop() {}
