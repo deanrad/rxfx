@@ -50,7 +50,7 @@ describe('createEffect - returns a function with properties which', () => {
       () => after(20, 'slow'),
       mergeMap,
       undefined,
-      { timeout: 5 }
+      { timeout: { duration: 5 } }
     );
     const errs = [] as Error[];
     const responses = [] as string[];
@@ -91,7 +91,7 @@ describe('createEffect - returns a function with properties which', () => {
       () => after(5, 'done'),
       mergeMap,
       undefined,
-      { timeout: 20 }
+      { timeout: { duration: 20 } }
     );
     const errs = [] as Error[];
     const responses = [] as string[];
@@ -110,11 +110,35 @@ describe('createEffect - returns a function with properties which', () => {
     expect(completions).toEqual([undefined]);
   });
 
+  it('uses timeout.errorFactory when provided', async () => {
+    const fx = createEffect<number, string, Error>(
+      () => after(20, 'slow'),
+      mergeMap,
+      undefined,
+      {
+        timeout: {
+          duration: 5,
+          errorFactory: (req) => new Error(`custom timeout for ${req}`),
+        },
+      }
+    );
+    const errs = [] as Error[];
+
+    fx.errors.subscribe((err) => errs.push(err));
+    fx(42);
+
+    await after(10);
+
+    expect(errs).toHaveLength(1);
+    expect(errs[0]).toHaveProperty('message', 'custom timeout for 42');
+    expect(fx.currentError.value).toBe(errs[0]);
+  });
+
   it('allows createImmediateEffect to accept timeout options', async () => {
     const fx = createImmediateEffect<void, string>(
       () => after(20, 'slow'),
       undefined,
-      { timeout: 5 }
+      { timeout: { duration: 5 } }
     );
     const errs = [] as Error[];
 

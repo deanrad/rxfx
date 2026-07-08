@@ -32,13 +32,13 @@ import {
   LifecycleReducerEvent,
   ProcessLifecycleCallbacks,
 } from './types';
-import { timeoutHandler } from './modifyHandler';
+import { TimeoutOptions, timeoutHandler } from './modifyHandler';
 export { EffectRunner } from './types';
 
 const allShutdowns = new Subject<void>();
 
-interface CreateEffectOptions {
-  timeout?: number;
+export interface CreateEffectOptions<TRequest = unknown, TError = Error> {
+  timeout?: TimeoutOptions<TRequest, TError>;
 }
 
 type ConcurrencyOperator = typeof mergeMap;
@@ -63,7 +63,7 @@ export function createEffect<
   handler: EffectSource<Request, Response>,
   concurrencyOperator?: ConcurrencyOperator,
   initialState?: TState,
-  options?: CreateEffectOptions
+  options?: CreateEffectOptions<Request, TError>
 ): EffectRunner<Request, Response, TError, TState>;
 export function createEffect<
   Request,
@@ -74,14 +74,11 @@ export function createEffect<
   handler: EffectSource<Request, Response>,
   concurrencyOperator = mergeMap,
   initialState?: TState,
-  options?: CreateEffectOptions
+  options?: CreateEffectOptions<Request, TError>
 ): EffectRunner<Request, Response, TError, TState> {
   const actualHandler =
-    typeof options?.timeout === 'number'
-      ? timeoutHandler<Request, Response, TError>(
-          { duration: options.timeout },
-          handler
-        )
+    options?.timeout
+      ? timeoutHandler<Request, Response, TError>(options.timeout, handler)
       : handler;
   const errors = new Subject<TError>();
 
@@ -324,7 +321,7 @@ export function createImmediateEffect<
 >(
   handler: EffectSource<Request, Response>,
   initialState?: TState,
-  options?: CreateEffectOptions
+  options?: CreateEffectOptions<Request, TError>
 ): EffectRunner<Request, Response, TError, TState> {
   return createEffect(handler, mergeMap, initialState, options);
 }
@@ -340,7 +337,7 @@ export function createQueueingEffect<
 >(
   handler: EffectSource<Request, Response>,
   initialState?: TState,
-  options?: CreateEffectOptions
+  options?: CreateEffectOptions<Request, TError>
 ): EffectRunner<Request, Response, TError, TState> {
   return createEffect(handler, concatMap, initialState, options);
 }
@@ -356,7 +353,7 @@ export function createSwitchingEffect<
 >(
   handler: EffectSource<Request, Response>,
   initialState?: TState,
-  options?: CreateEffectOptions
+  options?: CreateEffectOptions<Request, TError>
 ): EffectRunner<Request, Response, TError, TState> {
   return createEffect(handler, switchMap, initialState, options);
 }
@@ -373,7 +370,7 @@ export function createBlockingEffect<
 >(
   handler: EffectSource<Request, Response>,
   initialState?: TState,
-  options?: CreateEffectOptions
+  options?: CreateEffectOptions<Request, TError>
 ): EffectRunner<Request, Response, TError, TState> {
   return createEffect(handler, exhaustMap, initialState, options);
 }
@@ -390,7 +387,7 @@ export function createTogglingEffect<
 >(
   handler: EffectSource<Request, Response>,
   initialState?: TState,
-  options?: CreateEffectOptions
+  options?: CreateEffectOptions<Request, TError>
 ): EffectRunner<Request, Response, TError, TState> {
   return createEffect(
     handler,
@@ -419,7 +416,7 @@ export function createThrottledEffect(
   >(
     handler: EffectSource<Request, Response>,
     initialState?: TState,
-    options?: CreateEffectOptions
+    options?: CreateEffectOptions<Request, TError>
   ): EffectRunner<Request, Response, TError, TState> {
     return createEffect<Request, Response, TError, TState>(
       (args: Request) => {
@@ -454,7 +451,7 @@ export function createDebouncedEffect(
   >(
     handler: EffectSource<Request, Response>,
     initialState?: TState,
-    options?: CreateEffectOptions
+    options?: CreateEffectOptions<Request, TError>
   ): EffectRunner<Request, Response, TError, TState> {
     return createEffect<Request, Response, TError, TState>(
       (args: Request) => {
@@ -485,7 +482,7 @@ export function createCustomEffect<
   handler: EffectSource<Request, Response>,
   concurrencyOperator = mergeMap,
   initialState?: TState,
-  options?: CreateEffectOptions
+  options?: CreateEffectOptions<Request, TError>
 ): EffectRunner<Request, Response, TError, TState> {
   return createEffect(handler, concurrencyOperator, initialState, options);
 }
