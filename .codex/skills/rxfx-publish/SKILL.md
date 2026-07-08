@@ -56,6 +56,10 @@ Package-to-name mapping:
 
 ## Release Workflow
 
+### 0. Verify package builds
+
+Run `yarn test:full` in the package directory
+
 ### 1. Verify package versions to publish
 
 - Inspect changed `package.json` files.

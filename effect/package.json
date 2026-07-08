@@ -1,6 +1,6 @@
 {
   "name": "@rxfx/effect",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "license": "MIT",
   "author": "Dean Radcliffe",
   "repository": "https://github.com/deanrad/rxfx",
@@ -30,7 +30,8 @@
     "test:full": "yarn test:fast && yarn test:jsdom && yarn test:quiet && echo 'Retest successful' && yarn lint && yarn build",
     "doc": "typedoc --out dist/docs/effect",
     "doctoc": "doctoc .",
-    "build": "rimraf dist && tsc && timeout --foreground --preserve-status 10 rollup --bundleConfigAsCjs -c rollup.config.js"
+    "build": "rimraf dist && tsc && timeout --foreground --preserve-status 10 rollup --bundleConfigAsCjs -c rollup.config.js",
+    "npm:publish": "yarn test:full; yarn npm publish --access public"
   },
   "dependencies": {
     "@rxfx/after": "workspace:*",
