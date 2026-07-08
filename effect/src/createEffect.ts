@@ -32,9 +32,16 @@ import {
   LifecycleReducerEvent,
   ProcessLifecycleCallbacks,
 } from './types';
+import { timeoutHandler } from './modifyHandler';
 export { EffectRunner } from './types';
 
 const allShutdowns = new Subject<void>();
+
+interface CreateEffectOptions {
+  timeout?: number;
+}
+
+type ConcurrencyOperator = typeof mergeMap;
 
 /** Used to terminate all running Effects. Call when an application is shutting down. For individual effect control, see its Cancelable interface.
  */
@@ -54,9 +61,28 @@ export function createEffect<
   TState = Response
 >(
   handler: EffectSource<Request, Response>,
+  concurrencyOperator?: ConcurrencyOperator,
+  initialState?: TState,
+  options?: CreateEffectOptions
+): EffectRunner<Request, Response, TError, TState>;
+export function createEffect<
+  Request,
+  Response = void,
+  TError extends Error = Error,
+  TState = Response
+>(
+  handler: EffectSource<Request, Response>,
   concurrencyOperator = mergeMap,
-  initialState?: TState
+  initialState?: TState,
+  options?: CreateEffectOptions
 ): EffectRunner<Request, Response, TError, TState> {
+  const actualHandler =
+    typeof options?.timeout === 'number'
+      ? timeoutHandler<Request, Response, TError>(
+          { duration: options.timeout },
+          handler
+        )
+      : handler;
   const errors = new Subject<TError>();
 
   const currentError = new BehaviorSubject<TError | null>(null);
@@ -84,7 +110,7 @@ export function createEffect<
     currentError.next(null);
 
     try {
-      oneResult = handler(request);
+      oneResult = actualHandler(request);
     } catch (e) {
       errors.next(e as TError);
     }

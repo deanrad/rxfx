@@ -45,6 +45,71 @@ describe('createEffect - returns a function with properties which', () => {
     expect(fxFn).toHaveBeenCalled();
   });
 
+  it('times out when timeout is provided in trailing options', async () => {
+    const fx = createEffect<void, string>(
+      () => after(20, 'slow'),
+      mergeMap,
+      undefined,
+      { timeout: 5 }
+    );
+    const errs = [] as Error[];
+    const responses = [] as string[];
+    const completions = [] as void[];
+
+    fx.errors.subscribe((err) => errs.push(err));
+    fx.responses.subscribe((response) => responses.push(response));
+    fx.completions.subscribe((completion) => completions.push(completion));
+    fx();
+
+    await after(10);
+
+    expect(errs).toHaveLength(1);
+    expect(errs[0]).toHaveProperty('message', 'Rxfx process timed out in 5 ms');
+    expect(fx.currentError.value).toBe(errs[0]);
+    expect(responses).toEqual([]);
+    expect(completions).toEqual([]);
+    expect(fx.isHandling.value).toBe(false);
+  });
+
+  it('does not wrap with timeoutHandler when no timeout is given', async () => {
+    const fx = createEffect<void, string>(() => after(5, 'done'), mergeMap, {
+      count: 0,
+    });
+    const responses = [] as string[];
+
+    fx.responses.subscribe((response) => responses.push(response));
+    fx();
+
+    await after(10);
+
+    expect(responses).toEqual(['done']);
+    expect(fx.state.value).toEqual({ count: 0 });
+  });
+
+  it('allows a fast handler to complete when timeout is longer than execution', async () => {
+    const fx = createEffect<void, string>(
+      () => after(5, 'done'),
+      mergeMap,
+      undefined,
+      { timeout: 20 }
+    );
+    const errs = [] as Error[];
+    const responses = [] as string[];
+    const completions = [] as void[];
+
+    fx.errors.subscribe((err) => errs.push(err));
+    fx.responses.subscribe((response) => responses.push(response));
+    fx.completions.subscribe((completion) => completions.push(completion));
+    fx();
+
+    await after(10);
+
+    expect(errs).toEqual([]);
+    expect(fx.currentError.value).toBe(null);
+    expect(responses).toEqual(['done']);
+    expect(completions).toEqual([undefined]);
+  });
+
   it('is cancelable', async () => {
     const liked = [] as string[];
     const likePost = createEffect((postId: number) => {
