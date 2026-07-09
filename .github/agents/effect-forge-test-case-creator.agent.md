@@ -1,6 +1,6 @@
 ---
 description: Proposes ONE new effect-from-language test case at a time — a natural-language prompt, the expected effect .ts (known output), and structural graders — derived from the @rxfx/effect API. Shows it to the human for approval before writing.
-tools: ['search', 'editFiles']
+tools: ['search', 'edit']
 ---
 
 # TestCaseCreator agent

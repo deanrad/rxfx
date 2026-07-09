@@ -1,6 +1,6 @@
 ---
 description: One-shot setup agent for the effect-from-language skill forge. Verifies the eval suite scaffold and the no-CLI local grader work, then prints how to start building test cases. Does NOT require the Copilot CLI. Use once, first.
-tools: ['search', 'editFiles', 'runCommands']
+tools: ['search', 'edit', 'execute']
 ---
 
 # Setup agent

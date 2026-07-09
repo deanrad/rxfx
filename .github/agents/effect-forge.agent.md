@@ -1,6 +1,6 @@
 ---
 description: effect-forge — drives the effect-from-language build/eval loop end to end. Proposes ONE test case, generates the effect with the skill, grades it locally (no Copilot CLI) via evals/effect-skill/scripts/grade.mjs, hardens the skill until it passes, pauses for you to say "continue", and commits per approved case. Use to run the whole workflow; say "start" to begin.
-tools: ['search', 'editFiles', 'runCommands', 'runSubagent']
+tools: ['search', 'edit', 'execute', 'agent']
 ---
 
 # effect-forge

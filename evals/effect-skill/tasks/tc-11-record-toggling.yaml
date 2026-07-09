@@ -1,0 +1,38 @@
+id: tc-11-record-toggling
+name: Record button (toggling)
+description: Press once to start recording, press again to stop — the same action toggles on/off (toggleMap).
+tags: [seed, toggling, observable]
+inputs:
+  context:
+    fixture: fixtures
+  prompt: |
+    Using the effect-from-language skill, generate the @rxfx/effect
+    implementation for this scenario and save the TypeScript to a file named
+    `effect.ts` in the current directory:
+
+    "A microphone record button: press it to start recording audio; press the
+    same button again to stop. Pressing the same button toggles recording
+    on and off."
+graders:
+    - type: file
+      name: writes_effect_and_structure
+      config:
+        must_exist: ["effect.ts"]
+        content_patterns:
+          - path: "effect.ts"
+            must_match:
+              - "createTogglingEffect"
+              - "@rxfx/effect"
+              - "Observable"
+            must_not_match:
+              - "createSwitchingEffect"
+              - "createBlockingEffect"
+              - "createQueueingEffect"
+    - type: program
+      name: compiles
+      config:
+        command: bash
+        args:
+          - "-c"
+          - 'cd "$WAZA_WORKSPACE_DIR" && npx --yes --package=typescript@5.4 tsc -p tsconfig.json'
+        timeout: 180

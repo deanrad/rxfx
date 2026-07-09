@@ -1,6 +1,6 @@
 ---
 description: Grades a generated effect against a test case WITHOUT any LLM CLI — runs the structural regex checks and a TypeScript compile via scripts/grade.mjs. The generation step happens in the editor (any model you're authorized for); this agent only scores the result. Read/execute only.
-tools: ['search', 'runCommands']
+tools: ['search', 'execute']
 ---
 
 # Evaluator agent

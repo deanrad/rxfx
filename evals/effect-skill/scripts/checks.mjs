@@ -62,6 +62,13 @@ export const tasks = [
     mustNotMatch: [],
     compile: false,
   },
+  {
+    id: 'tc-11-record-toggling',
+    prompt: 'A record button: press to start recording; press again to stop (toggle on/off).',
+    mustMatch: [/createTogglingEffect/, /@rxfx\/effect/, /Observable/],
+    mustNotMatch: [/createSwitchingEffect/, /createBlockingEffect/, /createQueueingEffect/],
+    compile: true,
+  },
 ];
 
 export function findTask(id) {

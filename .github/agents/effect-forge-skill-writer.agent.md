@@ -1,6 +1,6 @@
 ---
 description: Edits the effect-from-language SKILL.md (and optional templates) so it produces passing code for the current test cases. Reads the @rxfx/effect source and the tasks; never invents test cases or runs the eval verdict.
-tools: ['search', 'editFiles']
+tools: ['search', 'edit']
 ---
 
 # SkillWriter agent
