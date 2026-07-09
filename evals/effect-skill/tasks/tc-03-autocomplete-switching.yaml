@@ -1,0 +1,36 @@
+id: tc-03-autocomplete-switching
+name: Autocomplete list (switching)
+description: A new keystroke cancels the in-flight suggestions request (switchMap).
+tags: [seed, switching, observable]
+inputs:
+  context:
+    fixture: fixtures
+  prompt: |
+    Using the effect-from-language skill, generate the @rxfx/effect
+    implementation for this scenario and save the TypeScript to a file named
+    `effect.ts` in the current directory:
+
+    "Show an autocomplete list: fetch suggestions as the user types; a new
+    keystroke cancels the in-flight request."
+graders:
+    - type: file
+      name: writes_effect_and_structure
+      config:
+        must_exist: ["effect.ts"]
+        content_patterns:
+          - path: "effect.ts"
+            must_match:
+              - "createSwitchingEffect"
+              - "@rxfx/effect"
+              - "Observable"
+            must_not_match:
+              - "createQueueingEffect"
+              - "createBlockingEffect"
+    - type: program
+      name: compiles
+      config:
+        command: bash
+        args:
+          - "-c"
+          - 'cd "$WAZA_WORKSPACE_DIR" && npx --yes --package=typescript@5.4 tsc -p tsconfig.json'
+        timeout: 180

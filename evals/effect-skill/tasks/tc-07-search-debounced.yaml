@@ -1,0 +1,33 @@
+id: tc-07-search-debounced
+name: Search-as-you-type (debounced)
+description: Wait 300ms after typing stops and cancel stale searches.
+tags: [seed, debounced, observable, timed]
+inputs:
+  context:
+    fixture: fixtures
+  prompt: |
+    Using the effect-from-language skill, generate the @rxfx/effect
+    implementation for this scenario and save the TypeScript to a file named
+    `effect.ts` in the current directory:
+
+    "Search as the user types; wait 300ms after they stop and cancel stale
+    searches."
+graders:
+    - type: file
+      name: writes_effect_and_structure
+      config:
+        must_exist: ["effect.ts"]
+        content_patterns:
+          - path: "effect.ts"
+            must_match:
+              - "createDebouncedEffect"
+              - "300"
+              - "@rxfx/effect"
+    - type: program
+      name: compiles
+      config:
+        command: bash
+        args:
+          - "-c"
+          - 'cd "$WAZA_WORKSPACE_DIR" && npx --yes --package=typescript@5.4 tsc -p tsconfig.json'
+        timeout: 180

@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "target": "ES2019",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "lib": ["ES2019", "DOM"],
+    "types": [],
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
+  },
+  "include": ["*.ts", "types/**/*.d.ts"]
+}

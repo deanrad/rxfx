@@ -1,0 +1,19 @@
+id: tc-08-upload-ambiguous
+name: Upload a file (ambiguous concurrency — must ask)
+description: >-
+  No concurrency cue is given, so the skill must ASK a clarifying question about
+  concurrency rather than silently guessing.
+tags: [seed, ambiguous, disambiguation]
+inputs:
+  prompt: |
+    Using the effect-from-language skill, create an @rxfx/effect for this
+    scenario. Do not assume a concurrency behavior if it is not stated:
+
+    "Upload a file to the server."
+graders:
+    - type: text
+      name: asks_about_concurrency
+      config:
+        regex_match:
+          - "(?i)concurren|parallel|queue|cancel|blocking|switching|ignore|in flight"
+          - "\\?"

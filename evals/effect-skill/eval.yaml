@@ -1,0 +1,31 @@
+# OPTIONAL — Waza eval spec. Waza 0.38.0's only real executor is the Copilot CLI
+# (copilot-sdk); if your org policy blocks it you'll get a 403. The primary,
+# no-CLI way to run this suite is `node scripts/grade.mjs` (see README + scripts/
+# checks.mjs, which is authoritative). This file lets you also run under Waza if
+# Copilot CLI access is enabled.
+name: effect-skill-eval
+description: >-
+  Build & harden the effect-from-language skill — turn natural-language
+  side-effect descriptions into typed @rxfx/effect code. Each task compiles the
+  generated code against a local @rxfx/effect type shim and checks the chosen
+  factory + types structurally.
+skill: effect-from-language
+schemaVersion: "1.1"
+version: "1.0"
+
+config:
+  trials_per_task: 1
+  timeout_seconds: 420
+  parallel: false
+  # Default model; override per-run with `waza run --model gpt-4o`.
+  model: claude-sonnet-4.6
+  executor: copilot-sdk
+  inject_skill_body: true
+  # The skill lives in the repo's .github/skills (relative to this eval dir).
+  skill_directories:
+    - "../../.github/skills"
+
+# Graders are defined inline per task (see tasks/*.yaml) because the ambiguous
+# task is graded differently (it should ASK, not emit compilable code).
+tasks:
+  - "tasks/*.yaml"

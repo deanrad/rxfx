@@ -1,0 +1,9 @@
+{
+  "name": "effect-skill-compile-harness",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Type-check harness copied into each Waza task workspace so `tsc` can validate generated @rxfx/effect code against the local declaration shim.",
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}

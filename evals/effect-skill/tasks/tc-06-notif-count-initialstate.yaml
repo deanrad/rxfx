@@ -1,0 +1,33 @@
+id: tc-06-notif-count-initialstate
+name: Notifications with a running count (immediate + initial state)
+description: Accumulated state (a count) starting at 0 via reduceWith.
+tags: [seed, immediate, state, reduceWith]
+inputs:
+  context:
+    fixture: fixtures
+  prompt: |
+    Using the effect-from-language skill, generate the @rxfx/effect
+    implementation for this scenario and save the TypeScript to a file named
+    `effect.ts` in the current directory:
+
+    "Fetch notifications and keep a running count starting at 0."
+graders:
+    - type: file
+      name: writes_effect_and_structure
+      config:
+        must_exist: ["effect.ts"]
+        content_patterns:
+          - path: "effect.ts"
+            must_match:
+              - "createEffect"
+              - "@rxfx/effect"
+              - "reduceWith"
+              - "type State"
+    - type: program
+      name: compiles
+      config:
+        command: bash
+        args:
+          - "-c"
+          - 'cd "$WAZA_WORKSPACE_DIR" && npx --yes --package=typescript@5.4 tsc -p tsconfig.json'
+        timeout: 180

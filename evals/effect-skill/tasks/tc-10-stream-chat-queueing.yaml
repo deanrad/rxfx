@@ -1,0 +1,35 @@
+id: tc-10-stream-chat-queueing
+name: Stream chat completion (queueing, async iterator)
+description: Streaming token-by-token effect that queues new prompts (concatMap).
+tags: [seed, queueing, async-iterator, streaming]
+inputs:
+  context:
+    fixture: fixtures
+  prompt: |
+    Using the effect-from-language skill, generate the @rxfx/effect
+    implementation for this scenario and save the TypeScript to a file named
+    `effect.ts` in the current directory:
+
+    "Stream a chat completion token-by-token; add new prompts to a queue."
+graders:
+    - type: file
+      name: writes_effect_and_structure
+      config:
+        must_exist: ["effect.ts"]
+        content_patterns:
+          - path: "effect.ts"
+            must_match:
+              - "createQueueingEffect"
+              - "@rxfx/effect"
+              - "async function\\*|AsyncGenerator|AsyncIterable"
+            must_not_match:
+              - "createSwitchingEffect"
+              - "createBlockingEffect"
+    - type: program
+      name: compiles
+      config:
+        command: bash
+        args:
+          - "-c"
+          - 'cd "$WAZA_WORKSPACE_DIR" && npx --yes --package=typescript@5.4 tsc -p tsconfig.json'
+        timeout: 180
