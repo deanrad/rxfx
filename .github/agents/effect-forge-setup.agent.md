@@ -17,7 +17,8 @@ build/eval loop **without the Copilot CLI** (the eval is graded locally by
 2. **Verify the suite scaffold** under `evals/effect-skill/`:
    - `scripts/grade.mjs`, `scripts/checks.mjs`
    - `fixtures/tsconfig.json`, `fixtures/package.json`, `fixtures/types/rxfx-effect.d.ts`
-   - `tasks/`, `known-outputs/`, `agents/`
+   - `tasks/`, `known-outputs/`
+   - The five agents in `.github/agents/effect-forge*.agent.md`.
    - The skill at `.github/skills/effect-from-language/SKILL.md`.
    Create anything missing from the shapes already in the repo.
 3. **Smoke-test the grader** — every known output must PASS:
@@ -34,10 +35,10 @@ build/eval loop **without the Copilot CLI** (the eval is graded locally by
 
 Print a short "get started" summary:
 
-- Run the **Orchestrator** agent to drive the loop, or add cases by hand.
+- Run the **`effect-forge`** agent to drive the loop, or add cases by hand.
 - The loop = TestCaseCreator → (you approve) → generate in the editor (2 models)
-  → Evaluator grades via `scripts/grade.mjs` → SkillWriter (if failing) →
-  re-grade → pause for `continue` → commit → next.
+  → Evaluator grades via `evals/effect-skill/scripts/grade.mjs` → SkillWriter (if
+  failing) → re-grade → pause for `continue` → commit → next.
 - See `evals/effect-skill/README.md` for the full workflow.
 
 Do not write test cases or edit the skill yourself — that's the other agents'

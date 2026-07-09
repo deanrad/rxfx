@@ -10,9 +10,10 @@ You author **one** new Waza test case per invocation for the
 
 ## Ground truth
 
-- Factories & semantics: [`effect/src/createEffect.ts`](../../../effect/src/createEffect.ts)
-- Behavior for disambiguation: [`effect/test/createEffect.spec.ts`](../../../effect/test/createEffect.spec.ts)
-- Existing cases: `evals/effect-skill/tasks/` and `known-outputs/`
+- Factories & semantics: `effect/src/createEffect.ts`
+- Behavior for disambiguation: `effect/test/createEffect.spec.ts`
+- Existing cases: `evals/effect-skill/tasks/`, `evals/effect-skill/known-outputs/`,
+  and the rules in `evals/effect-skill/scripts/checks.mjs`
 
 ## Pick a NEW dimension
 
@@ -39,6 +40,6 @@ One concept per case.
 
 ## Approval
 
-Show the human the prompt, the known output, and the graders. **Wait for
+Show the human the prompt, the known output, and the checks. **Wait for
 explicit approval** before considering the case final. Do not proceed to
-evaluation — hand back to the Orchestrator.
+evaluation — hand back to `effect-forge`.

@@ -17,17 +17,17 @@ separate files, e.g. `out/<model>/<taskId>.ts`.
 
 ## Grade
 
-From `evals/effect-skill/`:
+From the repo root:
 
 ```bash
 # one candidate
-node scripts/grade.mjs <taskId> path/to/effect.ts
+node evals/effect-skill/scripts/grade.mjs <taskId> path/to/effect.ts
 
 # an ambiguous "asks" case — grade the assistant's response text
-node scripts/grade.mjs <taskId> --text path/to/response.txt
+node evals/effect-skill/scripts/grade.mjs <taskId> --text path/to/response.txt
 
 # a whole directory of <taskId>.ts (+ <taskId>.txt for asks cases)
-node scripts/grade.mjs --all out/<model>
+node evals/effect-skill/scripts/grade.mjs --all evals/effect-skill/out/<model>
 ```
 
 The grader runs the same checks the Waza tasks encode: structural regex

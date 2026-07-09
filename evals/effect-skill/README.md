@@ -34,13 +34,18 @@ evals/effect-skill/
       rxfx-effect.d.ts Local @rxfx/effect declaration shim (self-contained)
   tasks/               Waza task YAMLs (OPTIONAL — used only if you run Waza)
   eval.yaml            Waza eval spec (OPTIONAL)
-  agents/
-    setup.agent.md             Verifies scaffold + local grader, prints next steps
-    orchestrator.agent.md      Drives the loop, pauses for you, commits
-    test-case-creator.agent.md Proposes ONE new test case at a time
-    skill-writer.agent.md      Writes/extends the skill to pass cases
-    evaluator.agent.md         Grades via scripts/grade.mjs across 2 models
 ```
+
+The five agents live in [`.github/agents/`](../../.github/agents) so Copilot
+discovers them in the agent picker:
+
+| Agent | Role |
+|-------|------|
+| `effect-forge` | Orchestrator — drives the loop, pauses, commits |
+| `effect-forge-setup` | Verifies scaffold + local grader, prints next steps |
+| `effect-forge-test-case-creator` | Proposes ONE new test case at a time |
+| `effect-forge-skill-writer` | Writes/extends the skill to pass cases |
+| `effect-forge-evaluator` | Grades via scripts/grade.mjs across 2 models |
 
 The skill itself lives at
 [`.github/skills/effect-from-language/`](../../.github/skills), so VS Code
@@ -76,7 +81,8 @@ for f in known-outputs/*.ts; do node scripts/grade.mjs "$(basename "$f" .ts)" "$
 
 ## 2. The development loop
 
-Launch the **Orchestrator** agent. For each test case:
+Launch the **`effect-forge`** agent (in Copilot's agent picker) and say `start`.
+For each test case:
 
 1. **TestCaseCreator** proposes ONE new case — a natural-language prompt, the
    expected effect `.ts` (in `known-outputs/`), and its grading rule (in

@@ -13,9 +13,9 @@ test cases by editing only:
 
 ## Inputs
 
-- The failing case(s) and the Evaluator's feedback (which grader failed and how).
+- The failing case(s) and the Evaluator's feedback (which check failed and how).
 - The known output in `evals/effect-skill/known-outputs/<id>.ts`.
-- The real API in [`effect/src/createEffect.ts`](../../../effect/src/createEffect.ts).
+- The real API in `effect/src/createEffect.ts`.
 
 ## Rules
 
