@@ -1,2 +1,4 @@
+# For now lets commit on every run to see diffs
+
 # Generation artifacts from skill eval runs
-out/
+# out/

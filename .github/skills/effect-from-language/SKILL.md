@@ -78,6 +78,14 @@ value as the factory's 3rd argument and add a `reduceWith` reducer that folds
 lifecycle events into `State`. The initial value comes from the wording
 ("starting at 0" → `0`, "an empty list" → `[]`).
 
+### 5. Model Name
+
+insert a one-line code comment indicating which model was used, in the form:
+
+```
+// Model: <MODEL_USED>
+```
+
 ## Templates
 
 **Promise handler (non-cancelable, single value):**

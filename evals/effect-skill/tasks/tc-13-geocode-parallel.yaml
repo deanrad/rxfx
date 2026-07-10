@@ -1,0 +1,42 @@
+id: tc-13-geocode-parallel
+name: Geocode address (parallel + Promise + structured payloads)
+description: Default parallel concurrency (mergeMap), a Promise return kind, and non-void object Request/Response shapes.
+tags: [seed, immediate, parallel, promise, structured]
+inputs:
+  context:
+    fixture: fixtures
+  prompt: |
+    Using the effect-from-language skill, generate the @rxfx/effect
+    implementation for this scenario and save the TypeScript to a file named
+    `effect.ts` in the current directory:
+
+    "Given a mailing address (street, city, postal code), geocode it by calling
+    the maps API and return its latitude and longitude — a single result. These
+    lookups are independent, so run them all in parallel; there's nothing to
+    cancel."
+graders:
+    - type: file
+      name: writes_effect_and_structure
+      config:
+        must_exist: ["effect.ts"]
+        content_patterns:
+          - path: "effect.ts"
+            must_match:
+              - "createEffect"
+              - "@rxfx/effect"
+              - "Promise<"
+            must_not_match:
+              - "createQueueingEffect"
+              - "createBlockingEffect"
+              - "createSwitchingEffect"
+              - "createTogglingEffect"
+              - "reduceWith"
+              - "Observable"
+    - type: program
+      name: compiles
+      config:
+        command: bash
+        args:
+          - "-c"
+          - 'cd "$WAZA_WORKSPACE_DIR" && npx --yes --package=typescript@5.4 tsc -p tsconfig.json'
+        timeout: 180

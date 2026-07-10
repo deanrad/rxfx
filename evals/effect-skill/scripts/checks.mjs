@@ -69,6 +69,25 @@ export const tasks = [
     mustNotMatch: [/createSwitchingEffect/, /createBlockingEffect/, /createQueueingEffect/],
     compile: true,
   },
+  {
+    id: 'tc-13-geocode-parallel',
+    prompt:
+      'Given a mailing address, geocode it by calling the maps API and return its latitude and longitude — a single result. Lookups are independent; run them all in parallel; nothing to cancel.',
+    // Parallel default factory (createEffect / createImmediateEffect), a Promise
+    // return kind, and no accumulated state — locks in three untested decisions.
+    mustMatch: [/createEffect\b|createImmediateEffect\b/, /@rxfx\/effect/, /Promise</],
+    mustNotMatch: [
+      /createQueueingEffect/,
+      /createBlockingEffect/,
+      /createSwitchingEffect/,
+      /createTogglingEffect/,
+      /createDebouncedEffect/,
+      /createThrottledEffect/,
+      /reduceWith/,
+      /Observable/,
+    ],
+    compile: true,
+  },
 ];
 
 export function findTask(id) {
