@@ -1,0 +1,9 @@
+The prompt "Upload a file to the server" is ambiguous regarding concurrency. Should concurrent uploads be:
+
+1. **Queued** (one at a time, in order)?
+2. **Allowed in parallel** (fire-and-forget)?
+3. **Blocking** (only one upload at a time, new attempts ignored)?
+4. **Switching** (latest upload cancels the previous one)?
+5. **Toggling** (start/stop paired uploads)?
+
+Which concurrency mode did you intend?

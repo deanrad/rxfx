@@ -1,0 +1,9 @@
+This request is ambiguous. Should file uploads operate in what concurrency mode?
+
+1. **Parallel** (all uploads proceed independently, fire-and-forget)
+2. **Queued** (uploads process one at a time in order)
+3. **Blocking** (only one upload at a time; new attempts are ignored)
+4. **Switching** (new uploads cancel any previous upload)
+5. **Toggling** (paired start/stop for a single upload)
+
+Please clarify your intended behavior.
