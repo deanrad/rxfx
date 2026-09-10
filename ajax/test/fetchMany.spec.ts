@@ -31,4 +31,19 @@ describe(fetchMany, () => {
 
     expect(users).toEqual(usersResponse.users);
   });
+
+  it.each(['data.users', 'data.users[*]'])(
+    'expands the documented nested path %s in compatibility mode',
+    (expandKey) => {
+      const response = { data: usersResponse };
+      jest.spyOn(RxAjax, 'ajax').mockReturnValue(of({ response }));
+
+      const users = [];
+      fetchMany({ url: '/users' }, expandKey).subscribe((user) =>
+        users.push(user)
+      );
+
+      expect(users).toEqual(usersResponse.users);
+    }
+  );
 });

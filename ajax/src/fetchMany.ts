@@ -50,11 +50,20 @@ function rxGet(expandKey: string, opts: FetchManyHTTPOptions): Observable<any> {
   return ajax(opts).pipe(
     mergeMap((ajax) => {
       const resultArr = expandKey
-        ? // @ts-ignore
-          ajax.response[expandKey]
+        ? getValueAtPath(ajax.response, expandKey)
         : ajax.response;
       return Array.isArray(resultArr) ? from(resultArr) : of(resultArr);
     })
+  );
+}
+
+/** Resolve the subset of Oboe paths that fetchMany documents for expansion. */
+function getValueAtPath(response: any, expandKey: string): any {
+  const path = expandKey.replace(/\[\*\]$/, '').split('.');
+
+  return path.reduce(
+    (value, key) => (value == null ? undefined : value[key]),
+    response
   );
 }
 
